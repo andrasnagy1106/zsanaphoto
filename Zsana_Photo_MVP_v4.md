@@ -426,7 +426,7 @@ A szabad időpontokat az adatbázisban tárolt szabályokból kell kiszámítani
 
 Például:  
 
-```text
+```text 
 Hétfő
 09:00 - 17:00
 slot: 10 perces slotok legyenek
