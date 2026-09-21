@@ -1,10 +1,10 @@
-import { and, desc, eq, gte, inArray, lte, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { bookings, services, type Booking, type Service } from "@/db/schema";
 import { ACTIVE_BOOKING_STATUSES, BOOKING_NUMBER_PREFIX } from "@/lib/constants";
 import { getEmailProvider } from "@/lib/providers/email";
 import { BookingConflictError, NotFoundError } from "@/lib/utils/errors";
-import { addMinutes, getZonedYear } from "@/lib/utils/time";
+import { addMinutes, getZonedYear, zonedDateTimeToUtc } from "@/lib/utils/time";
 import { getSiteSettings, isSlotAvailable } from "./availability-service";
 import { canCancelBooking, canConfirmBooking, determineInitialBookingStatus } from "./booking-rules";
 
@@ -164,24 +164,58 @@ export async function getBookingById(id: string): Promise<Booking | null> {
   return booking ?? null;
 }
 
+export type BookingSortOption =
+  | "startAt-desc"
+  | "startAt-asc"
+  | "createdAt-desc"
+  | "customerName-asc"
+  | "customerName-desc";
+
 export interface ListBookingsFilters {
   status?: Booking["status"];
   serviceId?: string;
-  fromDate?: Date;
-  toDate?: Date;
+  fromDate?: Date | string;
+  toDate?: Date | string;
+  sortBy?: BookingSortOption | string;
 }
 
 export async function listBookings(filters: ListBookingsFilters = {}) {
   const conditions = [];
   if (filters.status) conditions.push(eq(bookings.status, filters.status));
   if (filters.serviceId) conditions.push(eq(bookings.serviceId, filters.serviceId));
-  if (filters.fromDate) conditions.push(gte(bookings.startAt, filters.fromDate));
-  if (filters.toDate) conditions.push(lte(bookings.startAt, filters.toDate));
+
+  if (filters.fromDate) {
+    const fromInstant =
+      typeof filters.fromDate === "string"
+        ? zonedDateTimeToUtc(filters.fromDate, "00:00")
+        : filters.fromDate;
+    conditions.push(gte(bookings.startAt, fromInstant));
+  }
+
+  if (filters.toDate) {
+    const toInstant =
+      typeof filters.toDate === "string"
+        ? addMinutes(zonedDateTimeToUtc(filters.toDate, "00:00"), 24 * 60)
+        : filters.toDate;
+    conditions.push(lte(bookings.startAt, toInstant));
+  }
+
+  let orderByClause = desc(bookings.startAt);
+  if (filters.sortBy === "startAt-asc") {
+    orderByClause = asc(bookings.startAt);
+  } else if (filters.sortBy === "createdAt-desc") {
+    orderByClause = desc(bookings.createdAt);
+  } else if (filters.sortBy === "customerName-asc") {
+    orderByClause = asc(bookings.customerName);
+  } else if (filters.sortBy === "customerName-desc") {
+    orderByClause = desc(bookings.customerName);
+  }
 
   const query = db.select().from(bookings);
-  const rows = conditions.length > 0
-    ? await query.where(and(...conditions)).orderBy(desc(bookings.startAt))
-    : await query.orderBy(desc(bookings.startAt));
+  const rows =
+    conditions.length > 0
+      ? await query.where(and(...conditions)).orderBy(orderByClause)
+      : await query.orderBy(orderByClause);
 
   return rows;
 }

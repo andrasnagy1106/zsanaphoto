@@ -40,9 +40,18 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") as Booking["status"] | undefined;
   const serviceId = searchParams.get("serviceId") || undefined;
+  const fromDate = searchParams.get("fromDate") || undefined;
+  const toDate = searchParams.get("toDate") || undefined;
+  const sortBy = searchParams.get("sortBy") || undefined;
 
   const [bookings, services] = await Promise.all([
-    listBookings({ status: status || undefined, serviceId }),
+    listBookings({
+      status: status || undefined,
+      serviceId,
+      fromDate,
+      toDate,
+      sortBy,
+    }),
     listServices(),
   ]);
 
