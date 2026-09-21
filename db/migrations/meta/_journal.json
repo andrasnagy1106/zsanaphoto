@@ -15,6 +15,13 @@
       "when": 1789719251860,
       "tag": "0001_booking_overlap_protection",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789998284745,
+      "tag": "0002_flat_gamora",
+      "breakpoints": true
     }
   ]
 }

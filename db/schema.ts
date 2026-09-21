@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const approvalModeEnum = pgEnum("approval_mode", ["AUTO", "MANUAL"]);
+export const serviceAvailabilityModeEnum = pgEnum("service_availability_mode", ["GLOBAL", "CUSTOM"]);
 
 export const bookingStatusEnum = pgEnum("booking_status", [
   "PENDING",
@@ -48,6 +49,9 @@ export const services = pgTable("services", {
   durationMinutes: integer("duration_minutes").notNull(),
   bufferMinutes: integer("buffer_minutes").notNull().default(0),
   approvalMode: approvalModeEnum("approval_mode").notNull().default("AUTO"),
+  availabilityMode: serviceAvailabilityModeEnum("availability_mode").notNull().default("GLOBAL"),
+  dateRangeStart: text("date_range_start"), // "YYYY-MM-DD" or null
+  dateRangeEnd: text("date_range_end"), // "YYYY-MM-DD" or null
   active: boolean("active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   ...timestamps,
@@ -66,6 +70,22 @@ export const availabilityRules = pgTable("availability_rules", {
 }, (table) => [
   index("availability_rules_day_of_week_idx").on(table.dayOfWeek),
   index("availability_rules_active_idx").on(table.active),
+]);
+
+export const serviceAvailabilityRules = pgTable("service_availability_rules", {
+  id: id(),
+  serviceId: text("service_id")
+    .notNull()
+    .references(() => services.id, { onDelete: "cascade" }),
+  dayOfWeek: smallint("day_of_week").notNull(),
+  startTime: text("start_time").notNull(), // "HH:mm"
+  endTime: text("end_time").notNull(), // "HH:mm"
+  active: boolean("active").notNull().default(true),
+  ...timestamps,
+}, (table) => [
+  index("service_availability_rules_service_id_idx").on(table.serviceId),
+  index("service_availability_rules_day_of_week_idx").on(table.dayOfWeek),
+  index("service_availability_rules_active_idx").on(table.active),
 ]);
 
 export const blockedPeriods = pgTable("blocked_periods", {
@@ -145,6 +165,8 @@ export type Service = typeof services.$inferSelect;
 export type NewService = typeof services.$inferInsert;
 export type AvailabilityRule = typeof availabilityRules.$inferSelect;
 export type NewAvailabilityRule = typeof availabilityRules.$inferInsert;
+export type ServiceAvailabilityRule = typeof serviceAvailabilityRules.$inferSelect;
+export type NewServiceAvailabilityRule = typeof serviceAvailabilityRules.$inferInsert;
 export type BlockedPeriod = typeof blockedPeriods.$inferSelect;
 export type NewBlockedPeriod = typeof blockedPeriods.$inferInsert;
 export type Booking = typeof bookings.$inferSelect;

@@ -28,7 +28,16 @@ export async function getServiceById(id: string): Promise<Service | null> {
 export type UpdateServiceInput = Partial<
   Pick<
     NewService,
-    "name" | "description" | "durationMinutes" | "bufferMinutes" | "approvalMode" | "active" | "sortOrder"
+    | "name"
+    | "description"
+    | "durationMinutes"
+    | "bufferMinutes"
+    | "approvalMode"
+    | "availabilityMode"
+    | "dateRangeStart"
+    | "dateRangeEnd"
+    | "active"
+    | "sortOrder"
   >
 >;
 

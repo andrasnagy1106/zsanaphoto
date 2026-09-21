@@ -20,12 +20,16 @@ export async function updateServiceAction(formData: unknown): Promise<AdminActio
     durationMinutes: parsed.data.durationMinutes,
     bufferMinutes: parsed.data.bufferMinutes,
     approvalMode: parsed.data.approvalMode,
+    availabilityMode: parsed.data.availabilityMode,
+    dateRangeStart: parsed.data.dateRangeStart,
+    dateRangeEnd: parsed.data.dateRangeEnd,
     active: parsed.data.active,
   };
 
   try {
     await updateService(parsed.data.id, input);
     revalidatePath("/admin/services");
+    revalidatePath("/idopontfoglalas");
     return { success: true };
   } catch (error) {
     console.error("[updateServiceAction] Failed:", error);

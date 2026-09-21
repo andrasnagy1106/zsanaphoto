@@ -15,6 +15,9 @@ function makeService(overrides: Partial<Service> = {}): Service {
     durationMinutes: 60,
     bufferMinutes: 15,
     approvalMode: "AUTO",
+    availabilityMode: "GLOBAL",
+    dateRangeStart: null,
+    dateRangeEnd: null,
     active: true,
     sortOrder: 1,
     createdAt: new Date(),
@@ -146,5 +149,28 @@ describe("computeSlotsForDate - existing bookings", () => {
     });
     const slots = computeSlotsForDate(MONDAY, ctx);
     expect(slots.find((s) => s.start.toISOString() === "2026-10-12T07:00:00.000Z")).toBeUndefined();
+  });
+});
+
+describe("computeSlotsForDate - dateRange constraints", () => {
+  it("returns no slots if date is before dateRangeStart", () => {
+    const ctx = makeContext({
+      service: makeService({ dateRangeStart: "2026-10-15" }),
+    });
+    expect(computeSlotsForDate("2026-10-12", ctx)).toHaveLength(0);
+  });
+
+  it("returns no slots if date is after dateRangeEnd", () => {
+    const ctx = makeContext({
+      service: makeService({ dateRangeEnd: "2026-10-10" }),
+    });
+    expect(computeSlotsForDate("2026-10-12", ctx)).toHaveLength(0);
+  });
+
+  it("returns slots if date is within dateRangeStart and dateRangeEnd", () => {
+    const ctx = makeContext({
+      service: makeService({ dateRangeStart: "2026-10-01", dateRangeEnd: "2026-10-31" }),
+    });
+    expect(computeSlotsForDate("2026-10-12", ctx).length).toBeGreaterThan(0);
   });
 });

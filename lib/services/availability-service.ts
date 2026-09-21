@@ -4,6 +4,7 @@ import {
   availabilityRules,
   blockedPeriods,
   bookings,
+  serviceAvailabilityRules,
   services,
   type Service,
   type SiteSettings,
@@ -46,10 +47,32 @@ async function loadAvailabilityContext(
 
   const settings = await getSettings();
 
-  const rules = await db
-    .select()
-    .from(availabilityRules)
-    .where(eq(availabilityRules.active, true));
+  let rules: { dayOfWeek: number; startTime: string; endTime: string }[];
+
+  if (service.availabilityMode === "CUSTOM") {
+    rules = await db
+      .select({
+        dayOfWeek: serviceAvailabilityRules.dayOfWeek,
+        startTime: serviceAvailabilityRules.startTime,
+        endTime: serviceAvailabilityRules.endTime,
+      })
+      .from(serviceAvailabilityRules)
+      .where(
+        and(
+          eq(serviceAvailabilityRules.serviceId, service.id),
+          eq(serviceAvailabilityRules.active, true),
+        ),
+      );
+  } else {
+    rules = await db
+      .select({
+        dayOfWeek: availabilityRules.dayOfWeek,
+        startTime: availabilityRules.startTime,
+        endTime: availabilityRules.endTime,
+      })
+      .from(availabilityRules)
+      .where(eq(availabilityRules.active, true));
+  }
 
   const blocked = await db
     .select()
@@ -88,6 +111,15 @@ export function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): bo
 
 export function computeSlotsForDate(dateIso: string, ctx: AvailabilityContext): TimeSlot[] {
   const { service, settings, rules, blockedPeriods, activeBookings, now } = ctx;
+
+  // If service has date range constraints, ensure dateIso falls within [dateRangeStart, dateRangeEnd]
+  if (service.dateRangeStart && dateIso < service.dateRangeStart) {
+    return [];
+  }
+  if (service.dateRangeEnd && dateIso > service.dateRangeEnd) {
+    return [];
+  }
+
   const dayOfWeek = getZonedDayOfWeek(
     zonedDateTimeToUtc(dateIso, "12:00", settings.timezone),
     settings.timezone,

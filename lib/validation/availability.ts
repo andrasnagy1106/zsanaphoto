@@ -14,4 +14,17 @@ export const availabilityRuleSchema = z
     path: ["endTime"],
   });
 
-export type AvailabilityRuleForm = z.infer<typeof availabilityRuleSchema>;
+export const serviceAvailabilityRuleSchema = z
+  .object({
+    serviceId: z.string().min(1),
+    dayOfWeek: z.coerce.number().int().min(0).max(6),
+    startTime: z.string().regex(timePattern, "Érvénytelen időformátum (ÓÓ:PP)."),
+    endTime: z.string().regex(timePattern, "Érvénytelen időformátum (ÓÓ:PP)."),
+    active: z.coerce.boolean(),
+  })
+  .refine((data) => !data.active || data.startTime < data.endTime, {
+    message: "A kezdés időpontja korábban legyen, mint a befejezés.",
+    path: ["endTime"],
+  });
+
+export type ServiceAvailabilityRuleForm = z.infer<typeof serviceAvailabilityRuleSchema>;
