@@ -32,9 +32,44 @@ export default async function AdminBookingsPage({ searchParams }: AdminBookingsP
 
   const serviceNameById = new Map(services.map((service) => [service.id, service.name]));
 
+  const exportParams = new URLSearchParams();
+  if (status) exportParams.set("status", status);
+  if (serviceId) exportParams.set("serviceId", serviceId);
+  const exportUrl = `/api/admin/bookings/export${exportParams.toString() ? `?${exportParams.toString()}` : ""}`;
+
   return (
     <div>
-      <h1 className="font-display text-2xl text-foreground">Foglalások</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl text-foreground">Foglalások</h1>
+          <p className="mt-1 text-sm text-foreground/60">
+            Összesen {bookings.length} foglalás a kiválasztott szűrés szerint.
+          </p>
+        </div>
+        <a
+          href={exportUrl}
+          download
+          className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent hover:text-accent shadow-sm"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Exportálás Excelbe (CSV)
+        </a>
+      </div>
 
       <form className="mt-6 flex flex-wrap gap-3" method="get">
         <select
