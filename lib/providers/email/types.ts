@@ -11,6 +11,7 @@ export interface BookingEmailInput {
   startAt: Date;
   endAt: Date;
   adminNotificationEmail: string;
+  manageUrl?: string;
 }
 
 export interface EmailProvider {
@@ -18,4 +19,7 @@ export interface EmailProvider {
   sendAdminNewBookingEmail(input: BookingEmailInput): Promise<void>;
   sendBookingConfirmedEmail(input: BookingEmailInput): Promise<void>;
   sendBookingCancelledEmail(input: BookingEmailInput): Promise<void>;
+  sendAdminBookingCancelledEmail(input: BookingEmailInput): Promise<void>;
+  sendBookingRescheduledEmail(input: BookingEmailInput): Promise<void>;
+  sendAdminBookingRescheduledEmail(input: BookingEmailInput): Promise<void>;
 }

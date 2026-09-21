@@ -1,0 +1,2 @@
+ALTER TABLE "bookings" ADD COLUMN "manage_token" text DEFAULT gen_random_uuid()::text NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "bookings_manage_token_idx" ON "bookings" USING btree ("manage_token");

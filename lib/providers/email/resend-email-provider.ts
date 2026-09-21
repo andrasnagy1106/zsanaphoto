@@ -1,9 +1,12 @@
 import { Resend } from "resend";
 import {
+  buildAdminBookingCancelledEmail,
+  buildAdminBookingRescheduledEmail,
   buildAdminNewBookingEmail,
   buildBookingCancelledEmail,
   buildBookingConfirmedEmail,
   buildBookingCreatedEmail,
+  buildBookingRescheduledEmail,
 } from "./templates";
 import type { BookingEmailInput, EmailProvider } from "./types";
 
@@ -49,5 +52,20 @@ export class ResendEmailProvider implements EmailProvider {
   async sendBookingCancelledEmail(input: BookingEmailInput): Promise<void> {
     const { subject, text } = buildBookingCancelledEmail(input);
     await this.send(input.customerEmail, subject, text);
+  }
+
+  async sendAdminBookingCancelledEmail(input: BookingEmailInput): Promise<void> {
+    const { subject, text } = buildAdminBookingCancelledEmail(input);
+    await this.send(input.adminNotificationEmail, subject, text);
+  }
+
+  async sendBookingRescheduledEmail(input: BookingEmailInput): Promise<void> {
+    const { subject, text } = buildBookingRescheduledEmail(input);
+    await this.send(input.customerEmail, subject, text);
+  }
+
+  async sendAdminBookingRescheduledEmail(input: BookingEmailInput): Promise<void> {
+    const { subject, text } = buildAdminBookingRescheduledEmail(input);
+    await this.send(input.adminNotificationEmail, subject, text);
   }
 }

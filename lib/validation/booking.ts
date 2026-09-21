@@ -12,3 +12,14 @@ export const createBookingInputSchema = z.object({
 });
 
 export type CreateBookingInputForm = z.infer<typeof createBookingInputSchema>;
+
+export const cancelBookingByCustomerSchema = z.object({
+  token: z.string().min(1, "Érvénytelen azonosító."),
+});
+
+export const rescheduleBookingByCustomerSchema = z.object({
+  token: z.string().min(1, "Érvénytelen azonosító."),
+  startAt: z.string().min(1, "Válassz új időpontot."),
+});
+
+export type RescheduleBookingByCustomerForm = z.infer<typeof rescheduleBookingByCustomerSchema>;

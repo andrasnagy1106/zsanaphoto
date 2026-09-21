@@ -1,10 +1,10 @@
-import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { bookings, services, type Booking } from "@/db/schema";
+import { bookings, services, type Booking, type Service } from "@/db/schema";
 import { ACTIVE_BOOKING_STATUSES, BOOKING_NUMBER_PREFIX } from "@/lib/constants";
 import { getEmailProvider } from "@/lib/providers/email";
 import { BookingConflictError, NotFoundError } from "@/lib/utils/errors";
-import { getZonedYear } from "@/lib/utils/time";
+import { addMinutes, getZonedYear } from "@/lib/utils/time";
 import { getSiteSettings, isSlotAvailable } from "./availability-service";
 import { canCancelBooking, canConfirmBooking, determineInitialBookingStatus } from "./booking-rules";
 
@@ -132,6 +132,8 @@ async function sendBookingCreatedEmails(
 ) {
   const settings = await getSiteSettings();
   const provider = getEmailProvider();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zsanaphoto.vercel.app";
+  const manageUrl = `${siteUrl}/foglalas-kezeles?token=${booking.manageToken}`;
 
   const emailInput = {
     bookingNumber: booking.bookingNumber,
@@ -144,6 +146,7 @@ async function sendBookingCreatedEmails(
     startAt: booking.startAt,
     endAt: booking.endAt,
     adminNotificationEmail: settings.adminNotificationEmail,
+    manageUrl,
   };
 
   try {
@@ -230,6 +233,9 @@ export async function confirmBooking(id: string): Promise<Booking> {
 
   const settings = await getSiteSettings();
   const provider = getEmailProvider();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zsanaphoto.vercel.app";
+  const manageUrl = `${siteUrl}/foglalas-kezeles?token=${updated.manageToken}`;
+
   try {
     await provider.sendBookingConfirmedEmail({
       bookingNumber: updated.bookingNumber,
@@ -242,6 +248,7 @@ export async function confirmBooking(id: string): Promise<Booking> {
       startAt: updated.startAt,
       endAt: updated.endAt,
       adminNotificationEmail: settings.adminNotificationEmail,
+      manageUrl,
     });
   } catch (error) {
     console.error(`[booking-service] Failed to send confirmation email for ${updated.bookingNumber}:`, error);
@@ -294,6 +301,153 @@ export async function completeBooking(id: string): Promise<Booking> {
     .set({ status: "COMPLETED", updatedAt: new Date() })
     .where(eq(bookings.id, id))
     .returning();
+
+  return updated;
+}
+
+export async function getBookingByManageToken(
+  token: string,
+): Promise<(Booking & { service: Service }) | null> {
+  const [row] = await db
+    .select({
+      booking: bookings,
+      service: services,
+    })
+    .from(bookings)
+    .innerJoin(services, eq(bookings.serviceId, services.id))
+    .where(eq(bookings.manageToken, token))
+    .limit(1);
+
+  if (!row) return null;
+  return { ...row.booking, service: row.service };
+}
+
+export async function cancelBookingByCustomer(token: string): Promise<Booking> {
+  const bookingWithService = await getBookingByManageToken(token);
+  if (!bookingWithService) throw new NotFoundError("A foglalás nem található.");
+  if (!canCancelBooking(bookingWithService.status)) {
+    throw new Error("Ez a foglalás már nem mondható le.");
+  }
+
+  const [updated] = await db
+    .update(bookings)
+    .set({ status: "CANCELLED", cancelledAt: new Date(), updatedAt: new Date() })
+    .where(eq(bookings.id, bookingWithService.id))
+    .returning();
+
+  const settings = await getSiteSettings();
+  const provider = getEmailProvider();
+  const emailInput = {
+    bookingNumber: updated.bookingNumber,
+    serviceName: bookingWithService.service.name,
+    approvalMode: bookingWithService.service.approvalMode,
+    customerName: updated.customerName,
+    customerEmail: updated.customerEmail,
+    customerPhone: updated.customerPhone,
+    notes: updated.notes,
+    startAt: updated.startAt,
+    endAt: updated.endAt,
+    adminNotificationEmail: settings.adminNotificationEmail,
+  };
+
+  try {
+    await Promise.all([
+      provider.sendBookingCancelledEmail(emailInput),
+      provider.sendAdminBookingCancelledEmail(emailInput),
+    ]);
+  } catch (error) {
+    console.error(`[booking-service] Failed to send cancellation emails for ${updated.bookingNumber}:`, error);
+  }
+
+  return updated;
+}
+
+export interface RescheduleBookingInput {
+  token: string;
+  newStart: Date;
+}
+
+export async function rescheduleBookingByCustomer(input: RescheduleBookingInput): Promise<Booking> {
+  const bookingWithService = await getBookingByManageToken(input.token);
+  if (!bookingWithService) throw new NotFoundError("A foglalás nem található.");
+  if (!canCancelBooking(bookingWithService.status)) {
+    throw new Error("Csak aktív (függőben lévő vagy visszaigazolt) foglalás módosítható.");
+  }
+
+  const service = bookingWithService.service;
+  const newEnd = addMinutes(input.newStart, service.durationMinutes);
+
+  const available = await isSlotAvailable(service.id, input.newStart, newEnd);
+  if (!available) {
+    throw new BookingConflictError();
+  }
+
+  let updated: Booking;
+  try {
+    updated = await db.transaction(async (tx) => {
+      const conflicting = await tx
+        .select({ id: bookings.id })
+        .from(bookings)
+        .where(
+          and(
+            ne(bookings.id, bookingWithService.id),
+            inArray(bookings.status, ACTIVE_BOOKING_STATUSES),
+            lte(bookings.startAt, newEnd),
+            gte(bookings.endAt, input.newStart),
+          ),
+        )
+        .limit(1);
+
+      if (conflicting.length > 0) {
+        throw new BookingConflictError();
+      }
+
+      const [row] = await tx
+        .update(bookings)
+        .set({
+          startAt: input.newStart,
+          endAt: newEnd,
+          updatedAt: new Date(),
+        })
+        .where(eq(bookings.id, bookingWithService.id))
+        .returning();
+
+      return row;
+    });
+  } catch (error) {
+    if (isPgErrorCode(error, EXCLUSION_VIOLATION)) {
+      throw new BookingConflictError();
+    }
+    throw error;
+  }
+
+  const settings = await getSiteSettings();
+  const provider = getEmailProvider();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zsanaphoto.vercel.app";
+  const manageUrl = `${siteUrl}/foglalas-kezeles?token=${updated.manageToken}`;
+
+  const emailInput = {
+    bookingNumber: updated.bookingNumber,
+    serviceName: service.name,
+    approvalMode: service.approvalMode,
+    customerName: updated.customerName,
+    customerEmail: updated.customerEmail,
+    customerPhone: updated.customerPhone,
+    notes: updated.notes,
+    startAt: updated.startAt,
+    endAt: updated.endAt,
+    adminNotificationEmail: settings.adminNotificationEmail,
+    manageUrl,
+  };
+
+  try {
+    await Promise.all([
+      provider.sendBookingRescheduledEmail(emailInput),
+      provider.sendAdminBookingRescheduledEmail(emailInput),
+    ]);
+  } catch (error) {
+    console.error(`[booking-service] Failed to send reschedule emails for ${updated.bookingNumber}:`, error);
+  }
 
   return updated;
 }

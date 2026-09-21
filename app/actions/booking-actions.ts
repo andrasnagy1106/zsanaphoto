@@ -1,8 +1,17 @@
 "use server";
 
 import { headers } from "next/headers";
-import { createBookingInputSchema } from "@/lib/validation/booking";
-import { createBooking } from "@/lib/services/booking-service";
+import { revalidatePath } from "next/cache";
+import {
+  cancelBookingByCustomerSchema,
+  createBookingInputSchema,
+  rescheduleBookingByCustomerSchema,
+} from "@/lib/validation/booking";
+import {
+  cancelBookingByCustomer,
+  createBooking,
+  rescheduleBookingByCustomer,
+} from "@/lib/services/booking-service";
 import { getServiceById } from "@/lib/services/service-service";
 import { checkRateLimit } from "@/lib/utils/rate-limit";
 import { BookingConflictError, NotFoundError } from "@/lib/utils/errors";
@@ -14,6 +23,17 @@ export interface CreateBookingActionResult {
   booking?: {
     bookingNumber: string;
     status: "PENDING" | "CONFIRMED";
+    startAt: string;
+    endAt: string;
+  };
+}
+
+export interface CustomerManageActionResult {
+  success: boolean;
+  error?: string;
+  booking?: {
+    bookingNumber: string;
+    status: string;
     startAt: string;
     endAt: string;
   };
@@ -87,5 +107,101 @@ export async function createBookingAction(formData: unknown): Promise<CreateBook
     }
     console.error("[createBookingAction] Failed to create booking:", error);
     return { success: false, error: "Valami hiba történt. Kérjük, próbáld meg újra." };
+  }
+}
+
+export async function cancelBookingByCustomerAction(
+  formData: unknown,
+): Promise<CustomerManageActionResult> {
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for") ?? "unknown";
+
+  const rateLimit = checkRateLimit(`manage-cancel:${ip}`, 10, 10 * 60 * 1000);
+  if (!rateLimit.allowed) {
+    return { success: false, error: "Túl sok próbálkozás történt. Kérjük, próbáld meg később." };
+  }
+
+  const parsed = cancelBookingByCustomerSchema.safeParse(formData);
+  if (!parsed.success) {
+    return { success: false, error: "Érvénytelen kérés." };
+  }
+
+  try {
+    const booking = await cancelBookingByCustomer(parsed.data.token);
+    revalidatePath("/foglalas-kezeles");
+    revalidatePath("/admin/bookings");
+    revalidatePath("/admin");
+    return {
+      success: true,
+      booking: {
+        bookingNumber: booking.bookingNumber,
+        status: booking.status,
+        startAt: booking.startAt.toISOString(),
+        endAt: booking.endAt.toISOString(),
+      },
+    };
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return { success: false, error: error.message };
+    }
+    console.error("[cancelBookingByCustomerAction] Failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Valami hiba történt.",
+    };
+  }
+}
+
+export async function rescheduleBookingByCustomerAction(
+  formData: unknown,
+): Promise<CustomerManageActionResult> {
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for") ?? "unknown";
+
+  const rateLimit = checkRateLimit(`manage-reschedule:${ip}`, 10, 10 * 60 * 1000);
+  if (!rateLimit.allowed) {
+    return { success: false, error: "Túl sok próbálkozás történt. Kérjük, próbáld meg később." };
+  }
+
+  const parsed = rescheduleBookingByCustomerSchema.safeParse(formData);
+  if (!parsed.success) {
+    return { success: false, error: "Kérjük, válassz egy érvényes új időpontot." };
+  }
+
+  const startAt = new Date(parsed.data.startAt);
+  if (Number.isNaN(startAt.getTime())) {
+    return { success: false, error: "Érvénytelen időpont." };
+  }
+
+  try {
+    const booking = await rescheduleBookingByCustomer({
+      token: parsed.data.token,
+      newStart: startAt,
+    });
+
+    revalidatePath("/foglalas-kezeles");
+    revalidatePath("/admin/bookings");
+    revalidatePath("/admin");
+    return {
+      success: true,
+      booking: {
+        bookingNumber: booking.bookingNumber,
+        status: booking.status,
+        startAt: booking.startAt.toISOString(),
+        endAt: booking.endAt.toISOString(),
+      },
+    };
+  } catch (error) {
+    if (error instanceof BookingConflictError) {
+      return { success: false, error: error.message };
+    }
+    if (error instanceof NotFoundError) {
+      return { success: false, error: error.message };
+    }
+    console.error("[rescheduleBookingByCustomerAction] Failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Valami hiba történt.",
+    };
   }
 }
