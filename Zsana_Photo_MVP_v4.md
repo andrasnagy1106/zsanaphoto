@@ -424,7 +424,7 @@ A szabad időpontokat az adatbázisban tárolt szabályokból kell kiszámítani
 
 ## Availability rule
 
-Például: 
+Például:  
 
 ```text
 Hétfő
