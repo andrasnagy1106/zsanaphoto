@@ -187,7 +187,7 @@ export default async function AdminBookingsPage({ searchParams }: AdminBookingsP
               ✕ Szűrők törlése
             </Link>
           ) : (
-            <span className="text-xs text-foreground/40">Alapértelmezett nézet</span>
+            <span />
           )}
 
           <button
