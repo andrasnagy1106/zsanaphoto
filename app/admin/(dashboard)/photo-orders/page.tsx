@@ -1,16 +1,18 @@
 import { AdminTable } from "@/components/admin/AdminTable";
+import { PhotoOrderDetailsDialog } from "@/components/admin/PhotoOrderDetailsDialog";
 import { PhotoOrderStatusControl } from "@/components/admin/PhotoOrderStatusControl";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listPhotoOrders } from "@/lib/services/photo-order-service";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
 
-function formatOrderItems(items: Awaited<ReturnType<typeof listPhotoOrders>>[number]["items"]) {
+function renderOrderDetails(row: Awaited<ReturnType<typeof listPhotoOrders>>[number]) {
   return (
-    <ul className="space-y-1 text-xs text-foreground/70">
-      {items.map((item) => (
-        <li key={item.id}>{item.photoTitle} · {item.size} · {item.quantity} db</li>
-      ))}
-    </ul>
+    <PhotoOrderDetailsDialog
+      order={row.order}
+      customerName={row.booking.customerName}
+      bookingNumber={row.booking.bookingNumber}
+      items={row.items}
+    />
   );
 }
 
@@ -34,8 +36,7 @@ export default async function AdminPhotoOrdersPage() {
               { key: "booking", header: "Foglalás", render: (row) => row.booking.bookingNumber },
               { key: "customer", header: "Ügyfél", render: (row) => <span>{row.booking.customerName}<br /><span className="text-xs text-foreground/55">{row.booking.customerEmail}</span></span> },
               { key: "service", header: "Szolgáltatás", render: (row) => row.service.name },
-              { key: "items", header: "Tételek", render: (row) => formatOrderItems(row.items) },
-              { key: "notes", header: "Megjegyzés", render: (row) => row.order.notes ?? "-" },
+              { key: "items", header: "Tételek", render: renderOrderDetails },
               { key: "created", header: "Érkezett", render: (row) => `${formatZonedHungarianDate(row.order.createdAt)} ${formatZonedTime(row.order.createdAt)}` },
               { key: "status", header: "Állapot", render: (row) => <PhotoOrderStatusControl order={row.order} /> },
             ]}
@@ -49,8 +50,7 @@ export default async function AdminPhotoOrdersPage() {
                   </div>
                   <PhotoOrderStatusControl order={row.order} />
                 </div>
-                <div className="mt-4 border-t border-border pt-3">{formatOrderItems(row.items)}</div>
-                {row.order.notes ? <p className="mt-3 text-sm text-foreground/70">Megjegyzés: {row.order.notes}</p> : null}
+                <div className="mt-4 border-t border-border pt-3">{renderOrderDetails(row)}</div>
               </div>
             )}
           />
