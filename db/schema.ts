@@ -178,6 +178,30 @@ export const photoOrderItems = pgTable("photo_order_items", {
   index("photo_order_items_order_id_idx").on(table.orderId),
 ]);
 
+export const eventPhotos = pgTable("event_photos", {
+  id: id(),
+  bookingId: text("booking_id")
+    .notNull()
+    .references(() => bookings.id, { onDelete: "cascade" }),
+  pin: text("pin").notNull(),
+  publicId: text("public_id").notNull(),
+  secureUrl: text("secure_url").notNull(),
+  watermarkedUrl: text("watermarked_url").notNull(),
+  originalFilename: text("original_filename"),
+  title: text("title").notNull(),
+  width: integer("width"),
+  height: integer("height"),
+  bytes: integer("bytes"),
+  format: text("format"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("event_photos_public_id_idx").on(table.publicId),
+  index("event_photos_booking_id_idx").on(table.bookingId),
+  index("event_photos_pin_idx").on(table.pin),
+  index("event_photos_sort_order_idx").on(table.sortOrder),
+]);
+
 export const adminUsers = pgTable("admin_users", {
   id: id(),
   email: text("email").notNull(),
@@ -230,6 +254,8 @@ export type PhotoOrder = typeof photoOrders.$inferSelect;
 export type NewPhotoOrder = typeof photoOrders.$inferInsert;
 export type PhotoOrderItem = typeof photoOrderItems.$inferSelect;
 export type NewPhotoOrderItem = typeof photoOrderItems.$inferInsert;
+export type EventPhoto = typeof eventPhotos.$inferSelect;
+export type NewEventPhoto = typeof eventPhotos.$inferInsert;
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type SiteSettings = typeof siteSettings.$inferSelect;
 export type InstitutionInquiry = typeof institutionInquiries.$inferSelect;

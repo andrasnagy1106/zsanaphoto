@@ -59,6 +59,11 @@ lib/
    ADMIN_NOTIFICATION_EMAIL=admin@example.com
    ADMIN_AUTH_SECRET=<hosszú, véletlenszerű string>
    NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+   # Cloudinary (fotótárhely és vízjelezés)
+   CLOUDINARY_CLOUD_NAME=
+   CLOUDINARY_API_KEY=
+   CLOUDINARY_API_SECRET=
    ```
 
    `RESEND_API_KEY` és `EMAIL_FROM` nélkül az app a `ConsoleEmailProvider`-t használja: az e-mailek
