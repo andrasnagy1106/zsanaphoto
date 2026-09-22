@@ -21,7 +21,7 @@ app/
   (public)/        publikus oldalak (Header/Footer layout)
   admin/
     (auth)/        /admin/login - guard nélkül
-    (dashboard)/    /admin, /admin/bookings, /admin/photo-orders, ... - requireAdmin() véd
+    (dashboard)/    /admin, /admin/bookings, /admin/event-photos, /admin/photo-orders, ... - requireAdmin() véd
   (public)/fotorendeles/  PIN-nel megnyitható intézményi fotórendelő
   api/availability/  publikus GET route handlerek (elérhető napok/időpontok)
   actions/          "use server" Server Actionök (booking, inquiry, auth, admin mutációk)
@@ -156,9 +156,12 @@ Ajánlott két külön Neon adatbázis: `zsanaphoto-dev` (helyi fejlesztés) és
   szükséges (`/admin/bookings`).
 - Az egyedi, két nagybetűből és öt számjegyből álló PIN kizárólag intézményi foglaláshoz készül.
   Megerősített vagy teljesített foglalás PIN-jével a fejlécből megnyitható a privát fotórendelő.
-- A fotórendelő jelenleg bemutató stock képekkel működik. Képenként méret és darabszám választható,
-  a rendelési felület folyamatosan és valós időben kalkulálja a méretenkénti részösszegeket, darabszámot
-  és a végösszeget.
+- **Esemény fotók kezelése az adminban (`/admin/event-photos`):**
+  - Esemény/PIN alapján szűrhető felület a képek Cloudinary tárhelyre való feltöltésére és menedzselésére.
+  - Egyszerre egy vagy több kép feltöltése (drag & drop és fájlválasztó), automatikus PIN szerinti Cloudinary mappába szervezés (`zsanaphoto/events/{PIN}`).
+  - Automatikus vízjelezett előnézet generálás, fájlnév, felbontás, méret és feltöltési dátum megjelenítése.
+  - Egyenkénti vagy kötegelt (tömeges) törlési lehetőség a Cloudinary-ről és az adatbázisból.
+- A fotórendelő felületen a rendelési árak folyamatosan és valós időben kalkulálódnak méretenkénti bontásban és végösszeggel.
   - Alapértelmezett méretek és árak: `10x15 cm` (600 Ft / db), `13x18 cm` (750 Ft / db),
     `15x21 cm` (1 200 Ft / db), `A4 21x30 cm` (1 900 Ft / db).
   - **Globális alapárak módosítása:** Az `/admin/settings` oldalon a rendszer globális alapértelmezett darabárai

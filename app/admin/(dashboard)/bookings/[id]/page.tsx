@@ -53,7 +53,17 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-foreground/60">PIN</dt>
-              <dd className="font-mono font-semibold text-foreground">{booking.pin ?? "-"}</dd>
+              <dd className="font-mono font-semibold text-foreground flex items-center gap-2">
+                <span>{booking.pin ?? "-"}</span>
+                {booking.pin && (
+                  <Link
+                    href={`/admin/event-photos?pin=${booking.pin}`}
+                    className="text-xs font-sans font-semibold text-accent hover:underline"
+                  >
+                    (Fotók kezelése →)
+                  </Link>
+                )}
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-foreground/60">Dátum</dt>

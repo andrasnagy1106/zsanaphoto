@@ -1,8 +1,10 @@
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   bookings,
   eventPhotos,
+  services,
+  type Booking,
   type EventPhoto,
   type NewEventPhoto,
 } from "@/db/schema";
@@ -70,6 +72,48 @@ export async function listPhotosByBookingId(bookingId: string): Promise<EventPho
     .from(eventPhotos)
     .where(eq(eventPhotos.bookingId, bookingId))
     .orderBy(asc(eventPhotos.sortOrder), asc(eventPhotos.createdAt));
+}
+
+export interface EventWithPinOption {
+  bookingId: string;
+  bookingNumber: string;
+  pin: string;
+  customerName: string;
+  customerEmail: string;
+  serviceName: string;
+  startAt: Date;
+  status: Booking["status"];
+  photoCount: number;
+}
+
+/**
+ * Returns all bookings that have an assigned PIN code along with their photo counts.
+ */
+export async function listEventsWithPin(): Promise<EventWithPinOption[]> {
+  const rows = await db
+    .select({
+      booking: bookings,
+      service: services,
+      photoCount: sql<number>`count(${eventPhotos.id})::int`,
+    })
+    .from(bookings)
+    .innerJoin(services, eq(bookings.serviceId, services.id))
+    .leftJoin(eventPhotos, eq(bookings.id, eventPhotos.bookingId))
+    .where(isNotNull(bookings.pin))
+    .groupBy(bookings.id, services.id)
+    .orderBy(desc(bookings.startAt));
+
+  return rows.map((row) => ({
+    bookingId: row.booking.id,
+    bookingNumber: row.booking.bookingNumber,
+    pin: row.booking.pin!,
+    customerName: row.booking.customerName,
+    customerEmail: row.booking.customerEmail,
+    serviceName: row.service.name,
+    startAt: row.booking.startAt,
+    status: row.booking.status,
+    photoCount: row.photoCount,
+  }));
 }
 
 /**
