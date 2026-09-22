@@ -3,6 +3,7 @@ import { listBookings } from "@/lib/services/booking-service";
 import { listServices } from "@/lib/services/service-service";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { BookingRowActions } from "@/components/admin/BookingRowActions";
+import { CreateEventUserModal } from "@/components/admin/CreateEventUserModal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
@@ -68,29 +69,32 @@ export default async function AdminBookingsPage({ searchParams }: AdminBookingsP
             Összesen {bookings.length} foglalás a kiválasztott szűrés szerint.
           </p>
         </div>
-        <a
-          href={exportUrl}
-          download
-          className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent hover:text-accent shadow-sm"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+        <div className="flex flex-wrap items-center gap-3">
+          <CreateEventUserModal services={services} />
+          <a
+            href={exportUrl}
+            download
+            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent hover:text-accent shadow-sm"
           >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Exportálás Excelbe (CSV)
-        </a>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Exportálás Excelbe (CSV)
+          </a>
+        </div>
       </div>
 
       {/* Filter and Sort bar */}

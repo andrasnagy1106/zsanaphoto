@@ -24,3 +24,23 @@ export const rescheduleBookingByCustomerSchema = z.object({
 });
 
 export type RescheduleBookingByCustomerForm = z.infer<typeof rescheduleBookingByCustomerSchema>;
+
+export const createAdminEventUserSchema = z.object({
+  serviceId: z.string().min(1, "Válassz eseményt / szolgáltatást."),
+  customerName: z.string().trim().min(2, "A név legalább 2 karakter legyen.").max(100),
+  customerEmail: z.string().trim().email("Adj meg érvényes e-mail címet.").max(200),
+  customerPhone: z.string().trim().max(30).optional().default("+36"),
+  pin: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]{2}\d{5}$/, "A PIN 2 betű és 5 számjegy legyen (pl. AB12345).")
+    .optional()
+    .or(z.literal("")),
+  date: z.string().optional(),
+  status: z.enum(["PENDING", "CONFIRMED", "COMPLETED"]).optional().default("COMPLETED"),
+  notes: z.string().trim().max(1000).optional(),
+  sendEmail: z.boolean().optional().default(false),
+});
+
+export type CreateAdminEventUserForm = z.infer<typeof createAdminEventUserSchema>;

@@ -172,6 +172,92 @@ async function sendBookingCreatedEmails(
   }
 }
 
+export interface CreateAdminEventUserInput {
+  serviceId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  pin?: string;
+  startAt?: Date;
+  status?: Booking["status"];
+  notes?: string;
+  sendEmail?: boolean;
+}
+
+export async function createAdminEventUser(input: CreateAdminEventUserInput): Promise<Booking> {
+  const [service] = await db
+    .select()
+    .from(services)
+    .where(eq(services.id, input.serviceId))
+    .limit(1);
+
+  if (!service) {
+    throw new NotFoundError("A kiválasztott esemény / szolgáltatás nem található.");
+  }
+
+  const start = input.startAt ?? new Date();
+  const end = addMinutes(start, service.durationMinutes || 60);
+  const year = getZonedYear(start);
+  const status = input.status ?? "COMPLETED";
+
+  let assignedPin = input.pin?.trim().toUpperCase() || generateBookingPin();
+
+  if (input.pin?.trim()) {
+    const [existing] = await db
+      .select({ id: bookings.id })
+      .from(bookings)
+      .where(eq(bookings.pin, assignedPin))
+      .limit(1);
+    if (existing) {
+      throw new Error(`A(z) ${assignedPin} PIN kód már használatban van.`);
+    }
+  }
+
+  const created = await db.transaction(async (tx) => {
+    let bookingNumber = await generateBookingNumber(tx, year);
+    const now = new Date();
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      try {
+        const [row] = await tx
+          .insert(bookings)
+          .values({
+            bookingNumber,
+            pin: assignedPin,
+            serviceId: input.serviceId,
+            customerName: input.customerName.trim(),
+            customerEmail: input.customerEmail.trim(),
+            customerPhone: input.customerPhone?.trim() || "-",
+            startAt: start,
+            endAt: end,
+            status,
+            notes: input.notes?.trim() || null,
+            confirmedAt: status === "CONFIRMED" || status === "COMPLETED" ? now : null,
+          })
+          .returning();
+        if (row) return row;
+      } catch (error) {
+        if (isPgErrorCode(error, UNIQUE_VIOLATION) && attempt < 4) {
+          bookingNumber = `${bookingNumber}-${attempt + 1}`;
+          if (!input.pin?.trim()) {
+            assignedPin = generateBookingPin();
+          }
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new Error("Nem sikerült az esemény felhasználót létrehozni.");
+  });
+
+  if (input.sendEmail) {
+    await sendBookingCreatedEmails(created, service.name, service.approvalMode);
+  }
+
+  return created;
+}
+
 export async function getBookingById(id: string): Promise<Booking | null> {
   const [booking] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
   return booking ?? null;

@@ -156,11 +156,12 @@ Ajánlott két külön Neon adatbázis: `zsanaphoto-dev` (helyi fejlesztés) és
   szükséges (`/admin/bookings`).
 - Az egyedi, két nagybetűből és öt számjegyből álló PIN kizárólag intézményi foglaláshoz készül.
   Megerősített vagy teljesített foglalás PIN-jével a fejlécből megnyitható a privát fotórendelő.
-- **Esemény fotók kezelése az adminban (`/admin/event-photos`):**
-  - Esemény/PIN alapján szűrhető felület a képek Cloudinary tárhelyre való feltöltésére és menedzselésére.
-  - Egyszerre egy vagy több kép feltöltése (drag & drop és fájlválasztó), automatikus PIN szerinti Cloudinary mappába szervezés (`zsanaphoto/events/{PIN}`).
-  - Automatikus vízjelezett előnézet generálás, fájlnév, felbontás, méret és feltöltési dátum megjelenítése.
-  - Egyenkénti vagy kötegelt (tömeges) törlési lehetőség a Cloudinary-ről és az adatbázisból.
+- **Esemény fotók & PIN kezelés az adminban (`/admin/event-photos` és `/admin/bookings`):**
+  - **Új ügyfél & PIN létrehozása:** Az admin felületen modál ablakban bármikor létrehozható új ügyfél bármelyik eseményhez/szolgáltatáshoz, egyedi vagy automatikusan generált PIN-kóddal és opcionális értesítő e-maillel.
+  - **Esemény/Szolgáltatás szerinti szűrés:** A fotókezelőben eseménykategóriák szerint szűrhető a PIN-kódok és ügyfelek listája.
+  - **Nézetváltó:**
+    - **📸 Teljes képek galériában:** Képek feltöltése a PIN Cloudinary mappájába (`zsanaphoto/events/{PIN}`), vízjelezett előnézet, nagyfelbontású lightbox, metaadatok és tömeges kijelölés/törlés.
+    - **📋 Megrendelő / Leadott rendelés:** Valós idejű rendeléskövetés az adott PIN-hez (státuszállítás, tételes papírkép táblázat árakkal, digitális változat csomag, megjegyzés, végösszeg).
 - A fotórendelő felületen a rendelési árak folyamatosan és valós időben kalkulálódnak méretenkénti bontásban és végösszeggel.
   - Alapértelmezett méretek és árak: `10x15 cm` (600 Ft / db), `13x18 cm` (750 Ft / db),
     `15x21 cm` (1 200 Ft / db), `A4 21x30 cm` (1 900 Ft / db).

@@ -77,10 +77,14 @@ export async function listPhotosByBookingId(bookingId: string): Promise<EventPho
 export interface EventWithPinOption {
   bookingId: string;
   bookingNumber: string;
+  manageToken: string;
   pin: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
+  serviceId: string;
   serviceName: string;
+  serviceSlug: string;
   startAt: Date;
   status: Booking["status"];
   photoCount: number;
@@ -106,10 +110,14 @@ export async function listEventsWithPin(): Promise<EventWithPinOption[]> {
   return rows.map((row) => ({
     bookingId: row.booking.id,
     bookingNumber: row.booking.bookingNumber,
+    manageToken: row.booking.manageToken,
     pin: row.booking.pin!,
     customerName: row.booking.customerName,
     customerEmail: row.booking.customerEmail,
+    customerPhone: row.booking.customerPhone,
+    serviceId: row.service.id,
     serviceName: row.service.name,
+    serviceSlug: row.service.slug,
     startAt: row.booking.startAt,
     status: row.booking.status,
     photoCount: row.photoCount,

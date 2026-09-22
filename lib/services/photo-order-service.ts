@@ -16,7 +16,6 @@ import {
   resolvePhotoPrices,
   type PhotoPrintSize,
 } from "@/lib/photo-order-catalog";
-import { INSTITUTION_SERVICE_SLUG } from "@/lib/constants";
 import { getEmailProvider } from "@/lib/providers/email";
 import { NotFoundError } from "@/lib/utils/errors";
 import { getSiteSettings } from "./availability-service";
@@ -60,7 +59,7 @@ export async function getPhotoOrderAccessByPin(pin: string): Promise<PhotoOrderA
     .where(
       and(
         eq(bookings.pin, pin),
-        eq(services.slug, INSTITUTION_SERVICE_SLUG),
+        isNotNull(bookings.pin),
         inArray(bookings.status, PHOTO_ORDER_ACCESS_STATUSES),
       ),
     )
@@ -78,7 +77,6 @@ export async function getPhotoOrderAccessByToken(accessToken: string): Promise<P
       and(
         eq(bookings.manageToken, accessToken),
         isNotNull(bookings.pin),
-        eq(services.slug, INSTITUTION_SERVICE_SLUG),
         inArray(bookings.status, PHOTO_ORDER_ACCESS_STATUSES),
       ),
     )
