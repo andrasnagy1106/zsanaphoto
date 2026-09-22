@@ -22,7 +22,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="font-display text-xl text-foreground" onClick={() => setMenuOpen(false)}>
-          Zsana Photo
+          ZsaNa Photo
         </Link>
 
         <nav className="hidden lg:flex items-center gap-8" aria-label="Fő navigáció">

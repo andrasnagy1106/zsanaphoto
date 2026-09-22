@@ -29,7 +29,7 @@ export function buildBookingCreatedEmail(input: BookingEmailInput) {
 
   if (input.approvalMode === "AUTO") {
     return {
-      subject: "Időpontfoglalás visszaigazolása - Zsana Photo",
+      subject: "Időpontfoglalás visszaigazolása - ZsaNa Photo",
       text: `Kedves ${input.customerName}!
 
 Sikeresen lefoglaltad az alábbi időpontot:
@@ -43,12 +43,12 @@ ${consentSection}
 
 Várunk szeretettel!
 
-Zsana Photo`,
+ZsaNa Photo`,
     };
   }
 
   return {
-    subject: "Foglalási igény érkezett - Zsana Photo",
+    subject: "Foglalási igény érkezett - ZsaNa Photo",
     text: `Kedves ${input.customerName}!
 
 Köszönjük az időpontfoglalási igényedet:
@@ -62,7 +62,7 @@ ${consentSection}
 
 A végleges visszaigazolásról e-mailben értesítünk, amint a fotós jóváhagyta a foglalást.
 
-Zsana Photo`,
+ZsaNa Photo`,
   };
 }
 
@@ -91,7 +91,7 @@ export function buildBookingConfirmedEmail(input: BookingEmailInput) {
   const manageSection = formatManageSection(input.manageUrl);
 
   return {
-    subject: "Időpontfoglalás visszaigazolva - Zsana Photo",
+    subject: "Időpontfoglalás visszaigazolva - ZsaNa Photo",
     text: `Kedves ${input.customerName}!
 
 Örömmel értesítünk, hogy az alábbi időpontod véglegesen visszaigazolva:
@@ -104,7 +104,7 @@ Foglalási azonosító: ${input.bookingNumber}${manageSection}
 
 Várunk szeretettel!
 
-Zsana Photo`,
+ZsaNa Photo`,
   };
 }
 
@@ -112,7 +112,7 @@ export function buildBookingCancelledEmail(input: BookingEmailInput) {
   const { date, time } = formatWhen(input);
 
   return {
-    subject: "Időpontfoglalás lemondva - Zsana Photo",
+    subject: "Időpontfoglalás lemondva - ZsaNa Photo",
     text: `Kedves ${input.customerName}!
 
 Az alábbi időpontfoglalásod lemondásra került:
@@ -125,7 +125,7 @@ Foglalási azonosító: ${input.bookingNumber}
 
 Ha kérdésed van, keress minket bizalommal.
 
-Zsana Photo`,
+ZsaNa Photo`,
   };
 }
 
@@ -150,7 +150,7 @@ export function buildBookingRescheduledEmail(input: BookingEmailInput) {
   const manageSection = formatManageSection(input.manageUrl);
 
   return {
-    subject: "Időpont módosítva - Zsana Photo",
+    subject: "Időpont módosítva - ZsaNa Photo",
     text: `Kedves ${input.customerName}!
 
 A fotózási időpontod sikeresen módosult az új időpontra:
@@ -163,7 +163,7 @@ Foglalási azonosító: ${input.bookingNumber}${manageSection}
 
 Várunk szeretettel!
 
-Zsana Photo`,
+ZsaNa Photo`,
   };
 }
 
@@ -207,7 +207,7 @@ ${formatPhotoOrderItems(input)}
 
 A rendelés feldolgozásáról értesítünk.
 
-Zsana Photo`,
+ZsaNa Photo`,
   };
 }
 

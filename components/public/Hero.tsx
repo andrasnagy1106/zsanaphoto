@@ -9,7 +9,7 @@ export function Hero() {
       />
       <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:py-32">
         <div className="max-w-2xl">
-          <p className="text-sm font-medium uppercase tracking-wide text-accent">Zsana Photo</p>
+          <p className="text-sm font-medium uppercase tracking-wide text-accent">ZsaNa Photo</p>
           <h1 className="mt-4 font-display text-4xl leading-tight text-foreground sm:text-5xl lg:text-6xl">
             Emlékek, amiket jó újra és újra megnézni.
           </h1>

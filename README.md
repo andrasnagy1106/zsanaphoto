@@ -1,6 +1,6 @@
-# Zsana Photo
+# ZsaNa Photo
 
-Zsana Photo teljes körű Next.js (App Router) alkalmazása: publikus fotós weboldal valódi online
+ZsaNa Photo teljes körű Next.js (App Router) alkalmazása: publikus fotós weboldal valódi online
 időpontfoglalással, admin felülettel, PostgreSQL (Neon) adatbázissal és e-mail értesítésekkel.
 
 A teljes specifikációt lásd: [`Zsana_Photo_MVP_v4.md`](./Zsana_Photo_MVP_v4.md).

@@ -6,7 +6,7 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="grid gap-10 sm:grid-cols-3">
           <div>
-            <p className="font-display text-lg text-foreground">Zsana Photo</p>
+            <p className="font-display text-lg text-foreground">ZsaNa Photo</p>
             <p className="mt-2 text-sm text-foreground/70 leading-relaxed">
               Emlékek, amiket jó újra és újra megnézni. Családi és intézményi fotózás.
             </p>
@@ -34,7 +34,7 @@ export function Footer() {
         </div>
 
         <p className="mt-10 border-t border-border pt-6 text-xs text-foreground/50">
-          © {new Date().getFullYear()} Zsana Photo. Minden jog fenntartva.
+          © {new Date().getFullYear()} ZsaNa Photo. Minden jog fenntartva.
         </p>
       </div>
     </footer>

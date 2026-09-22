@@ -4,7 +4,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 
 export const metadata: Metadata = {
   title: "Rólam",
-  description: "Ismerd meg a Zsana Photo mögött álló fotóst.",
+  description: "Ismerd meg a ZsaNa Photo mögött álló fotóst.",
 };
 
 export default function AboutPage() {
@@ -12,7 +12,7 @@ export default function AboutPage() {
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <div className="grid gap-10 lg:grid-cols-[2fr_1fr] lg:items-start">
         <div>
-          <SectionHeading eyebrow="Rólam" title="Sziasztok, Zsana vagyok" />
+          <SectionHeading eyebrow="Rólam" title="Sziasztok, ZsaNa vagyok" />
           <div className="mt-6 space-y-4 text-foreground/70 leading-relaxed">
             <p>
               Több éve fotózok családokat és intézményeket, és minden alkalommal ugyanaz a célom:

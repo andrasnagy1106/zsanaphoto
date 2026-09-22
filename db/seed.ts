@@ -163,7 +163,7 @@ async function main() {
     await db.insert(schema.adminUsers).values({
       email: DEV_ADMIN_EMAIL,
       passwordHash,
-      name: "Zsana Photo Admin",
+      name: "ZsaNa Photo Admin",
     });
     console.log(
       `Development admin created: ${DEV_ADMIN_EMAIL} / ${DEV_ADMIN_PASSWORD} (development only - change in production!)`,

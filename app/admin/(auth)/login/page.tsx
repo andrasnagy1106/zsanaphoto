@@ -16,7 +16,7 @@ export default async function AdminLoginPage() {
 
   return (
     <div className="w-full max-w-sm rounded-xl border border-border bg-white p-8 shadow-sm">
-      <p className="font-display text-2xl text-foreground">Zsana Photo Admin</p>
+      <p className="font-display text-2xl text-foreground">ZsaNa Photo Admin</p>
       <p className="mt-1 text-sm text-foreground/60">Jelentkezz be a kezelőfelület eléréséhez.</p>
       <div className="mt-6">
         <LoginForm />

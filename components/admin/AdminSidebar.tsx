@@ -48,7 +48,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
   return (
     <>
       <div className="lg:hidden flex items-center justify-between border-b border-border bg-white px-4 py-3">
-        <span className="font-display text-lg text-foreground">Zsana Photo Admin</span>
+        <span className="font-display text-lg text-foreground">ZsaNa Photo Admin</span>
         <button
           type="button"
           className="flex h-11 w-11 items-center justify-center rounded-md"
@@ -74,7 +74,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
       ) : null}
 
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-border lg:bg-white lg:px-4 lg:py-6">
-        <p className="px-3 font-display text-lg text-foreground">Zsana Photo Admin</p>
+        <p className="px-3 font-display text-lg text-foreground">ZsaNa Photo Admin</p>
         <p className="px-3 pb-4 text-xs text-foreground/50">{adminName}</p>
         <nav className="flex-1">
           <NavLinks pathname={pathname} />

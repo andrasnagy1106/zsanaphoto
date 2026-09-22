@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Foglalás kezelése",
-  description: "Időpont módosítása vagy lemondása - Zsana Photo",
+  description: "Időpont módosítása vagy lemondása - ZsaNa Photo",
   robots: { index: false, follow: false },
 };
 

@@ -1,4 +1,4 @@
-# Zsana Photo - MVP fejlesztési specifikáció v4
+# ZsaNa Photo - MVP fejlesztési specifikáció v4
 
 ## 0. Dokumentum célja
 
@@ -31,7 +31,7 @@ Az MVP-ben **nem kell** implementálni:
 
 # 1. Üzleti cél
 
-A Zsana Photo egy fotós szolgáltatásokat bemutató, modern, mobilbarát weboldal.
+A ZsaNa Photo egy fotós szolgáltatásokat bemutató, modern, mobilbarát weboldal.
 
 A látogató elsődleges célja:
 
@@ -865,7 +865,7 @@ Adminnak mindig.
 Subject:
 
 ```text
-Időpontfoglalás visszaigazolása - Zsana Photo
+Időpontfoglalás visszaigazolása - ZsaNa Photo
 ```
 
 Body:
@@ -883,7 +883,7 @@ Foglalási azonosító: {bookingNumber}
 
 Várunk szeretettel!
 
-Zsana Photo
+ZsaNa Photo
 ```
 
 ## MANUAL
@@ -891,7 +891,7 @@ Zsana Photo
 Subject:
 
 ```text
-Foglalási igény érkezett - Zsana Photo
+Foglalási igény érkezett - ZsaNa Photo
 ```
 
 A tartalom jelezze, hogy az időpont véglegesítése admin jóváhagyásához kötött.

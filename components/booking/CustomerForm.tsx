@@ -100,7 +100,7 @@ export function CustomerForm({
               {...register("photoPublicationConsent")}
             />
             <span>
-              Hozzájárulok, hogy a gyermekemről készült képek megjelenjenek a Zsana Photo
+              Hozzájárulok, hogy a gyermekemről készült képek megjelenjenek a ZsaNa Photo
               weboldalán és/vagy az intézmény Facebook-csoportjában.
             </span>
           </label>

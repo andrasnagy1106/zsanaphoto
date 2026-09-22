@@ -22,16 +22,16 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   title: {
-    default: "Zsana Photo - Családi és intézményi fotózás",
-    template: "%s | Zsana Photo",
+    default: "ZsaNa Photo - Családi és intézményi fotózás",
+    template: "%s | ZsaNa Photo",
   },
   description:
     "Családi és intézményi fotózás természetes, időtálló képekkel. Foglalj időpontot online.",
   openGraph: {
     type: "website",
     locale: "hu_HU",
-    siteName: "Zsana Photo",
-    title: "Zsana Photo - Családi és intézményi fotózás",
+    siteName: "ZsaNa Photo",
+    title: "ZsaNa Photo - Családi és intézményi fotózás",
     description:
       "Családi és intézményi fotózás természetes, időtálló képekkel. Foglalj időpontot online.",
   },
