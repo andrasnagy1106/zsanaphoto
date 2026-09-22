@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PhotoOrderForm } from "@/components/booking/PhotoOrderForm";
-import { resolvePhotoPrices } from "@/lib/photo-order-catalog";
+import { resolvePhotoPrices, STOCK_PHOTOS } from "@/lib/photo-order-catalog";
 import { getSiteSettings } from "@/lib/services/availability-service";
 import {
   getActivePhotoOrderForBooking,
   getPhotoOrderAccessByToken,
 } from "@/lib/services/photo-order-service";
+import { listPhotosByBookingId } from "@/lib/services/photo-storage-service";
 
 export const metadata: Metadata = {
   title: "Fotók megtekintése és rendelés",
@@ -38,14 +39,31 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
     );
   }
 
-  const [activeOrder, settings] = await Promise.all([
+  const [activeOrder, settings, uploadedPhotos] = await Promise.all([
     getActivePhotoOrderForBooking(access.booking.id),
     getSiteSettings(),
+    listPhotosByBookingId(access.booking.id),
   ]);
+
   const prices = resolvePhotoPrices(
     access.booking.customPhotoPrices,
     settings.defaultPhotoPrices,
   );
+
+  const photos =
+    uploadedPhotos.length > 0
+      ? uploadedPhotos.map((p) => ({
+          id: p.id,
+          title: p.title,
+          src: p.watermarkedUrl,
+          alt: p.title,
+        }))
+      : STOCK_PHOTOS.map((p) => ({
+          id: p.id,
+          title: p.title,
+          src: p.src,
+          alt: p.alt,
+        }));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
@@ -53,6 +71,9 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
         accessToken={token!}
         customerName={access.booking.customerName}
         bookingNumber={access.booking.bookingNumber}
+        pin={access.booking.pin ?? undefined}
+        photos={photos}
+        isRealEventPhotos={uploadedPhotos.length > 0}
         prices={prices}
         initialOrder={activeOrder ? {
           orderNumber: activeOrder.order.orderNumber,

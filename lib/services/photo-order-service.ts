@@ -20,6 +20,7 @@ import { INSTITUTION_SERVICE_SLUG } from "@/lib/constants";
 import { getEmailProvider } from "@/lib/providers/email";
 import { NotFoundError } from "@/lib/utils/errors";
 import { getSiteSettings } from "./availability-service";
+import { listPhotosByBookingId } from "./photo-storage-service";
 
 const PHOTO_ORDER_ACCESS_STATUSES: Booking["status"][] = ["CONFIRMED", "COMPLETED"];
 const ACTIVE_PHOTO_ORDER_STATUSES: PhotoOrder["status"][] = ["NEW", "PROCESSING"];
@@ -115,16 +116,25 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
   const access = await getPhotoOrderAccessByToken(input.accessToken);
   if (!access) throw new NotFoundError("A fotók nem érhetők el ezzel a hozzáféréssel.");
 
-  const settings = await getSiteSettings();
-  const catalogById = new Map<string, (typeof STOCK_PHOTOS)[number]>(
-    STOCK_PHOTOS.map((photo) => [photo.id, photo]),
-  );
+  const [settings, eventPhotosList] = await Promise.all([
+    getSiteSettings(),
+    listPhotosByBookingId(access.booking.id),
+  ]);
+
+  const photoLookup = new Map<string, { title: string }>();
+  for (const photo of STOCK_PHOTOS) {
+    photoLookup.set(photo.id, { title: photo.title });
+  }
+  for (const photo of eventPhotosList) {
+    photoLookup.set(photo.id, { title: photo.title });
+  }
+
   const prices = resolvePhotoPrices(
     access.booking.customPhotoPrices,
     settings.defaultPhotoPrices,
   );
   const trustedItems = input.items.map((item) => {
-    const photo = catalogById.get(item.photoId);
+    const photo = photoLookup.get(item.photoId);
     if (!photo) throw new NotFoundError("A kiválasztott fotó nem található.");
     const unitPrice = prices[item.size] ?? 0;
     const totalPrice = unitPrice * item.quantity;

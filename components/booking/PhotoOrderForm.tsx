@@ -11,10 +11,20 @@ import {
   type PhotoPrintSize,
 } from "@/lib/photo-order-catalog";
 
+export interface PhotoOrderItemDisplay {
+  id: string;
+  title: string;
+  src: string;
+  alt?: string;
+}
+
 interface PhotoOrderFormProps {
   accessToken: string;
   customerName: string;
   bookingNumber: string;
+  pin?: string;
+  photos?: PhotoOrderItemDisplay[];
+  isRealEventPhotos?: boolean;
   prices?: Record<PhotoPrintSize, number>;
   initialOrder?: {
     orderNumber: string;
@@ -37,6 +47,9 @@ export function PhotoOrderForm({
   accessToken,
   customerName,
   bookingNumber,
+  pin,
+  photos = STOCK_PHOTOS as unknown as PhotoOrderItemDisplay[],
+  isRealEventPhotos = false,
   prices = DEFAULT_PHOTO_PRICES,
   initialOrder,
 }: PhotoOrderFormProps) {
@@ -44,6 +57,7 @@ export function PhotoOrderForm({
   const [notes, setNotes] = useState(initialOrder?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
   const [activeOrderNumber, setActiveOrderNumber] = useState(initialOrder?.orderNumber ?? null);
+  const [previewPhoto, setPreviewPhoto] = useState<PhotoOrderItemDisplay | null>(null);
   const [savedOrder, setSavedOrder] = useState<{
     orderNumber: string;
     wasUpdated: boolean;
@@ -54,7 +68,7 @@ export function PhotoOrderForm({
 
   // Calculate per-size totals and grand totals
   const sizeBreakdown = PHOTO_PRINT_SIZES.map((size) => {
-    const count = STOCK_PHOTOS.reduce((sum, photo) => {
+    const count = photos.reduce((sum, photo) => {
       return sum + (quantities[getQuantityKey(photo.id, size)] ?? 0);
     }, 0);
     const unitPrice = prices[size] ?? 0;
@@ -72,7 +86,7 @@ export function PhotoOrderForm({
   }
 
   function submitPhotoOrder() {
-    const items = STOCK_PHOTOS.flatMap((photo) =>
+    const items = photos.flatMap((photo) =>
       PHOTO_PRINT_SIZES.flatMap((size) => {
         const quantity = quantities[getQuantityKey(photo.id, size)] ?? 0;
         return quantity > 0 ? [{ photoId: photo.id, size, quantity }] : [];
@@ -127,9 +141,16 @@ export function PhotoOrderForm({
   return (
     <div>
       <div className="border-b border-border pb-8">
-        <p className="text-sm font-semibold uppercase text-accent">
-          {activeOrderNumber ? "Aktív fotórendelés" : "Privát fotórendelés"}
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-semibold uppercase text-accent">
+            {activeOrderNumber ? "Aktív fotórendelés" : "Privát fotórendelés"}
+          </p>
+          {pin && (
+            <span className="rounded-full bg-accent/10 px-2.5 py-0.5 font-mono text-xs font-semibold text-accent">
+              PIN: {pin}
+            </span>
+          )}
+        </div>
         <h1 className="mt-3 font-display text-3xl sm:text-4xl">
           {activeOrderNumber ? "Rendelés módosítása" : "Válaszd ki a képeket"}
         </h1>
@@ -137,7 +158,9 @@ export function PhotoOrderForm({
           {customerName} · Foglalás: {bookingNumber}
         </p>
         <p className="mt-2 max-w-2xl text-sm text-foreground/55">
-          A jelenlegi képek bemutató stock fotók. Képenként több méretből is rendelhetsz.
+          {isRealEventPhotos
+            ? "Az eseményen készült privát fotóid. Kattints a képre a nagyításhoz, és válaszd ki a kívánt méretet és darabszámot."
+            : "A jelenlegi képek bemutató stock fotók. Képenként több méretből is rendelhetsz."}
         </p>
         {activeOrderNumber ? (
           <p className="mt-2 font-mono text-sm font-semibold text-foreground/70">{activeOrderNumber}</p>
@@ -157,51 +180,71 @@ export function PhotoOrderForm({
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {STOCK_PHOTOS.map((photo) => (
-          <article key={photo.id} className="overflow-hidden rounded-lg border border-border bg-white flex flex-col justify-between">
-            <div>
-              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-                <Image src={photo.src} alt={photo.alt} fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw" className="object-cover" />
-              </div>
-              <div className="p-4">
-                <h2 className="font-display text-xl">{photo.title}</h2>
-                <div className="mt-4 space-y-2.5">
-                  {PHOTO_PRINT_SIZES.map((size) => {
-                    const qty = quantities[getQuantityKey(photo.id, size)] ?? 0;
-                    const unitPrice = prices[size] ?? 0;
-                    return (
-                      <div key={size} className="flex items-center justify-between gap-3 text-sm py-1 border-b border-border/40 last:border-0">
-                        <div className="min-w-0">
-                          <span className="font-medium block truncate">{size}</span>
-                          <span className="text-xs text-foreground/60">{formatPrice(unitPrice)} / db</span>
+      {/* Photos Grid */}
+      {photos.length === 0 ? (
+        <div className="my-12 rounded-xl border border-border bg-white p-12 text-center">
+          <p className="text-base font-medium text-foreground">Ehhez a galériához még nincsenek feltöltve fotók.</p>
+          <p className="mt-2 text-sm text-foreground/60">Kérjük, látogass vissza később, vagy lépj kapcsolatba a fotóssal.</p>
+        </div>
+      ) : (
+        <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {photos.map((photo) => (
+            <article key={photo.id} className="overflow-hidden rounded-lg border border-border bg-white flex flex-col justify-between">
+              <div>
+                <div
+                  onClick={() => setPreviewPhoto(photo)}
+                  className="group relative aspect-[4/3] overflow-hidden bg-muted cursor-pointer"
+                >
+                  <Image
+                    src={photo.src}
+                    alt={photo.alt ?? photo.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold">
+                    Kattints a nagyításhoz 🔍
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h2 className="font-display text-xl truncate" title={photo.title}>{photo.title}</h2>
+                  <div className="mt-4 space-y-2.5">
+                    {PHOTO_PRINT_SIZES.map((size) => {
+                      const qty = quantities[getQuantityKey(photo.id, size)] ?? 0;
+                      const unitPrice = prices[size] ?? 0;
+                      return (
+                        <div key={size} className="flex items-center justify-between gap-3 text-sm py-1 border-b border-border/40 last:border-0">
+                          <div className="min-w-0">
+                            <span className="font-medium block truncate">{size}</span>
+                            <span className="text-xs text-foreground/60">{formatPrice(unitPrice)} / db</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {qty > 0 && (
+                              <span className="text-xs font-semibold text-accent hidden sm:inline">
+                                {formatPrice(qty * unitPrice)}
+                              </span>
+                            )}
+                            <input
+                              type="number"
+                              min={0}
+                              max={99}
+                              inputMode="numeric"
+                              aria-label={`${photo.title}, ${size} darabszám`}
+                              value={qty}
+                              onChange={(event) => updatePhotoQuantity(photo.id, size, Number(event.target.value))}
+                              className="min-h-10 w-16 rounded-md border border-border px-2 text-center outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+                            />
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {qty > 0 && (
-                            <span className="text-xs font-semibold text-accent hidden sm:inline">
-                              {formatPrice(qty * unitPrice)}
-                            </span>
-                          )}
-                          <input
-                            type="number"
-                            min={0}
-                            max={99}
-                            inputMode="numeric"
-                            aria-label={`${photo.title}, ${size} darabszám`}
-                            value={qty}
-                            onChange={(event) => updatePhotoQuantity(photo.id, size, Number(event.target.value))}
-                            className="min-h-10 w-16 rounded-md border border-border px-2 text-center outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
-          </article>
-        ))}
-      </div>
+            </article>
+          ))}
+        </div>
+      )}
 
       <div className="mt-8 max-w-2xl">
         <label htmlFor="photo-order-notes" className="text-sm font-medium text-foreground">
@@ -266,6 +309,39 @@ export function PhotoOrderForm({
           </div>
         </div>
       </div>
+
+      {/* Customer Preview Modal */}
+      {previewPhoto && (
+        <dialog
+          open
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 w-full h-full border-0"
+          onClick={() => setPreviewPhoto(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[90vh] bg-background rounded-xl p-4 shadow-2xl flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between w-full mb-3">
+              <h3 className="text-sm font-semibold text-foreground truncate">{previewPhoto.title}</h3>
+              <button
+                type="button"
+                onClick={() => setPreviewPhoto(null)}
+                className="size-8 rounded-full bg-muted flex items-center justify-center text-foreground hover:bg-muted/80 text-lg font-bold"
+              >
+                ×
+              </button>
+            </div>
+            <div className="relative w-[80vw] max-w-3xl h-[65vh]">
+              <Image
+                src={previewPhoto.src}
+                alt={previewPhoto.title}
+                fill
+                className="object-contain"
+              />
+            </div>
+          </div>
+        </dialog>
+      )}
     </div>
   );
 }
