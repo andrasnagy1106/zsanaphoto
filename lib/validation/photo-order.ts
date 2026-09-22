@@ -14,8 +14,17 @@ export const photoOrderItemSchema = z.object({
 export const savePhotoOrderSchema = z.object({
   accessToken: z.string().uuid("Érvénytelen hozzáférés."),
   notes: z.string().trim().max(1000, "A megjegyzés legfeljebb 1000 karakter lehet.").optional(),
-  items: z.array(photoOrderItemSchema).min(1, "Válassz legalább egy képet.").max(100),
-}).superRefine(({ items }, context) => {
+  includesDigital: z.boolean().optional().default(false),
+  items: z.array(photoOrderItemSchema).max(100).default([]),
+}).superRefine(({ items, includesDigital }, context) => {
+  if (!includesDigital && items.length === 0) {
+    context.addIssue({
+      code: "custom",
+      path: ["items"],
+      message: "Válassz legalább egy papírképet, vagy jelöld be a digitális változatot.",
+    });
+  }
+
   const itemKeys = items.map((item) => `${item.photoId}:${item.size}`);
   if (new Set(itemKeys).size !== itemKeys.length) {
     context.addIssue({ code: "custom", path: ["items"], message: "Egy kép és méret csak egyszer szerepelhet." });
@@ -39,6 +48,7 @@ export const updateBookingPhotoPricesSchema = z.object({
       "13x18 cm": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
       "15x21 cm": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
       "A4 21x30 cm": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
+      "Digitális változat": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
     })
     .nullable()
     .optional(),

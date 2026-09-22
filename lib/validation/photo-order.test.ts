@@ -30,6 +30,26 @@ describe("savePhotoOrderSchema", () => {
     ).toBe(true);
   });
 
+  it("accepts an order with digital version only and empty items", () => {
+    expect(
+      savePhotoOrderSchema.safeParse({
+        accessToken,
+        includesDigital: true,
+        items: [],
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects an order with no items and no digital version", () => {
+    expect(
+      savePhotoOrderSchema.safeParse({
+        accessToken,
+        includesDigital: false,
+        items: [],
+      }).success,
+    ).toBe(false);
+  });
+
   it("rejects duplicate photo and size lines", () => {
     const item = { photoId: "family-meadow", size: "10x15 cm", quantity: 1 };
     expect(savePhotoOrderSchema.safeParse({ accessToken, items: [item, item] }).success).toBe(false);
@@ -48,6 +68,7 @@ describe("updateBookingPhotoPricesSchema", () => {
           "13x18 cm": 850,
           "15x21 cm": 1300,
           "A4 21x30 cm": 2000,
+          "Digitális változat": 2500,
         },
       }).success,
     ).toBe(true);

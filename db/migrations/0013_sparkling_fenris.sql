@@ -1,0 +1,1 @@
+ALTER TABLE "photo_orders" ADD COLUMN "includes_digital" boolean DEFAULT false NOT NULL;

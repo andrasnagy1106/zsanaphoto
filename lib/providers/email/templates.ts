@@ -186,12 +186,16 @@ Szolgáltatás: ${input.serviceName}
 }
 
 function formatPhotoOrderItems(input: PhotoOrderEmailInput): string {
-  return input.items
-    .map(
-      (item) =>
-        `- ${item.photoTitle} · ${item.size} · ${item.quantity} db × ${formatPrice(item.unitPrice)} = ${formatPrice(item.totalPrice)}`,
-    )
-    .join("\n");
+  const lines = input.items.map(
+    (item) =>
+      `- ${item.photoTitle} · ${item.size} · ${item.quantity} db × ${formatPrice(item.unitPrice)} = ${formatPrice(item.totalPrice)}`,
+  );
+  if (input.includesDigital) {
+    lines.push(
+      "- Digitális változat (digitálisan átadott, megszerkesztett képek online galériában, szabadon felhasználható)",
+    );
+  }
+  return lines.length > 0 ? lines.join("\n") : "- Nincs kiválasztva papírkép (csak digitális átadás)";
 }
 
 export function buildPhotoOrderConfirmationEmail(input: PhotoOrderEmailInput) {
@@ -204,9 +208,9 @@ ${input.isUpdate ? "Sikeresen módosítottuk" : "Sikeresen rögzítettük"} a fo
 Rendelési azonosító: ${input.orderNumber}
 Foglalási azonosító: ${input.bookingNumber}
 Fotózás: ${input.serviceName}
-Megjegyzés: ${input.notes ?? "-"}
+${input.includesDigital ? "Digitális változat: Igen (digitálisan átadott, megszerkesztett képek online galériában)\n" : ""}Megjegyzés: ${input.notes ?? "-"}
 
-Rendelt képek:
+Rendelt tételek:
 ${formatPhotoOrderItems(input)}
 
 Végösszeg: ${formatPrice(input.totalAmount)}
@@ -227,9 +231,9 @@ Foglalási azonosító: ${input.bookingNumber}
 Ügyfél: ${input.customerName}
 E-mail: ${input.customerEmail}
 Fotózás: ${input.serviceName}
-Megjegyzés: ${input.notes ?? "-"}
+${input.includesDigital ? "Digitális változat: Igen\n" : ""}Megjegyzés: ${input.notes ?? "-"}
 
-Rendelt képek:
+Rendelt tételek:
 ${formatPhotoOrderItems(input)}
 
 Végösszeg: ${formatPrice(input.totalAmount)}`,

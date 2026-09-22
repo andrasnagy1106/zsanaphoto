@@ -8,7 +8,7 @@ import {
   PHOTO_PRINT_SIZES,
   STOCK_PHOTOS,
   formatPrice,
-  type PhotoPrintSize,
+  type PhotoPriceKey,
 } from "@/lib/photo-order-catalog";
 
 export interface PhotoOrderItemDisplay {
@@ -25,10 +25,11 @@ interface PhotoOrderFormProps {
   pin?: string;
   photos?: PhotoOrderItemDisplay[];
   isRealEventPhotos?: boolean;
-  prices?: Record<PhotoPrintSize, number>;
+  prices?: Record<PhotoPriceKey, number>;
   initialOrder?: {
     orderNumber: string;
     notes: string | null;
+    includesDigital?: boolean;
     items: Array<{ photoId: string; size: string; quantity: number }>;
   };
 }
@@ -55,6 +56,7 @@ export function PhotoOrderForm({
 }: PhotoOrderFormProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>(() => buildInitialQuantities(initialOrder));
   const [notes, setNotes] = useState(initialOrder?.notes ?? "");
+  const [includesDigital, setIncludesDigital] = useState<boolean>(initialOrder?.includesDigital ?? false);
   const [error, setError] = useState<string | null>(null);
   const [activeOrderNumber, setActiveOrderNumber] = useState(initialOrder?.orderNumber ?? null);
   const [previewPhoto, setPreviewPhoto] = useState<PhotoOrderItemDisplay | null>(null);
@@ -63,8 +65,11 @@ export function PhotoOrderForm({
     wasUpdated: boolean;
     totalQuantity: number;
     totalAmount: number;
+    includesDigital: boolean;
   } | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const digitalUnitPrice = prices["Digitális változat"] ?? DEFAULT_PHOTO_PRICES["Digitális változat"];
 
   // Calculate per-size totals and grand totals
   const sizeBreakdown = PHOTO_PRINT_SIZES.map((size) => {
@@ -78,7 +83,8 @@ export function PhotoOrderForm({
 
   const activeSizeBreakdown = sizeBreakdown.filter((item) => item.count > 0);
   const totalQuantity = sizeBreakdown.reduce((sum, item) => sum + item.count, 0);
-  const totalAmount = sizeBreakdown.reduce((sum, item) => sum + item.subtotal, 0);
+  const printTotalAmount = sizeBreakdown.reduce((sum, item) => sum + item.subtotal, 0);
+  const totalAmount = printTotalAmount + (includesDigital ? digitalUnitPrice : 0);
 
   function updatePhotoQuantity(photoId: string, size: string, quantity: number) {
     const key = getQuantityKey(photoId, size);
@@ -93,14 +99,14 @@ export function PhotoOrderForm({
       }),
     );
 
-    if (items.length === 0) {
-      setError("Adj meg legalább egy darabot valamelyik képből.");
+    if (items.length === 0 && !includesDigital) {
+      setError("Adj meg legalább egy darabot valamelyik képből vagy válaszd a digitális változatot.");
       return;
     }
 
     setError(null);
     startTransition(async () => {
-      const result = await savePhotoOrderAction({ accessToken, notes, items });
+      const result = await savePhotoOrderAction({ accessToken, notes, includesDigital, items });
       if (!result.success || !result.orderNumber) {
         setError(result.error ?? "A rendelés nem sikerült.");
         return;
@@ -111,6 +117,7 @@ export function PhotoOrderForm({
         wasUpdated: result.wasUpdated ?? false,
         totalQuantity,
         totalAmount,
+        includesDigital,
       });
     });
   }
@@ -124,9 +131,16 @@ export function PhotoOrderForm({
         <h1 className="mt-3 font-display text-3xl">Köszönjük, {customerName}!</h1>
         <p className="mt-4 text-foreground/70">A visszaigazolást elküldtük e-mailben.</p>
         <p className="mt-3 font-mono text-lg font-semibold">{savedOrder.orderNumber}</p>
-        <p className="mt-2 text-sm text-foreground/80 font-medium">
-          Összesen {savedOrder.totalQuantity} db kép · Végösszeg: {formatPrice(savedOrder.totalAmount)}
-        </p>
+        <div className="mt-3 text-sm text-foreground/80 font-medium space-y-1">
+          {savedOrder.includesDigital && (
+            <p className="text-accent font-semibold">
+              ✓ Digitális változat kiválasztva
+            </p>
+          )}
+          <p>
+            Összesen {savedOrder.totalQuantity} db papírkép · Végösszeg: {formatPrice(savedOrder.totalAmount)}
+          </p>
+        </div>
         <button
           type="button"
           onClick={() => setSavedOrder(null)}
@@ -178,6 +192,44 @@ export function PhotoOrderForm({
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Digital Version Option Card */}
+      <div className={`mt-6 rounded-xl border-2 p-4 sm:p-5 transition-all ${
+        includesDigital ? "border-accent bg-accent/5 shadow-sm" : "border-border bg-white hover:border-border/80"
+      }`}>
+        <label className="flex items-start gap-3.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={includesDigital}
+            onChange={(e) => setIncludesDigital(e.target.checked)}
+            className="mt-1 size-5 rounded border-border text-accent focus:ring-accent cursor-pointer shrink-0 accent-accent"
+          />
+          <div className="space-y-1.5 select-none flex-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="font-display font-semibold text-foreground text-base sm:text-lg">
+                  Digitális változat kérése
+                </span>
+                {includesDigital ? (
+                  <span className="rounded-full bg-accent text-white px-2.5 py-0.5 text-[11px] font-bold">
+                    Kiválasztva
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-muted text-foreground/60 px-2 py-0.5 text-[11px] font-medium">
+                    Opcionális
+                  </span>
+                )}
+              </div>
+              <span className="text-sm font-bold text-accent">
+                {formatPrice(digitalUnitPrice)}
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-foreground/75 leading-relaxed">
+              Kinyomtatott képek ebben a fotócsomagban nem készülnek, csak digitálisan átadott, megszerkesztett képek, online galériában. Szabadon felhasználható, sokszorosítási lehetőség.
+            </p>
+          </div>
+        </label>
       </div>
 
       {/* Photos Grid */}
@@ -267,15 +319,20 @@ export function PhotoOrderForm({
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <span className="text-sm text-foreground/60">Kiválasztva:</span>
-              <span className="font-display text-2xl font-semibold text-foreground">{totalQuantity} db</span>
+              <span className="font-display text-2xl font-semibold text-foreground">{totalQuantity} db papírkép</span>
+              {includesDigital && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-semibold text-accent border border-accent/20">
+                  + Digitális változat
+                </span>
+              )}
               <span className="text-sm text-foreground/40 hidden sm:inline">|</span>
               <span className="text-sm text-foreground/60">Végösszeg:</span>
               <span className="font-display text-2xl font-bold text-accent">{formatPrice(totalAmount)}</span>
             </div>
 
             {/* Continuous per-size breakdown */}
-            {activeSizeBreakdown.length > 0 ? (
-              <div className="flex flex-wrap gap-2 text-xs pt-1">
+            {activeSizeBreakdown.length > 0 || includesDigital ? (
+              <div className="flex flex-wrap gap-2 text-xs pt-1 items-center">
                 {activeSizeBreakdown.map((item) => (
                   <span
                     key={item.size}
@@ -286,9 +343,12 @@ export function PhotoOrderForm({
                     <span className="text-foreground/60">({formatPrice(item.subtotal)})</span>
                   </span>
                 ))}
+                {includesDigital && activeSizeBreakdown.length === 0 && (
+                  <span className="text-xs text-accent font-medium">Csak digitális átadás</span>
+                )}
               </div>
             ) : (
-              <p className="text-xs text-foreground/50">Még nincs fotó kiválasztva.</p>
+              <p className="text-xs text-foreground/50">Még nincs fotó vagy digitális változat kiválasztva.</p>
             )}
           </div>
 
@@ -297,7 +357,7 @@ export function PhotoOrderForm({
             <button
               type="button"
               onClick={submitPhotoOrder}
-              disabled={isPending || totalQuantity === 0}
+              disabled={isPending || (totalQuantity === 0 && !includesDigital)}
               className="min-h-11 rounded-full bg-accent px-7 py-3 text-sm font-semibold text-white hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
             >
               {isPending

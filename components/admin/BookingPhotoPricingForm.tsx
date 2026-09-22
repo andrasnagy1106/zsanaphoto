@@ -3,16 +3,16 @@
 import { useState, useTransition } from "react";
 import { updateBookingPhotoPricesAction } from "@/app/actions/admin-booking-actions";
 import {
-  PHOTO_PRINT_SIZES,
+  PHOTO_PRICE_KEYS,
   formatPrice,
   resolvePhotoPrices,
-  type PhotoPrintSize,
+  type PhotoPriceKey,
 } from "@/lib/photo-order-catalog";
 
 interface BookingPhotoPricingFormProps {
   bookingId: string;
-  customPrices?: Partial<Record<PhotoPrintSize, number>> | null;
-  defaultSitePrices?: Partial<Record<PhotoPrintSize, number>> | null;
+  customPrices?: Partial<Record<PhotoPriceKey, number>> | null;
+  defaultSitePrices?: Partial<Record<PhotoPriceKey, number>> | null;
 }
 
 export function BookingPhotoPricingForm({
@@ -21,7 +21,7 @@ export function BookingPhotoPricingForm({
   defaultSitePrices,
 }: BookingPhotoPricingFormProps) {
   const fallbackPrices = resolvePhotoPrices(defaultSitePrices);
-  const [prices, setPrices] = useState<Record<PhotoPrintSize, number>>(() =>
+  const [prices, setPrices] = useState<Record<PhotoPriceKey, number>>(() =>
     resolvePhotoPrices(customPrices, defaultSitePrices),
   );
   const [hasCustomPrices, setHasCustomPrices] = useState(
@@ -30,10 +30,10 @@ export function BookingPhotoPricingForm({
   const [isPending, startTransition] = useTransition();
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  function handlePriceChange(size: PhotoPrintSize, value: number) {
+  function handlePriceChange(key: PhotoPriceKey, value: number) {
     setPrices((prev) => ({
       ...prev,
-      [size]: Math.max(0, value || 0),
+      [key]: Math.max(0, value || 0),
     }));
   }
 
@@ -80,7 +80,7 @@ export function BookingPhotoPricingForm({
         <div>
           <h2 className="text-base font-semibold text-foreground">Fotórendelési árak (Esemény árazása)</h2>
           <p className="mt-1 text-xs text-foreground/60">
-            Az ehhez az eseményhez tartozó fotórendelések darabárai (Ft / db).
+            Az ehhez az eseményhez tartozó fotórendelések darabárai és digitális változat ára (Ft).
           </p>
         </div>
         <span
@@ -95,30 +95,30 @@ export function BookingPhotoPricingForm({
       </div>
 
       <form onSubmit={handleSaveCustomPrices} className="mt-5 space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {PHOTO_PRINT_SIZES.map((size) => {
-            const isDifferent = prices[size] !== fallbackPrices[size];
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {PHOTO_PRICE_KEYS.map((key) => {
+            const isDifferent = prices[key] !== fallbackPrices[key];
             return (
-              <div key={size} className="rounded-lg border border-border p-3 bg-muted/20">
-                <label htmlFor={`price-${size}`} className="block text-xs font-semibold text-foreground">
-                  {size}
+              <div key={key} className="rounded-lg border border-border p-3 bg-muted/20">
+                <label htmlFor={`price-${key}`} className="block text-xs font-semibold text-foreground truncate" title={key}>
+                  {key}
                 </label>
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <input
-                    id={`price-${size}`}
+                    id={`price-${key}`}
                     type="number"
                     min={0}
                     max={100000}
                     step={10}
-                    value={prices[size]}
-                    onChange={(e) => handlePriceChange(size, Number(e.target.value))}
+                    value={prices[key]}
+                    onChange={(e) => handlePriceChange(key, Number(e.target.value))}
                     className="w-full rounded-md border border-border bg-white px-2.5 py-1.5 text-sm font-semibold outline-none focus:border-accent focus:ring-1 focus:ring-accent"
                   />
                   <span className="text-xs font-medium text-foreground/60">Ft</span>
                 </div>
                 <p className="mt-1 text-[11px] text-foreground/50">
-                  Alapértelmezett: {formatPrice(fallbackPrices[size])}
-                  {isDifferent && <span className="ml-1 font-semibold text-accent">(módosítva)</span>}
+                  Alapért.: {formatPrice(fallbackPrices[key])}
+                  {isDifferent && <span className="ml-1 font-semibold text-accent">(mód.)</span>}
                 </p>
               </div>
             );

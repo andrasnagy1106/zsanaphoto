@@ -33,6 +33,7 @@ export interface PhotoOrderAccess {
 export interface SavePhotoOrderInput {
   accessToken: string;
   notes?: string;
+  includesDigital?: boolean;
   items: Array<{
     photoId: string;
     size: PhotoPrintSize;
@@ -133,6 +134,8 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
     access.booking.customPhotoPrices,
     settings.defaultPhotoPrices,
   );
+  const digitalPrice = prices["Digitális változat"] ?? 2000;
+
   const trustedItems = input.items.map((item) => {
     const photo = photoLookup.get(item.photoId);
     if (!photo) throw new NotFoundError("A kiválasztott fotó nem található.");
@@ -141,7 +144,8 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
     return { ...item, photoTitle: photo.title, unitPrice, totalPrice };
   });
 
-  const totalAmount = trustedItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  const printTotalAmount = trustedItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  const totalAmount = printTotalAmount + (input.includesDigital ? digitalPrice : 0);
 
   const saved = await db.transaction(async (tx) => {
     await tx.execute(
@@ -167,6 +171,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
         .update(photoOrders)
         .set({
           totalAmount,
+          includesDigital: input.includesDigital ?? false,
           notes: input.notes?.trim() || null,
           status: "NEW",
           updatedAt: new Date(),
@@ -183,6 +188,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
           orderNumber: generatePhotoOrderNumber(),
           bookingId: access.booking.id,
           totalAmount,
+          includesDigital: input.includesDigital ?? false,
           notes: input.notes?.trim() || null,
         })
         .onConflictDoNothing({ target: photoOrders.orderNumber })
@@ -191,20 +197,23 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
 
     if (!savedOrder) throw new Error("Nem sikerült rendelési azonosítót generálni.");
 
-    const createdItems = await tx
-      .insert(photoOrderItems)
-      .values(
-        trustedItems.map((item) => ({
-          orderId: savedOrder.id,
-          photoId: item.photoId,
-          photoTitle: item.photoTitle,
-          size: item.size,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          totalPrice: item.totalPrice,
-        })),
-      )
-      .returning();
+    const createdItems =
+      trustedItems.length > 0
+        ? await tx
+            .insert(photoOrderItems)
+            .values(
+              trustedItems.map((item) => ({
+                orderId: savedOrder.id,
+                photoId: item.photoId,
+                photoTitle: item.photoTitle,
+                size: item.size,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                totalPrice: item.totalPrice,
+              })),
+            )
+            .returning()
+        : [];
 
     return {
       order: savedOrder,
@@ -227,6 +236,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
       notes: saved.order.notes,
       isUpdate: saved.wasUpdated,
       totalAmount: saved.order.totalAmount,
+      includesDigital: saved.order.includesDigital,
       items: saved.items.map((item) => ({
         photoTitle: item.photoTitle,
         size: item.size,

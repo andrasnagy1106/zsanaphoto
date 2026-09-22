@@ -7,11 +7,19 @@ export const PHOTO_PRINT_SIZES = [
 
 export type PhotoPrintSize = (typeof PHOTO_PRINT_SIZES)[number];
 
-export const DEFAULT_PHOTO_PRICES: Record<PhotoPrintSize, number> = {
+export const PHOTO_PRICE_KEYS = [
+  ...PHOTO_PRINT_SIZES,
+  "Digitális változat",
+] as const;
+
+export type PhotoPriceKey = (typeof PHOTO_PRICE_KEYS)[number];
+
+export const DEFAULT_PHOTO_PRICES: Record<PhotoPriceKey, number> = {
   "10x15 cm": 600,
   "13x18 cm": 750,
   "15x21 cm": 1200,
   "A4 21x30 cm": 1900,
+  "Digitális változat": 2000,
 };
 
 export function formatPrice(amount: number): string {
@@ -19,9 +27,9 @@ export function formatPrice(amount: number): string {
 }
 
 export function resolvePhotoPrices(
-  customPrices?: Partial<Record<PhotoPrintSize, number>> | Record<string, number> | null,
-  fallbackPrices?: Partial<Record<PhotoPrintSize, number>> | Record<string, number> | null,
-): Record<PhotoPrintSize, number> {
+  customPrices?: Partial<Record<PhotoPriceKey, number>> | Record<string, number> | null,
+  fallbackPrices?: Partial<Record<PhotoPriceKey, number>> | Record<string, number> | null,
+): Record<PhotoPriceKey, number> {
   const defaults = fallbackPrices
     ? {
         "10x15 cm": typeof fallbackPrices["10x15 cm"] === "number" && fallbackPrices["10x15 cm"] >= 0
@@ -36,6 +44,9 @@ export function resolvePhotoPrices(
         "A4 21x30 cm": typeof fallbackPrices["A4 21x30 cm"] === "number" && fallbackPrices["A4 21x30 cm"] >= 0
           ? fallbackPrices["A4 21x30 cm"]
           : DEFAULT_PHOTO_PRICES["A4 21x30 cm"],
+        "Digitális változat": typeof fallbackPrices["Digitális változat"] === "number" && fallbackPrices["Digitális változat"] >= 0
+          ? fallbackPrices["Digitális változat"]
+          : DEFAULT_PHOTO_PRICES["Digitális változat"],
       }
     : DEFAULT_PHOTO_PRICES;
 
@@ -52,6 +63,9 @@ export function resolvePhotoPrices(
     "A4 21x30 cm": typeof customPrices?.["A4 21x30 cm"] === "number" && customPrices["A4 21x30 cm"] >= 0
       ? customPrices["A4 21x30 cm"]
       : defaults["A4 21x30 cm"],
+    "Digitális változat": typeof customPrices?.["Digitális változat"] === "number" && customPrices["Digitális változat"] >= 0
+      ? customPrices["Digitális változat"]
+      : defaults["Digitális változat"],
   };
 }
 

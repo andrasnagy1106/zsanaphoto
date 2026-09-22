@@ -21,11 +21,13 @@ describe("photo-order-catalog", () => {
     expect(DEFAULT_PHOTO_PRICES["13x18 cm"]).toBe(750);
     expect(DEFAULT_PHOTO_PRICES["15x21 cm"]).toBe(1200);
     expect(DEFAULT_PHOTO_PRICES["A4 21x30 cm"]).toBe(1900);
+    expect(DEFAULT_PHOTO_PRICES["Digitális változat"]).toBe(2000);
   });
 
   it("formats price with Hungarian locale and currency", () => {
     expect(formatPrice(600)).toContain("600 Ft");
     expect(formatPrice(1200)).toContain("Ft");
+    expect(formatPrice(2000)).toContain("Ft");
   });
 
   it("resolves default prices when custom prices are not provided", () => {
@@ -37,21 +39,25 @@ describe("photo-order-catalog", () => {
     const resolved = resolvePhotoPrices(null, {
       "10x15 cm": 650,
       "13x18 cm": 800,
+      "Digitális változat": 2500,
     });
     expect(resolved["10x15 cm"]).toBe(650);
     expect(resolved["13x18 cm"]).toBe(800);
     expect(resolved["15x21 cm"]).toBe(1200); // hardcoded default fallback
     expect(resolved["A4 21x30 cm"]).toBe(1900);
+    expect(resolved["Digitális változat"]).toBe(2500);
   });
 
   it("overrides specific sizes when custom prices are provided", () => {
     const resolved = resolvePhotoPrices({
       "10x15 cm": 800,
       "A4 21x30 cm": 2500,
+      "Digitális változat": 3000,
     });
     expect(resolved["10x15 cm"]).toBe(800);
     expect(resolved["13x18 cm"]).toBe(750); // fallback to default
     expect(resolved["15x21 cm"]).toBe(1200); // fallback to default
     expect(resolved["A4 21x30 cm"]).toBe(2500);
+    expect(resolved["Digitális változat"]).toBe(3000);
   });
 });

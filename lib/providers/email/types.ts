@@ -26,6 +26,7 @@ export interface PhotoOrderEmailInput {
   notes?: string | null;
   isUpdate: boolean;
   totalAmount: number;
+  includesDigital?: boolean;
   items: Array<{
     photoTitle: string;
     size: string;

@@ -78,6 +78,7 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
         initialOrder={activeOrder ? {
           orderNumber: activeOrder.order.orderNumber,
           notes: activeOrder.order.notes,
+          includesDigital: activeOrder.order.includesDigital,
           items: activeOrder.items,
         } : undefined}
       />

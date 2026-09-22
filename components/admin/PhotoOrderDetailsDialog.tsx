@@ -5,7 +5,7 @@ import type { PhotoOrder, PhotoOrderItem } from "@/db/schema";
 import { formatPrice } from "@/lib/photo-order-catalog";
 
 interface PhotoOrderDetailsDialogProps {
-  order: Pick<PhotoOrder, "orderNumber" | "notes" | "totalAmount">;
+  order: Pick<PhotoOrder, "orderNumber" | "notes" | "totalAmount"> & { includesDigital?: boolean | null };
   customerName: string;
   bookingNumber: string;
   items: Array<Pick<PhotoOrderItem, "id" | "photoId" | "photoTitle" | "size" | "quantity" | "unitPrice" | "totalPrice">>;
@@ -38,7 +38,12 @@ export function PhotoOrderDetailsDialog({
         <p className="text-sm font-medium text-foreground">
           {photoCount} kép · {totalQuantity} db
         </p>
-        <p className="text-xs font-semibold text-accent">
+        {order.includesDigital && (
+          <span className="inline-block mt-0.5 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
+            + Digitális változat
+          </span>
+        )}
+        <p className="text-xs font-semibold text-accent mt-0.5">
           {formatPrice(totalAmount)}
         </p>
         <button
@@ -76,10 +81,17 @@ export function PhotoOrderDetailsDialog({
             </button>
           </div>
 
+          {order.includesDigital && (
+            <div className="mt-4 rounded-lg border border-accent/30 bg-accent/5 p-3 text-xs text-foreground/80">
+              <strong className="text-accent font-semibold block mb-0.5">Digitális változat kérve</strong>
+              Kinyomtatott képek ebben a fotócsomagban nem készülnek (ha nincs papírkép választva), csak digitálisan átadott, megszerkesztett képek online galériában. Szabadon felhasználható, sokszorosítási lehetőség.
+            </div>
+          )}
+
           <div className="mt-6 overflow-hidden rounded-lg border border-border bg-white">
             <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_4.5rem_3.5rem_5rem] gap-2 sm:gap-3 border-b border-border bg-muted/40 px-3 sm:px-4 py-3 text-xs font-semibold text-foreground/60">
-              <span>Fotó</span>
-              <span>Méret</span>
+              <span>Fotó / Tétel</span>
+              <span>Típus</span>
               <span className="text-right">Egységár</span>
               <span className="text-right">Db</span>
               <span className="text-right">Összeg</span>
@@ -97,9 +109,20 @@ export function PhotoOrderDetailsDialog({
                   <span className="text-right font-semibold text-xs sm:text-sm text-accent">{formatPrice(item.totalPrice)}</span>
                 </div>
               ))}
+              {order.includesDigital && (
+                <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_4.5rem_3.5rem_5rem] items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 text-sm bg-accent/5">
+                  <span className="font-medium text-foreground">Digitális változat</span>
+                  <span className="text-accent text-xs sm:text-sm font-semibold">Online galéria</span>
+                  <span className="text-right text-xs sm:text-sm text-foreground/70">-</span>
+                  <span className="text-right font-medium text-xs sm:text-sm">1 csomag</span>
+                  <span className="text-right font-semibold text-xs sm:text-sm text-accent">
+                    {formatPrice(Math.max(0, totalAmount - items.reduce((sum, item) => sum + item.totalPrice, 0)))}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between border-t border-border bg-muted/25 px-4 py-3 text-sm font-semibold">
-              <span>Összesen ({totalQuantity} db)</span>
+              <span>Összesen {totalQuantity > 0 ? `(${totalQuantity} db papírkép${order.includesDigital ? ' + digitális' : ''})` : '(digitális csomag)'}</span>
               <span className="text-base font-bold text-accent">{formatPrice(totalAmount)}</span>
             </div>
           </div>

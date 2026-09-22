@@ -8,7 +8,7 @@ import { settingsSchema, type SettingsForm as SettingsFormData } from "@/lib/val
 import { updateSettingsAction } from "@/app/actions/admin-settings-actions";
 import {
   DEFAULT_PHOTO_PRICES,
-  PHOTO_PRINT_SIZES,
+  PHOTO_PRICE_KEYS,
   formatPrice,
 } from "@/lib/photo-order-catalog";
 
@@ -108,30 +108,30 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormDat
         {/* Global Default Photo Prices */}
         <div className="pt-4 border-t border-border">
           <label className="block text-sm font-semibold text-foreground">
-            Alapértelmezett fotórendelési darabárak (Ft / db)
+            Alapértelmezett fotórendelési árak (Ft)
           </label>
           <p className="mt-1 text-xs text-foreground/60">
             Ezeket az alapárakat használja a rendszer az új foglalásoknál és a fotórendelésnél, ha nincs egyedi esemény-ár megadva.
           </p>
 
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {PHOTO_PRINT_SIZES.map((size) => (
-              <div key={size} className="rounded-lg border border-border p-2.5 bg-muted/20">
-                <span className="block text-xs font-semibold text-foreground">{size}</span>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {PHOTO_PRICE_KEYS.map((key) => (
+              <div key={key} className="rounded-lg border border-border p-2.5 bg-muted/20">
+                <span className="block text-xs font-semibold text-foreground truncate" title={key}>{key}</span>
                 <div className="mt-1 flex items-center gap-1.5">
                   <input
                     type="number"
                     min={0}
                     max={100000}
                     step={10}
-                    placeholder={String(DEFAULT_PHOTO_PRICES[size])}
+                    placeholder={String(DEFAULT_PHOTO_PRICES[key])}
                     className="w-full rounded-md border border-border bg-white px-2 py-1 text-sm font-semibold outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-                    {...register(`defaultPhotoPrices.${size}` as const)}
+                    {...register(`defaultPhotoPrices.${key}` as const)}
                   />
                   <span className="text-xs text-foreground/60">Ft</span>
                 </div>
                 <span className="mt-1 block text-[11px] text-foreground/50">
-                  Gyári: {formatPrice(DEFAULT_PHOTO_PRICES[size])}
+                  Gyári: {formatPrice(DEFAULT_PHOTO_PRICES[key])}
                 </span>
               </div>
             ))}

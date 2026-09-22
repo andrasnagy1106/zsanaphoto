@@ -74,6 +74,24 @@ describe("buildPhotoOrderConfirmationEmail", () => {
     expect(email.text).toContain("Megjegyzés: Egy csomagba kérem.");
   });
 
+  it("includes digital version notice when selected", () => {
+    const email = buildPhotoOrderConfirmationEmail({
+      orderNumber: "ZR-2026-12345",
+      bookingNumber: "ZS-2026-0001",
+      customerName: "Teszt Elek",
+      customerEmail: "teszt@example.com",
+      serviceName: "Intézményi fotózás",
+      adminNotificationEmail: "admin@example.com",
+      isUpdate: false,
+      totalAmount: 0,
+      includesDigital: true,
+      items: [],
+    });
+
+    expect(email.text).toContain("Digitális változat: Igen");
+    expect(email.text).toContain("szabadon felhasználható");
+  });
+
   it("labels an updated order", () => {
     const email = buildPhotoOrderConfirmationEmail({
       orderNumber: "ZR-2026-12345",
