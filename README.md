@@ -171,6 +171,7 @@ Ajánlott két külön Neon adatbázis: `zsanaphoto-dev` (helyi fejlesztés) és
   - **Digitális képek rendelése:** Képenként külön kérhető digitális átadás (2 000 Ft / db), melyről az információs doboz részletes tájékoztatást ad (digitálisan átadott, megszerkesztett képek online galériában, szabad sokszorosítási joggal).
   - **Globális alapárak módosítása:** Az `/admin/settings` oldalon a rendszer globális alapértelmezett darabárai
     is közvetlenül szerkeszthetők és adatbázisban tárolódnak.
+  - **Adminisztrátori fiókok kezelése:** Az `/admin/settings` oldalon közvetlenül hozzáadhatók új admin felhasználók (név, e-mail, min. 8 karakteres jelszó), illetve törölhetők a meglévő adminok (a saját fiók és az utolsó admin törlése védett).
   - **Egyedi esemény-árazás:** Az admin felületen az adott foglalás/esemény adatlapján (`/admin/bookings/[id]`)
     lehetőség van esemény-specifikus darabárak megadására, vagy az alapértelmezett árak visszaállítására.
   - A rendelés mentésekor tételes áras és végösszeggel ellátott e-mailes visszaigazolást küld a rendszer
