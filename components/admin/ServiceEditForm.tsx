@@ -8,6 +8,7 @@ import { updateServiceSchema } from "@/lib/validation/service";
 import { updateServiceAction } from "@/app/actions/admin-service-actions";
 import type { Service, ServiceAvailabilityRule } from "@/db/schema";
 import { ServiceAvailabilityRuleRow } from "./ServiceAvailabilityRuleRow";
+import { DeleteServiceModal } from "./DeleteServiceModal";
 
 type FormInput = z.input<typeof updateServiceSchema>;
 type FormOutput = z.output<typeof updateServiceSchema>;
@@ -195,13 +196,16 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
           </p>
         ) : null}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="mt-4 min-h-11 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-        >
-          {isSubmitting ? "Mentés..." : "Alapadatok mentése"}
-        </button>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="min-h-11 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60 shadow-sm hover:bg-accent-dark transition-colors"
+          >
+            {isSubmitting ? "Mentés..." : "Alapadatok mentése"}
+          </button>
+          <DeleteServiceModal service={service} />
+        </div>
       </form>
 
       {/* If custom availability mode is selected, show weekday rules table for this service */}

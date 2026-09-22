@@ -273,13 +273,35 @@ export async function getPhotoOrdersForBooking(bookingId: string): Promise<Photo
   return rows.map((row) => ({ ...row, items: itemsByOrderId.get(row.order.id) ?? [] }));
 }
 
-export async function listPhotoOrders(): Promise<PhotoOrderWithDetails[]> {
-  const rows = await db
+export interface ListPhotoOrdersFilters {
+  serviceId?: string;
+  status?: PhotoOrder["status"];
+  search?: string;
+}
+
+export async function listPhotoOrders(
+  filters: ListPhotoOrdersFilters = {},
+): Promise<PhotoOrderWithDetails[]> {
+  const conditions = [];
+
+  if (filters.serviceId) {
+    conditions.push(eq(services.id, filters.serviceId));
+  }
+
+  if (filters.status) {
+    conditions.push(eq(photoOrders.status, filters.status));
+  }
+
+  const query = db
     .select({ order: photoOrders, booking: bookings, service: services })
     .from(photoOrders)
     .innerJoin(bookings, eq(photoOrders.bookingId, bookings.id))
-    .innerJoin(services, eq(bookings.serviceId, services.id))
-    .orderBy(desc(photoOrders.createdAt));
+    .innerJoin(services, eq(bookings.serviceId, services.id));
+
+  const rows =
+    conditions.length > 0
+      ? await query.where(and(...conditions)).orderBy(desc(photoOrders.createdAt))
+      : await query.orderBy(desc(photoOrders.createdAt));
 
   if (rows.length === 0) return [];
 
