@@ -238,16 +238,33 @@ export function PhotoOrderForm({
                                 {formatPrice(qty * unitPrice)}
                               </span>
                             )}
-                            <input
-                              type="number"
-                              min={0}
-                              max={99}
-                              inputMode="numeric"
-                              aria-label={`${photo.title}, ${size} darabszám`}
-                              value={qty}
-                              onChange={(event) => updatePhotoQuantity(photo.id, size, Number(event.target.value))}
-                              className="min-h-10 w-16 rounded-md border border-border px-2 text-center outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-white"
-                            />
+                            {isDigital ? (
+                              <label className="flex items-center gap-1.5 cursor-pointer select-none bg-white px-2.5 py-1.5 rounded-md border border-border hover:border-accent">
+                                <input
+                                  type="checkbox"
+                                  checked={qty > 0}
+                                  onChange={(event) =>
+                                    updatePhotoQuantity(photo.id, size, event.target.checked ? 1 : 0)
+                                  }
+                                  className="size-4 rounded border-border text-accent focus:ring-accent accent-accent cursor-pointer"
+                                  aria-label={`${photo.title}, digitális kép kérése`}
+                                />
+                                <span className={`text-xs font-semibold ${qty > 0 ? "text-accent" : "text-foreground/70"}`}>
+                                  {qty > 0 ? "Kérve" : "Kérem"}
+                                </span>
+                              </label>
+                            ) : (
+                              <input
+                                type="number"
+                                min={0}
+                                max={99}
+                                inputMode="numeric"
+                                aria-label={`${photo.title}, ${size} darabszám`}
+                                value={qty}
+                                onChange={(event) => updatePhotoQuantity(photo.id, size, Number(event.target.value))}
+                                className="min-h-10 w-16 rounded-md border border-border px-2 text-center outline-none focus:border-accent focus:ring-1 focus:ring-accent bg-white"
+                              />
+                            )}
                           </div>
                         </div>
                       );
