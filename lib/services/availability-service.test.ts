@@ -34,6 +34,7 @@ function makeSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
     siteContactEmail: "admin@zsanaphoto.dev",
     minimumLeadTimeHours: 2,
     maxAdvanceDays: 90,
+    defaultPhotoPrices: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { updateBookingPhotoPricesAction } from "@/app/actions/admin-booking-actions";
 import {
-  DEFAULT_PHOTO_PRICES,
   PHOTO_PRINT_SIZES,
   formatPrice,
   resolvePhotoPrices,
@@ -13,14 +12,17 @@ import {
 interface BookingPhotoPricingFormProps {
   bookingId: string;
   customPrices?: Partial<Record<PhotoPrintSize, number>> | null;
+  defaultSitePrices?: Partial<Record<PhotoPrintSize, number>> | null;
 }
 
 export function BookingPhotoPricingForm({
   bookingId,
   customPrices,
+  defaultSitePrices,
 }: BookingPhotoPricingFormProps) {
+  const fallbackPrices = resolvePhotoPrices(defaultSitePrices);
   const [prices, setPrices] = useState<Record<PhotoPrintSize, number>>(() =>
-    resolvePhotoPrices(customPrices),
+    resolvePhotoPrices(customPrices, defaultSitePrices),
   );
   const [hasCustomPrices, setHasCustomPrices] = useState(
     Boolean(customPrices && Object.keys(customPrices).length > 0),
@@ -63,7 +65,7 @@ export function BookingPhotoPricingForm({
       });
 
       if (result.success) {
-        setPrices(DEFAULT_PHOTO_PRICES);
+        setPrices(fallbackPrices);
         setHasCustomPrices(false);
         setStatusMessage({ type: "success", text: "Alapértelmezett árak visszaállítva!" });
       } else {
@@ -95,7 +97,7 @@ export function BookingPhotoPricingForm({
       <form onSubmit={handleSaveCustomPrices} className="mt-5 space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {PHOTO_PRINT_SIZES.map((size) => {
-            const isDifferent = prices[size] !== DEFAULT_PHOTO_PRICES[size];
+            const isDifferent = prices[size] !== fallbackPrices[size];
             return (
               <div key={size} className="rounded-lg border border-border p-3 bg-muted/20">
                 <label htmlFor={`price-${size}`} className="block text-xs font-semibold text-foreground">
@@ -115,7 +117,7 @@ export function BookingPhotoPricingForm({
                   <span className="text-xs font-medium text-foreground/60">Ft</span>
                 </div>
                 <p className="mt-1 text-[11px] text-foreground/50">
-                  Alapértelmezett: {formatPrice(DEFAULT_PHOTO_PRICES[size])}
+                  Alapértelmezett: {formatPrice(fallbackPrices[size])}
                   {isDifferent && <span className="ml-1 font-semibold text-accent">(módosítva)</span>}
                 </p>
               </div>

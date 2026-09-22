@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PhotoOrderForm } from "@/components/booking/PhotoOrderForm";
 import { resolvePhotoPrices } from "@/lib/photo-order-catalog";
+import { getSiteSettings } from "@/lib/services/availability-service";
 import {
   getActivePhotoOrderForBooking,
   getPhotoOrderAccessByToken,
@@ -37,8 +38,14 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
     );
   }
 
-  const activeOrder = await getActivePhotoOrderForBooking(access.booking.id);
-  const prices = resolvePhotoPrices(access.booking.customPhotoPrices);
+  const [activeOrder, settings] = await Promise.all([
+    getActivePhotoOrderForBooking(access.booking.id),
+    getSiteSettings(),
+  ]);
+  const prices = resolvePhotoPrices(
+    access.booking.customPhotoPrices,
+    settings.defaultPhotoPrices,
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">

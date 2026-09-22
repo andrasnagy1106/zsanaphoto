@@ -33,6 +33,17 @@ describe("photo-order-catalog", () => {
     expect(resolved).toEqual(DEFAULT_PHOTO_PRICES);
   });
 
+  it("supports fallback prices from site settings", () => {
+    const resolved = resolvePhotoPrices(null, {
+      "10x15 cm": 650,
+      "13x18 cm": 800,
+    });
+    expect(resolved["10x15 cm"]).toBe(650);
+    expect(resolved["13x18 cm"]).toBe(800);
+    expect(resolved["15x21 cm"]).toBe(1200); // hardcoded default fallback
+    expect(resolved["A4 21x30 cm"]).toBe(1900);
+  });
+
   it("overrides specific sizes when custom prices are provided", () => {
     const resolved = resolvePhotoPrices({
       "10x15 cm": 800,

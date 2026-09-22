@@ -20,20 +20,38 @@ export function formatPrice(amount: number): string {
 
 export function resolvePhotoPrices(
   customPrices?: Partial<Record<PhotoPrintSize, number>> | Record<string, number> | null,
+  fallbackPrices?: Partial<Record<PhotoPrintSize, number>> | Record<string, number> | null,
 ): Record<PhotoPrintSize, number> {
+  const defaults = fallbackPrices
+    ? {
+        "10x15 cm": typeof fallbackPrices["10x15 cm"] === "number" && fallbackPrices["10x15 cm"] >= 0
+          ? fallbackPrices["10x15 cm"]
+          : DEFAULT_PHOTO_PRICES["10x15 cm"],
+        "13x18 cm": typeof fallbackPrices["13x18 cm"] === "number" && fallbackPrices["13x18 cm"] >= 0
+          ? fallbackPrices["13x18 cm"]
+          : DEFAULT_PHOTO_PRICES["13x18 cm"],
+        "15x21 cm": typeof fallbackPrices["15x21 cm"] === "number" && fallbackPrices["15x21 cm"] >= 0
+          ? fallbackPrices["15x21 cm"]
+          : DEFAULT_PHOTO_PRICES["15x21 cm"],
+        "A4 21x30 cm": typeof fallbackPrices["A4 21x30 cm"] === "number" && fallbackPrices["A4 21x30 cm"] >= 0
+          ? fallbackPrices["A4 21x30 cm"]
+          : DEFAULT_PHOTO_PRICES["A4 21x30 cm"],
+      }
+    : DEFAULT_PHOTO_PRICES;
+
   return {
     "10x15 cm": typeof customPrices?.["10x15 cm"] === "number" && customPrices["10x15 cm"] >= 0
       ? customPrices["10x15 cm"]
-      : DEFAULT_PHOTO_PRICES["10x15 cm"],
+      : defaults["10x15 cm"],
     "13x18 cm": typeof customPrices?.["13x18 cm"] === "number" && customPrices["13x18 cm"] >= 0
       ? customPrices["13x18 cm"]
-      : DEFAULT_PHOTO_PRICES["13x18 cm"],
+      : defaults["13x18 cm"],
     "15x21 cm": typeof customPrices?.["15x21 cm"] === "number" && customPrices["15x21 cm"] >= 0
       ? customPrices["15x21 cm"]
-      : DEFAULT_PHOTO_PRICES["15x21 cm"],
+      : defaults["15x21 cm"],
     "A4 21x30 cm": typeof customPrices?.["A4 21x30 cm"] === "number" && customPrices["A4 21x30 cm"] >= 0
       ? customPrices["A4 21x30 cm"]
-      : DEFAULT_PHOTO_PRICES["A4 21x30 cm"],
+      : defaults["A4 21x30 cm"],
   };
 }
 

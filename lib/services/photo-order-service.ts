@@ -115,10 +115,14 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
   const access = await getPhotoOrderAccessByToken(input.accessToken);
   if (!access) throw new NotFoundError("A fotók nem érhetők el ezzel a hozzáféréssel.");
 
+  const settings = await getSiteSettings();
   const catalogById = new Map<string, (typeof STOCK_PHOTOS)[number]>(
     STOCK_PHOTOS.map((photo) => [photo.id, photo]),
   );
-  const prices = resolvePhotoPrices(access.booking.customPhotoPrices);
+  const prices = resolvePhotoPrices(
+    access.booking.customPhotoPrices,
+    settings.defaultPhotoPrices,
+  );
   const trustedItems = input.items.map((item) => {
     const photo = catalogById.get(item.photoId);
     if (!photo) throw new NotFoundError("A kiválasztott fotó nem található.");

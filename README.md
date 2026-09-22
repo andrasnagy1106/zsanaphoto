@@ -156,6 +156,8 @@ Ajánlott két külön Neon adatbázis: `zsanaphoto-dev` (helyi fejlesztés) és
   és a végösszeget.
   - Alapértelmezett méretek és árak: `10x15 cm` (600 Ft / db), `13x18 cm` (750 Ft / db),
     `15x21 cm` (1 200 Ft / db), `A4 21x30 cm` (1 900 Ft / db).
+  - **Globális alapárak módosítása:** Az `/admin/settings` oldalon a rendszer globális alapértelmezett darabárai
+    is közvetlenül szerkeszthetők és adatbázisban tárolódnak.
   - **Egyedi esemény-árazás:** Az admin felületen az adott foglalás/esemény adatlapján (`/admin/bookings/[id]`)
     lehetőség van esemény-specifikus darabárak megadására, vagy az alapértelmezett árak visszaállítására.
   - A rendelés mentésekor tételes áras és végösszeggel ellátott e-mailes visszaigazolást küld a rendszer
