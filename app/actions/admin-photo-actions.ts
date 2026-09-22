@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guard";
+import { updateBookingCustomerPhotoViewMode } from "@/lib/services/booking-service";
 import {
   deleteMultiplePhotosByIds,
   deletePhotoById,
   uploadMultiplePhotosForPin,
 } from "@/lib/services/photo-storage-service";
+import type { Booking } from "@/db/schema";
 
 export interface AdminPhotoActionResult {
   success: boolean;
@@ -137,6 +139,34 @@ export async function deleteMultipleEventPhotosAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "A fotók törlése nem sikerült.",
+    };
+  }
+}
+
+export async function updateCustomerPhotoViewModeAction(
+  bookingId: string,
+  mode: Booking["customerPhotoViewMode"],
+): Promise<AdminPhotoActionResult> {
+  await requireAdmin();
+
+  try {
+    if (!bookingId) {
+      return { success: false, error: "Hiányzó foglalás azonosító." };
+    }
+    if (mode !== "ORDER_ONLY" && mode !== "GALLERY_ONLY") {
+      return { success: false, error: "Érvénytelen nézet mód." };
+    }
+
+    await updateBookingCustomerPhotoViewMode(bookingId, mode);
+    revalidatePath("/admin/event-photos");
+    revalidatePath("/admin/bookings");
+    revalidatePath(`/admin/bookings/${bookingId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("[updateCustomerPhotoViewModeAction] Failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "A nézet módosítása nem sikerült.",
     };
   }
 }

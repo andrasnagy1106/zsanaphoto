@@ -48,7 +48,7 @@ export const updateBookingPhotoPricesSchema = z.object({
       "13x18 cm": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
       "15x21 cm": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
       "A4 21x30 cm": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
-      "Digitális változat": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
+      "Digitális kép": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
     })
     .nullable()
     .optional(),

@@ -21,6 +21,7 @@ export interface PhotoOrderActionResult {
   accessToken?: string;
   orderNumber?: string;
   wasUpdated?: boolean;
+  redirectUrl?: string;
 }
 
 export async function verifyPhotoOrderPinAction(pin: string): Promise<PhotoOrderActionResult> {
@@ -37,7 +38,15 @@ export async function verifyPhotoOrderPinAction(pin: string): Promise<PhotoOrder
   const access = await getPhotoOrderAccessByPin(parsed.data.pin);
   if (!access) return { success: false, error: "A PIN érvénytelen, vagy a fotók még nem érhetők el." };
 
-  return { success: true, accessToken: access.booking.manageToken };
+  const token = access.booking.manageToken;
+  const targetPath =
+    access.booking.customerPhotoViewMode === "GALLERY_ONLY" ? "/fotogaleria" : "/fotorendeles";
+
+  return {
+    success: true,
+    accessToken: token,
+    redirectUrl: `${targetPath}?token=${encodeURIComponent(token)}`,
+  };
 }
 
 export async function savePhotoOrderAction(input: unknown): Promise<PhotoOrderActionResult> {

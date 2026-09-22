@@ -99,6 +99,13 @@
       "when": 1790110238474,
       "tag": "0013_sparkling_fenris",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790113147266,
+      "tag": "0014_abnormal_scarlet_spider",
+      "breakpoints": true
     }
   ]
 }

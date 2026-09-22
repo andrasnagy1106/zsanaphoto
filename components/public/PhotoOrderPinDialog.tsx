@@ -37,7 +37,7 @@ export function PhotoOrderPinDialog({ mobile = false, onNavigate }: PhotoOrderPi
 
       closePhotoOrderPinDialog();
       onNavigate?.();
-      router.push(`/fotorendeles?token=${encodeURIComponent(result.accessToken)}`);
+      router.push(result.redirectUrl ?? `/fotorendeles?token=${encodeURIComponent(result.accessToken)}`);
     });
   }
 

@@ -132,7 +132,6 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
     access.booking.customPhotoPrices,
     settings.defaultPhotoPrices,
   );
-  const digitalPrice = prices["Digitális változat"] ?? 2000;
 
   const trustedItems = input.items.map((item) => {
     const photo = photoLookup.get(item.photoId);
@@ -142,8 +141,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
     return { ...item, photoTitle: photo.title, unitPrice, totalPrice };
   });
 
-  const printTotalAmount = trustedItems.reduce((sum, item) => sum + item.totalPrice, 0);
-  const totalAmount = printTotalAmount + (input.includesDigital ? digitalPrice : 0);
+  const totalAmount = trustedItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
   const saved = await db.transaction(async (tx) => {
     await tx.execute(

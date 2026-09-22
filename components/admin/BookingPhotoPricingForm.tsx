@@ -3,16 +3,16 @@
 import { useState, useTransition } from "react";
 import { updateBookingPhotoPricesAction } from "@/app/actions/admin-booking-actions";
 import {
-  PHOTO_PRICE_KEYS,
+  PHOTO_PRINT_SIZES,
   formatPrice,
   resolvePhotoPrices,
-  type PhotoPriceKey,
+  type PhotoPrintSize,
 } from "@/lib/photo-order-catalog";
 
 interface BookingPhotoPricingFormProps {
   bookingId: string;
-  customPrices?: Partial<Record<PhotoPriceKey, number>> | null;
-  defaultSitePrices?: Partial<Record<PhotoPriceKey, number>> | null;
+  customPrices?: Partial<Record<PhotoPrintSize, number>> | null;
+  defaultSitePrices?: Partial<Record<PhotoPrintSize, number>> | null;
 }
 
 export function BookingPhotoPricingForm({
@@ -21,7 +21,7 @@ export function BookingPhotoPricingForm({
   defaultSitePrices,
 }: BookingPhotoPricingFormProps) {
   const fallbackPrices = resolvePhotoPrices(defaultSitePrices);
-  const [prices, setPrices] = useState<Record<PhotoPriceKey, number>>(() =>
+  const [prices, setPrices] = useState<Record<PhotoPrintSize, number>>(() =>
     resolvePhotoPrices(customPrices, defaultSitePrices),
   );
   const [hasCustomPrices, setHasCustomPrices] = useState(
@@ -30,7 +30,7 @@ export function BookingPhotoPricingForm({
   const [isPending, startTransition] = useTransition();
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  function handlePriceChange(key: PhotoPriceKey, value: number) {
+  function handlePriceChange(key: PhotoPrintSize, value: number) {
     setPrices((prev) => ({
       ...prev,
       [key]: Math.max(0, value || 0),
@@ -80,7 +80,7 @@ export function BookingPhotoPricingForm({
         <div>
           <h2 className="text-base font-semibold text-foreground">Fotórendelési árak (Esemény árazása)</h2>
           <p className="mt-1 text-xs text-foreground/60">
-            Az ehhez az eseményhez tartozó fotórendelések darabárai és digitális változat ára (Ft).
+            Az ehhez az eseményhez tartozó fotórendelések darabárai (Ft / db).
           </p>
         </div>
         <span
@@ -96,7 +96,7 @@ export function BookingPhotoPricingForm({
 
       <form onSubmit={handleSaveCustomPrices} className="mt-5 space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {PHOTO_PRICE_KEYS.map((key) => {
+          {PHOTO_PRINT_SIZES.map((key) => {
             const isDifferent = prices[key] !== fallbackPrices[key];
             return (
               <div key={key} className="rounded-lg border border-border p-3 bg-muted/20">

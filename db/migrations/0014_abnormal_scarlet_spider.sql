@@ -1,0 +1,2 @@
+CREATE TYPE "public"."customer_photo_view_mode" AS ENUM('ORDER_ONLY', 'GALLERY_ONLY');--> statement-breakpoint
+ALTER TABLE "bookings" ADD COLUMN "customer_photo_view_mode" "customer_photo_view_mode" DEFAULT 'ORDER_ONLY' NOT NULL;

@@ -87,6 +87,7 @@ export interface EventWithPinOption {
   serviceSlug: string;
   startAt: Date;
   status: Booking["status"];
+  customerPhotoViewMode: Booking["customerPhotoViewMode"];
   photoCount: number;
 }
 
@@ -120,6 +121,7 @@ export async function listEventsWithPin(): Promise<EventWithPinOption[]> {
     serviceSlug: row.service.slug,
     startAt: row.booking.startAt,
     status: row.booking.status,
+    customerPhotoViewMode: row.booking.customerPhotoViewMode,
     photoCount: row.photoCount,
   }));
 }

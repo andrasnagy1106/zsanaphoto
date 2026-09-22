@@ -8,7 +8,7 @@ import { settingsSchema, type SettingsForm as SettingsFormData } from "@/lib/val
 import { updateSettingsAction } from "@/app/actions/admin-settings-actions";
 import {
   DEFAULT_PHOTO_PRICES,
-  PHOTO_PRICE_KEYS,
+  PHOTO_PRINT_SIZES,
   formatPrice,
 } from "@/lib/photo-order-catalog";
 
@@ -108,14 +108,14 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormDat
         {/* Global Default Photo Prices */}
         <div className="pt-4 border-t border-border">
           <label className="block text-sm font-semibold text-foreground">
-            Alapértelmezett fotórendelési árak (Ft)
+            Alapértelmezett fotórendelési darabárak (Ft / db)
           </label>
           <p className="mt-1 text-xs text-foreground/60">
             Ezeket az alapárakat használja a rendszer az új foglalásoknál és a fotórendelésnél, ha nincs egyedi esemény-ár megadva.
           </p>
 
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
-            {PHOTO_PRICE_KEYS.map((key) => (
+            {PHOTO_PRINT_SIZES.map((key) => (
               <div key={key} className="rounded-lg border border-border p-2.5 bg-muted/20">
                 <span className="block text-xs font-semibold text-foreground truncate" title={key}>{key}</span>
                 <div className="mt-1 flex items-center gap-1.5">

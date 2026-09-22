@@ -7,9 +7,10 @@ import { useId, useMemo, useRef, useState, useTransition } from "react";
 import {
   deleteEventPhotoAction,
   deleteMultipleEventPhotosAction,
+  updateCustomerPhotoViewModeAction,
   uploadEventPhotosAction,
 } from "@/app/actions/admin-photo-actions";
-import type { EventPhoto, PhotoOrder, PhotoOrderItem, Service } from "@/db/schema";
+import type { Booking, EventPhoto, PhotoOrder, PhotoOrderItem, Service } from "@/db/schema";
 import type { EventWithPinOption } from "@/lib/services/photo-storage-service";
 import { formatPrice } from "@/lib/photo-order-catalog";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
@@ -56,6 +57,7 @@ export function EventPhotoManager({
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [isUploading, startUploadTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
+  const [isUpdatingMode, startModeTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [previewModalUrl, setPreviewModalUrl] = useState<{ url: string; title: string } | null>(null);
@@ -67,6 +69,26 @@ export function EventPhotoManager({
   }, [events, selectedServiceId]);
 
   const selectedEvent = events.find((e) => e.pin === currentPin);
+
+  function handleViewModeChange(newMode: Booking["customerPhotoViewMode"]) {
+    if (!selectedEvent) return;
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    startModeTransition(async () => {
+      const result = await updateCustomerPhotoViewModeAction(selectedEvent.bookingId, newMode);
+      if (result.success) {
+        setSuccessMessage(
+          newMode === "GALLERY_ONLY"
+            ? "Ügyfél nézet beállítva: Teljes képgaléria (megrendelő letiltva)."
+            : "Ügyfél nézet beállítva: Megrendelő felület (képek kiválasztása & rendelés).",
+        );
+        router.refresh();
+      } else {
+        setErrorMessage(result.error ?? "A nézet módosítása nem sikerült.");
+      }
+    });
+  }
 
   function handleServiceFilterChange(serviceId: string) {
     setSelectedServiceId(serviceId);
@@ -273,7 +295,7 @@ export function EventPhotoManager({
         </div>
 
         {selectedEvent && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-border/60 pt-3 text-xs text-foreground/70">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border/60 pt-3 text-xs text-foreground/70">
             <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
               <div>
                 <span className="text-foreground/50">Ügyfél:</span> <strong className="text-foreground">{selectedEvent.customerName}</strong>
@@ -295,15 +317,33 @@ export function EventPhotoManager({
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <a
-                href={`/fotorendeles?token=${encodeURIComponent(selectedEvent.manageToken)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-semibold text-accent hover:underline inline-flex items-center gap-1"
+            {/* Customer Access Mode Control */}
+            <div className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-lg border border-border/60">
+              <span className="font-semibold text-foreground/70 text-[11px] px-1">Ügyfél nézet:</span>
+              <button
+                type="button"
+                disabled={isUpdatingMode}
+                onClick={() => handleViewModeChange("ORDER_ONLY")}
+                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                  selectedEvent.customerPhotoViewMode === "ORDER_ONLY"
+                    ? "bg-accent text-white shadow-sm"
+                    : "bg-white text-foreground/70 hover:text-foreground border border-border/60"
+                }`}
               >
-                Ügyfél nézet megnyitása ↗
-              </a>
+                Megrendelő felület
+              </button>
+              <button
+                type="button"
+                disabled={isUpdatingMode}
+                onClick={() => handleViewModeChange("GALLERY_ONLY")}
+                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                  selectedEvent.customerPhotoViewMode === "GALLERY_ONLY"
+                    ? "bg-accent text-white shadow-sm"
+                    : "bg-white text-foreground/70 hover:text-foreground border border-border/60"
+                }`}
+              >
+                Teljes képgaléria
+              </button>
             </div>
           </div>
         )}
@@ -704,20 +744,8 @@ export function EventPhotoManager({
                 Ehhez a PIN-kódhoz ({selectedEvent?.pin}) még nincs leadott rendelés.
               </h3>
               <p className="mt-1 text-xs text-foreground/60 max-w-md mx-auto">
-                Az ügyfél a PIN-kóddal tud belépni a privát fotórendelőbe a képek megtekintéséhez és a papírképek vagy digitális változat megrendeléséhez.
+                Az ügyfél a PIN-kóddal tud belépni a privát felületre a képek megtekintéséhez és a papírképek vagy digitális változat megrendeléséhez.
               </p>
-              {selectedEvent && (
-                <div className="mt-5">
-                  <a
-                    href={`/fotorendeles?token=${encodeURIComponent(selectedEvent.manageToken)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-accent px-5 py-2 text-xs font-semibold text-accent hover:bg-accent hover:text-white transition-colors"
-                  >
-                    Megrendelő oldal megnyitása ügyfélként ↗
-                  </a>
-                </div>
-              )}
             </div>
           )}
         </div>

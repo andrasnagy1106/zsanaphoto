@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PhotoOrderForm } from "@/components/booking/PhotoOrderForm";
 import { resolvePhotoPrices, STOCK_PHOTOS } from "@/lib/photo-order-catalog";
 import { getSiteSettings } from "@/lib/services/availability-service";
@@ -37,6 +38,11 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
         </Link>
       </div>
     );
+  }
+
+  // If this event/booking is set to GALLERY_ONLY, redirect to the private gallery view
+  if (access.booking.customerPhotoViewMode === "GALLERY_ONLY") {
+    redirect(`/fotogaleria?token=${encodeURIComponent(token!)}`);
   }
 
   const [activeOrder, settings, uploadedPhotos] = await Promise.all([
@@ -78,7 +84,6 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
         initialOrder={activeOrder ? {
           orderNumber: activeOrder.order.orderNumber,
           notes: activeOrder.order.notes,
-          includesDigital: activeOrder.order.includesDigital,
           items: activeOrder.items,
         } : undefined}
       />

@@ -457,6 +457,25 @@ export async function updateBookingPhotoPrices(
   return updated;
 }
 
+export async function updateBookingCustomerPhotoViewMode(
+  bookingId: string,
+  mode: Booking["customerPhotoViewMode"],
+): Promise<Booking> {
+  const booking = await getBookingById(bookingId);
+  if (!booking) throw new NotFoundError("A foglalás nem található.");
+
+  const [updated] = await db
+    .update(bookings)
+    .set({
+      customerPhotoViewMode: mode,
+      updatedAt: new Date(),
+    })
+    .where(eq(bookings.id, bookingId))
+    .returning();
+
+  return updated;
+}
+
 export async function getBookingByManageToken(
   token: string,
 ): Promise<(Booking & { service: Service }) | null> {
