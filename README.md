@@ -151,10 +151,18 @@ Ajánlott két külön Neon adatbázis: `zsanaphoto-dev` (helyi fejlesztés) és
   szükséges (`/admin/bookings`).
 - Az egyedi, két nagybetűből és öt számjegyből álló PIN kizárólag intézményi foglaláshoz készül.
   Megerősített vagy teljesített foglalás PIN-jével a fejlécből megnyitható a privát fotórendelő.
-- A fotórendelő jelenleg stock képekkel működik. Képenként méret és darabszám választható, a rendelés
-  e-mailes visszaigazolást küld az ügyfélnek és az adminnak, majd az `/admin/photo-orders` oldalon
-  követhető és státuszolható. Egy PIN-hez egyszerre egy aktív (`NEW`/`PROCESSING`) rendelés tartozhat;
-  ismételt belépéskor a tételek, darabszámok, méretek és a rendelési megjegyzés módosíthatók.
+- A fotórendelő jelenleg bemutató stock képekkel működik. Képenként méret és darabszám választható,
+  a rendelési felület folyamatosan és valós időben kalkulálja a méretenkénti részösszegeket, darabszámot
+  és a végösszeget.
+  - Alapértelmezett méretek és árak: `10x15 cm` (600 Ft / db), `13x18 cm` (750 Ft / db),
+    `15x21 cm` (1 200 Ft / db), `A4 21x30 cm` (1 900 Ft / db).
+  - **Egyedi esemény-árazás:** Az admin felületen az adott foglalás/esemény adatlapján (`/admin/bookings/[id]`)
+    lehetőség van esemény-specifikus darabárak megadására, vagy az alapértelmezett árak visszaállítására.
+  - A rendelés mentésekor tételes áras és végösszeggel ellátott e-mailes visszaigazolást küld a rendszer
+    az ügyfélnek és az adminnak.
+  - Az `/admin/photo-orders` oldalon követhető az összes rendelés állapota, összbevétele, valamint a tételes
+    egységárak és összegek. Egy PIN-hez egyszerre egy aktív (`NEW`/`PROCESSING`) rendelés tartozhat;
+    ismételt belépéskor a tételek, darabszámok, méretek és a rendelési megjegyzés módosíthatók.
 - Minden foglalási/admin mutáció szerveroldali Server Actionön keresztül történik, Zod validációval,
   és admin műveletek `requireAdmin()` guard mögött futnak.
 - Rate limiting: booking submit, intézményi érdeklődés és admin login is korlátozva van (egyszerű,
