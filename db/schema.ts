@@ -112,6 +112,7 @@ export const bookings = pgTable("bookings", {
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email").notNull(),
   customerPhone: text("customer_phone").notNull(),
+  photoPublicationConsent: boolean("photo_publication_consent"),
   startAt: timestamp("start_at", { withTimezone: true }).notNull(),
   endAt: timestamp("end_at", { withTimezone: true }).notNull(),
   status: bookingStatusEnum("status").notNull().default("PENDING"),

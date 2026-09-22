@@ -76,6 +76,14 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
               <dt className="text-foreground/60">Telefon</dt>
               <dd className="text-foreground">{booking.customerPhone}</dd>
             </div>
+            {booking.photoPublicationConsent !== null ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-foreground/60">Online képmegjelenés</dt>
+                <dd className="text-right font-medium text-foreground">
+                  {booking.photoPublicationConsent ? "Hozzájárult" : "Nem járult hozzá"}
+                </dd>
+              </div>
+            ) : null}
             {booking.notes ? (
               <div>
                 <dt className="text-foreground/60">Megjegyzés</dt>

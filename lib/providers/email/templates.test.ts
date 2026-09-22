@@ -20,4 +20,17 @@ describe("buildBookingCreatedEmail", () => {
 
     expect(buildBookingCreatedEmail(input).text).toContain("PIN: AB12345");
   });
+
+  it.each([
+    [true, "Online képmegjelenés: Hozzájárult"],
+    [false, "Online képmegjelenés: Nem járult hozzá"],
+  ])("includes the publication consent when it is %s", (photoPublicationConsent, expected) => {
+    const input = {
+      ...baseInput,
+      approvalMode: "MANUAL" as const,
+      photoPublicationConsent,
+    } satisfies BookingEmailInput;
+
+    expect(buildBookingCreatedEmail(input).text).toContain(expected);
+  });
 });

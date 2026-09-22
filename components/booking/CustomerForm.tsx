@@ -9,6 +9,7 @@ const customerFormSchema = z.object({
   email: z.string().trim().email("Adj meg érvényes e-mail címet.").max(200),
   phone: z.string().trim().min(6, "Adj meg érvényes telefonszámot.").max(30),
   notes: z.string().trim().max(1000).optional(),
+  photoPublicationConsent: z.boolean(),
   company: z.string().max(0).optional(),
 });
 
@@ -16,17 +17,25 @@ export type CustomerFormData = z.infer<typeof customerFormSchema>;
 
 interface CustomerFormProps {
   defaultValues?: Partial<CustomerFormData>;
+  showPhotoPublicationConsent?: boolean;
   onSubmit: (data: CustomerFormData) => void;
 }
 
-export function CustomerForm({ defaultValues, onSubmit }: CustomerFormProps) {
+export function CustomerForm({
+  defaultValues,
+  showPhotoPublicationConsent = false,
+  onSubmit,
+}: CustomerFormProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<CustomerFormData>({
     resolver: zodResolver(customerFormSchema),
-    defaultValues,
+    defaultValues: {
+      photoPublicationConsent: false,
+      ...defaultValues,
+    },
   });
 
   return (
@@ -81,6 +90,25 @@ export function CustomerForm({ defaultValues, onSubmit }: CustomerFormProps) {
           {...register("notes")}
         />
       </div>
+
+      {showPhotoPublicationConsent ? (
+        <div className="rounded-lg border border-border bg-white/60 p-4">
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-foreground">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-5 shrink-0 accent-accent"
+              {...register("photoPublicationConsent")}
+            />
+            <span>
+              Hozzájárulok, hogy a gyermekemről készült képek megjelenjenek a Zsana Photo
+              weboldalán és/vagy az intézmény Facebook-csoportjában.
+            </span>
+          </label>
+          <p className="mt-2 pl-8 text-xs text-foreground/60">
+            A hozzájárulás önkéntes, és nem feltétele a foglalásnak.
+          </p>
+        </div>
+      ) : null}
 
       <div className="hidden" aria-hidden="true">
         <label htmlFor="company">Cég</label>

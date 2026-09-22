@@ -13,9 +13,15 @@ function formatManageSection(manageUrl?: string): string {
   return `\n\nIdőpont módosítása vagy lemondása:\n${manageUrl}`;
 }
 
+function formatPhotoPublicationConsent(consent?: boolean | null): string {
+  if (consent === null || consent === undefined) return "";
+  return `\nOnline képmegjelenés: ${consent ? "Hozzájárult" : "Nem járult hozzá"}`;
+}
+
 export function buildBookingCreatedEmail(input: BookingEmailInput) {
   const { date, time } = formatWhen(input);
   const manageSection = formatManageSection(input.manageUrl);
+  const consentSection = formatPhotoPublicationConsent(input.photoPublicationConsent);
 
   if (input.approvalMode === "AUTO") {
     return {
@@ -30,6 +36,7 @@ Időpont: ${time}
 
 Foglalási azonosító: ${input.bookingNumber}
 PIN: ${input.pin ?? "-"}${manageSection}
+${consentSection}
 
 Várunk szeretettel!
 
@@ -49,6 +56,7 @@ Időpont: ${time}
 
 Foglalási azonosító: ${input.bookingNumber}
 PIN: ${input.pin ?? "-"}${manageSection}
+${consentSection}
 
 A végleges visszaigazolásról e-mailben értesítünk, amint a fotós jóváhagyta a foglalást.
 
@@ -71,6 +79,7 @@ Dátum: ${date}
 Időpont: ${time}
 Megjegyzés: ${input.notes ?? "-"}
 PIN: ${input.pin ?? "-"}
+${formatPhotoPublicationConsent(input.photoPublicationConsent)}
 Státusz: ${input.approvalMode === "AUTO" ? "CONFIRMED" : "PENDING"}`,
   };
 }

@@ -6,6 +6,7 @@ interface BookingSummaryProps {
   serviceName: string;
   slot: Slot;
   customer: CustomerFormData;
+  showPhotoPublicationConsent?: boolean;
   submitting: boolean;
   error: string | null;
   onBack: () => void;
@@ -16,6 +17,7 @@ export function BookingSummary({
   serviceName,
   slot,
   customer,
+  showPhotoPublicationConsent = false,
   submitting,
   error,
   onBack,
@@ -50,6 +52,14 @@ export function BookingSummary({
             <div className="flex justify-between gap-4">
               <dt className="text-foreground/60">Megjegyzés</dt>
               <dd className="text-foreground">{customer.notes}</dd>
+            </div>
+          ) : null}
+          {showPhotoPublicationConsent ? (
+            <div className="flex justify-between gap-4">
+              <dt className="text-foreground/60">Online képmegjelenés</dt>
+              <dd className="text-right text-foreground">
+                {customer.photoPublicationConsent ? "Hozzájárulok" : "Nem járulok hozzá"}
+              </dd>
             </div>
           ) : null}
         </dl>

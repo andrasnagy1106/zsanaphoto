@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Service } from "@/db/schema";
+import { INSTITUTION_SERVICE_SLUG } from "@/lib/constants";
 import { createBookingAction } from "@/app/actions/booking-actions";
 import { StepIndicator } from "./StepIndicator";
 import { ServiceStep } from "./ServiceStep";
@@ -44,6 +45,7 @@ export function BookingWizard({ services }: BookingWizardProps) {
       email: customer.email,
       phone: customer.phone,
       notes: customer.notes,
+      photoPublicationConsent: customer.photoPublicationConsent,
       company: customer.company,
     });
 
@@ -137,6 +139,7 @@ export function BookingWizard({ services }: BookingWizardProps) {
         <div>
           <CustomerForm
             defaultValues={customer ?? undefined}
+            showPhotoPublicationConsent={selectedService?.slug === INSTITUTION_SERVICE_SLUG}
             onSubmit={(data) => {
               setCustomer(data);
               setStep("summary");
@@ -157,6 +160,7 @@ export function BookingWizard({ services }: BookingWizardProps) {
           serviceName={selectedService.name}
           slot={selectedSlot}
           customer={customer}
+          showPhotoPublicationConsent={selectedService.slug === INSTITUTION_SERVICE_SLUG}
           submitting={submitting}
           error={submitError}
           onBack={() => setStep("details")}

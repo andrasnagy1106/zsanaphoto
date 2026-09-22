@@ -1,0 +1,1 @@
+ALTER TABLE "bookings" ADD COLUMN "photo_publication_consent" boolean;

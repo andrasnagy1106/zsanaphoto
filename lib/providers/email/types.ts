@@ -8,6 +8,7 @@ export interface BookingEmailInput {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
+  photoPublicationConsent?: boolean | null;
   notes?: string | null;
   startAt: Date;
   endAt: Date;

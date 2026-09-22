@@ -43,6 +43,13 @@
       "when": 1790065822491,
       "tag": "0005_update_institution_booking_copy",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790067918794,
+      "tag": "0006_panoramic_inhumans",
+      "breakpoints": true
     }
   ]
 }

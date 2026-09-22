@@ -18,6 +18,7 @@ export interface CreateBookingInput {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
+  photoPublicationConsent?: boolean | null;
   notes?: string;
 }
 
@@ -97,6 +98,7 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
               customerName: input.customerName,
               customerEmail: input.customerEmail,
               customerPhone: input.customerPhone,
+              photoPublicationConsent: input.photoPublicationConsent ?? null,
               startAt: input.start,
               endAt: input.end,
               status,
@@ -147,6 +149,7 @@ async function sendBookingCreatedEmails(
     customerName: booking.customerName,
     customerEmail: booking.customerEmail,
     customerPhone: booking.customerPhone,
+    photoPublicationConsent: booking.photoPublicationConsent,
     notes: booking.notes,
     startAt: booking.startAt,
     endAt: booking.endAt,

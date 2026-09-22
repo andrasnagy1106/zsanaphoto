@@ -7,6 +7,7 @@ export const createBookingInputSchema = z.object({
   email: z.string().trim().email("Adj meg érvényes e-mail címet.").max(200),
   phone: z.string().trim().min(6, "Adj meg érvényes telefonszámot.").max(30),
   notes: z.string().trim().max(1000).optional(),
+  photoPublicationConsent: z.boolean().optional().default(false),
   // Honeypot field: real users never fill this in; bots often do.
   company: z.string().max(0, "Érvénytelen beküldés.").optional(),
 });

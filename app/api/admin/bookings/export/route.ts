@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
     "Ügyfél neve",
     "E-mail",
     "Telefonszám",
+    "Online képmegjelenési hozzájárulás",
     "Szolgáltatás",
     "Dátum",
     "Kezdés",
@@ -80,6 +81,13 @@ export async function GET(request: NextRequest) {
     escapeCsvCell(b.customerName),
     escapeCsvCell(b.customerEmail),
     escapeCsvCell(b.customerPhone),
+    escapeCsvCell(
+      b.photoPublicationConsent === null
+        ? "Nem alkalmazható"
+        : b.photoPublicationConsent
+          ? "Hozzájárult"
+          : "Nem járult hozzá",
+    ),
     escapeCsvCell(serviceNameById.get(b.serviceId) ?? "-"),
     escapeCsvCell(formatZonedHungarianDate(b.startAt)),
     escapeCsvCell(formatZonedTime(b.startAt)),
