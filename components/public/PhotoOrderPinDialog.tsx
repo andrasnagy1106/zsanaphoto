@@ -48,8 +48,8 @@ export function PhotoOrderPinDialog({ mobile = false, onNavigate }: PhotoOrderPi
         onClick={openPhotoOrderPinDialog}
         className={
           mobile
-            ? "flex min-h-11 w-full items-center justify-center rounded-full border border-accent px-5 py-2.5 text-base font-semibold text-accent"
-            : "inline-flex min-h-11 items-center rounded-full border border-accent px-4 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
+            ? "flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-accent px-5 py-2.5 text-base font-semibold text-accent"
+            : "inline-flex min-h-11 cursor-pointer items-center rounded-full border border-accent px-4 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
         }
       >
         Fotók megtekintése / rendelés
