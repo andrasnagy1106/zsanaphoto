@@ -23,10 +23,48 @@ function formatPhotoPublicationConsent(consent?: boolean | null): string {
   return `\nOnline képmegjelenés: ${consent ? "Hozzájárult" : "Nem járult hozzá"}`;
 }
 
+export function buildGoogleCalendarUrl(input: {
+  title: string;
+  startAt: Date;
+  endAt: Date;
+  description?: string;
+  location?: string;
+}): string {
+  const formatUtcIso = (d: Date) =>
+    d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+
+  const dates = `${formatUtcIso(input.startAt)}/${formatUtcIso(input.endAt)}`;
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: input.title,
+    dates,
+    ctz: "Europe/Budapest",
+  });
+
+  if (input.description) params.set("details", input.description);
+  if (input.location) params.set("location", input.location);
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function formatGoogleCalendarSection(input: BookingEmailInput): string {
+  const gcalUrl = buildGoogleCalendarUrl({
+    title: `ZsaNa Photo - ${input.serviceName}`,
+    startAt: input.startAt,
+    endAt: input.endAt,
+    description: `Fotózás: ${input.serviceName}\nFoglalási azonosító: ${input.bookingNumber}${input.pin ? `\nPIN: ${input.pin}` : ""}${input.manageUrl ? `\nKezelés / Lemondás: ${input.manageUrl}` : ""}`,
+    location: "ZsaNa Photo",
+  });
+
+  return `\n\nHozzáadás a Google Naptárhoz:\n${gcalUrl}`;
+}
+
 export function buildBookingCreatedEmail(input: BookingEmailInput) {
   const { date, time } = formatWhen(input);
   const manageSection = formatManageSection(input.manageUrl);
   const consentSection = formatPhotoPublicationConsent(input.photoPublicationConsent);
+  const calendarSection =
+    input.approvalMode === "AUTO" ? formatGoogleCalendarSection(input) : "";
 
   if (input.approvalMode === "AUTO") {
     return {
@@ -39,7 +77,7 @@ Fotózás: ${input.serviceName}
 Dátum: ${date}
 Időpont: ${time}
 
-Foglalási azonosító: ${input.bookingNumber}${formatBookingPin(input.pin)}${manageSection}
+Foglalási azonosító: ${input.bookingNumber}${formatBookingPin(input.pin)}${manageSection}${calendarSection}
 ${consentSection}
 
 Várunk szeretettel!
@@ -90,6 +128,7 @@ Státusz: ${input.approvalMode === "AUTO" ? "CONFIRMED" : "PENDING"}`,
 export function buildBookingConfirmedEmail(input: BookingEmailInput) {
   const { date, time } = formatWhen(input);
   const manageSection = formatManageSection(input.manageUrl);
+  const calendarSection = formatGoogleCalendarSection(input);
 
   return {
     subject: "Időpontfoglalás visszaigazolva - ZsaNa Photo",
@@ -101,7 +140,7 @@ Fotózás: ${input.serviceName}
 Dátum: ${date}
 Időpont: ${time}
 
-Foglalási azonosító: ${input.bookingNumber}${manageSection}
+Foglalási azonosító: ${input.bookingNumber}${manageSection}${calendarSection}
 
 Várunk szeretettel!
 
@@ -149,6 +188,7 @@ Eredeti időpont: ${date} (${time})`,
 export function buildBookingRescheduledEmail(input: BookingEmailInput) {
   const { date, time } = formatWhen(input);
   const manageSection = formatManageSection(input.manageUrl);
+  const calendarSection = formatGoogleCalendarSection(input);
 
   return {
     subject: "Időpont módosítva - ZsaNa Photo",
@@ -160,7 +200,7 @@ Fotózás: ${input.serviceName}
 Új dátum: ${date}
 Új időpont: ${time}
 
-Foglalási azonosító: ${input.bookingNumber}${manageSection}
+Foglalási azonosító: ${input.bookingNumber}${manageSection}${calendarSection}
 
 Várunk szeretettel!
 

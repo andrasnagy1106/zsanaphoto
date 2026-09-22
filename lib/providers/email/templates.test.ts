@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildBookingCreatedEmail, buildPhotoOrderConfirmationEmail } from "./templates";
+import {
+  buildBookingCreatedEmail,
+  buildGoogleCalendarUrl,
+  buildPhotoOrderConfirmationEmail,
+} from "./templates";
 import type { ApprovalMode, BookingEmailInput, PhotoOrderEmailInput } from "./types";
 
 const baseInput = {
@@ -43,6 +47,44 @@ describe("buildBookingCreatedEmail", () => {
     } satisfies BookingEmailInput;
 
     expect(buildBookingCreatedEmail(input).text).toContain(expected);
+  });
+
+  it("includes Google Calendar link in AUTO approval mode", () => {
+    const input = {
+      ...baseInput,
+      approvalMode: "AUTO" as const,
+    } satisfies BookingEmailInput;
+
+    const email = buildBookingCreatedEmail(input);
+    expect(email.text).toContain("Hozzáadás a Google Naptárhoz:");
+    expect(email.text).toContain("calendar.google.com/calendar/render");
+  });
+
+  it("omits Google Calendar link when booking is still pending (MANUAL approval mode)", () => {
+    const input = {
+      ...baseInput,
+      approvalMode: "MANUAL" as const,
+    } satisfies BookingEmailInput;
+
+    const email = buildBookingCreatedEmail(input);
+    expect(email.text).not.toContain("Hozzáadás a Google Naptárhoz:");
+  });
+});
+
+describe("buildGoogleCalendarUrl", () => {
+  it("formats Google Calendar URL with correct parameters", () => {
+    const url = buildGoogleCalendarUrl({
+      title: "ZsaNa Photo - Családi fotózás",
+      startAt: new Date("2026-10-15T10:00:00Z"),
+      endAt: new Date("2026-10-15T11:00:00Z"),
+      description: "Foglalás: ZS-2026-0005",
+      location: "ZsaNa Photo Stúdió",
+    });
+
+    expect(url).toContain("https://calendar.google.com/calendar/render?");
+    expect(url).toContain("action=TEMPLATE");
+    expect(url).toContain("dates=20261015T100000Z%2F20261015T110000Z");
+    expect(url).toContain("ctz=Europe%2FBudapest");
   });
 });
 
