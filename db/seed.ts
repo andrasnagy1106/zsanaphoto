@@ -55,7 +55,7 @@ async function main() {
     await db.insert(schema.services).values({
       name: "Intézményi fotózás",
       slug: INSTITUTION_SERVICE_SLUG,
-      description: "Óvodai, iskolai és céges csoportos fotózás, egyedi ajánlat alapján.",
+      description: "Óvodai, iskolai és céges csoportos fotózás, személyes egyeztetéssel.",
       durationMinutes: 60,
       bufferMinutes: 0,
       approvalMode: "MANUAL",

@@ -37,6 +37,10 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
               <dd className="text-foreground">{service?.name ?? "-"}</dd>
             </div>
             <div className="flex justify-between gap-4">
+              <dt className="text-foreground/60">PIN</dt>
+              <dd className="font-mono font-semibold text-foreground">{booking.pin ?? "-"}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
               <dt className="text-foreground/60">Dátum</dt>
               <dd className="text-foreground">{formatZonedHungarianDate(booking.startAt)}</dd>
             </div>

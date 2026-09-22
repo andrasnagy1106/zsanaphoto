@@ -34,8 +34,7 @@ export default function ContactPage() {
         <div className="rounded-xl border border-border bg-white/60 p-6">
           <h2 className="font-display text-xl text-foreground">Mit szeretnél?</h2>
           <p className="mt-3 text-sm text-foreground/70">
-            Családi fotózásra online is tudsz időpontot foglalni, intézményi fotózáshoz pedig
-            ajánlatot kérhetsz.
+            Családi és intézményi fotózásra is online tudsz időpontot foglalni.
           </p>
           <div className="mt-5 flex flex-col gap-3">
             <Link
@@ -48,7 +47,7 @@ export default function ContactPage() {
               href="/intezmenyi-fotozas"
               className="inline-flex min-h-11 items-center justify-center rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-foreground hover:border-accent hover:text-accent"
             >
-              Ajánlatot kérek intézménynek
+              Intézményi időpontot foglalok
             </Link>
           </div>
         </div>

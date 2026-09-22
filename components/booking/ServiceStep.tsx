@@ -1,5 +1,4 @@
 import type { Service } from "@/db/schema";
-import { INSTITUTION_SERVICE_SLUG } from "@/lib/constants";
 
 interface ServiceStepProps {
   services: Service[];
@@ -18,10 +17,7 @@ export function ServiceStep({ services, onSelect }: ServiceStepProps) {
         >
           <p className="font-display text-xl text-foreground">{service.name}</p>
           <p className="mt-2 text-sm text-foreground/70">
-            {service.description ??
-              (service.slug === INSTITUTION_SERVICE_SLUG
-                ? "Ajánlatkérés óvodák, iskolák és cégek számára."
-                : `${service.durationMinutes} perces időpontfoglalás.`)}
+            {service.description ?? `${service.durationMinutes} perces időpontfoglalás.`}
           </p>
         </button>
       ))}

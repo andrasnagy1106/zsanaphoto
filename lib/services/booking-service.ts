@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { bookings, services, type Booking, type Service } from "@/db/schema";
 import { ACTIVE_BOOKING_STATUSES, BOOKING_NUMBER_PREFIX } from "@/lib/constants";
 import { getEmailProvider } from "@/lib/providers/email";
+import { generateBookingPin } from "@/lib/utils/booking-pin";
 import { BookingConflictError, NotFoundError } from "@/lib/utils/errors";
 import { addMinutes, getZonedYear, zonedDateTimeToUtc } from "@/lib/utils/time";
 import { getSiteSettings, isSlotAvailable } from "./availability-service";
@@ -86,10 +87,12 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
 
       for (let attempt = 0; attempt < 5; attempt += 1) {
         try {
+          const pin = generateBookingPin();
           const [row] = await tx
             .insert(bookings)
             .values({
               bookingNumber,
+              pin,
               serviceId: input.serviceId,
               customerName: input.customerName,
               customerEmail: input.customerEmail,
@@ -100,8 +103,9 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
               notes: input.notes ?? null,
               confirmedAt: status === "CONFIRMED" ? now : null,
             })
+            .onConflictDoNothing({ target: bookings.pin })
             .returning();
-          return row;
+          if (row) return row;
         } catch (error) {
           if (isPgErrorCode(error, UNIQUE_VIOLATION) && attempt < 4) {
             bookingNumber = `${bookingNumber}-${attempt + 1}`;
@@ -137,6 +141,7 @@ async function sendBookingCreatedEmails(
 
   const emailInput = {
     bookingNumber: booking.bookingNumber,
+    pin: booking.pin,
     serviceName,
     approvalMode,
     customerName: booking.customerName,
@@ -300,7 +305,7 @@ export async function cancelBooking(id: string): Promise<Booking> {
 
   const [updated] = await db
     .update(bookings)
-    .set({ status: "CANCELLED", cancelledAt: new Date(), updatedAt: new Date() })
+    .set({ status: "CANCELLED", pin: null, cancelledAt: new Date(), updatedAt: new Date() })
     .where(eq(bookings.id, id))
     .returning();
 
@@ -365,7 +370,7 @@ export async function cancelBookingByCustomer(token: string): Promise<Booking> {
 
   const [updated] = await db
     .update(bookings)
-    .set({ status: "CANCELLED", cancelledAt: new Date(), updatedAt: new Date() })
+    .set({ status: "CANCELLED", pin: null, cancelledAt: new Date(), updatedAt: new Date() })
     .where(eq(bookings.id, bookingWithService.id))
     .returning();
 

@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
 
   const headers = [
     "Foglalási azonosító",
+    "PIN",
     "Ügyfél neve",
     "E-mail",
     "Telefonszám",
@@ -75,6 +76,7 @@ export async function GET(request: NextRequest) {
 
   const rows = bookings.map((b) => [
     escapeCsvCell(b.bookingNumber),
+    escapeCsvCell(b.pin),
     escapeCsvCell(b.customerName),
     escapeCsvCell(b.customerEmail),
     escapeCsvCell(b.customerPhone),

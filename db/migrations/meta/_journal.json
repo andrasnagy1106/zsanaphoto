@@ -29,6 +29,20 @@
       "when": 1790023221638,
       "tag": "0003_freezing_cable",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790063886234,
+      "tag": "0004_clean_lady_vermin",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790065822491,
+      "tag": "0005_update_institution_booking_copy",
+      "breakpoints": true
     }
   ]
 }

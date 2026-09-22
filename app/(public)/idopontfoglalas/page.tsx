@@ -5,7 +5,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 
 export const metadata: Metadata = {
   title: "Időpontfoglalás",
-  description: "Foglalj online időpontot családi fotózásra, vagy kérj ajánlatot intézményi fotózásra.",
+  description: "Foglalj online időpontot családi vagy intézményi fotózásra.",
 };
 
 // Always reflect the latest service configuration (active flag, approval mode) from the admin.

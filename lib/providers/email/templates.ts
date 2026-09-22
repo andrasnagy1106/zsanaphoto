@@ -28,7 +28,8 @@ Fotózás: ${input.serviceName}
 Dátum: ${date}
 Időpont: ${time}
 
-Foglalási azonosító: ${input.bookingNumber}${manageSection}
+Foglalási azonosító: ${input.bookingNumber}
+PIN: ${input.pin ?? "-"}${manageSection}
 
 Várunk szeretettel!
 
@@ -46,7 +47,8 @@ Fotózás: ${input.serviceName}
 Dátum: ${date}
 Időpont: ${time}
 
-Foglalási azonosító: ${input.bookingNumber}${manageSection}
+Foglalási azonosító: ${input.bookingNumber}
+PIN: ${input.pin ?? "-"}${manageSection}
 
 A végleges visszaigazolásról e-mailben értesítünk, amint a fotós jóváhagyta a foglalást.
 
@@ -68,6 +70,7 @@ Szolgáltatás: ${input.serviceName}
 Dátum: ${date}
 Időpont: ${time}
 Megjegyzés: ${input.notes ?? "-"}
+PIN: ${input.pin ?? "-"}
 Státusz: ${input.approvalMode === "AUTO" ? "CONFIRMED" : "PENDING"}`,
   };
 }

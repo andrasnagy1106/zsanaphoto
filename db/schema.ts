@@ -102,6 +102,7 @@ export const blockedPeriods = pgTable("blocked_periods", {
 export const bookings = pgTable("bookings", {
   id: id(),
   bookingNumber: text("booking_number").notNull(),
+  pin: text("pin"),
   manageToken: text("manage_token")
     .notNull()
     .$defaultFn(() => crypto.randomUUID()),
@@ -120,6 +121,7 @@ export const bookings = pgTable("bookings", {
   ...timestamps,
 }, (table) => [
   uniqueIndex("bookings_booking_number_idx").on(table.bookingNumber),
+  uniqueIndex("bookings_pin_idx").on(table.pin),
   uniqueIndex("bookings_manage_token_idx").on(table.manageToken),
   index("bookings_service_id_idx").on(table.serviceId),
   index("bookings_start_at_idx").on(table.startAt),

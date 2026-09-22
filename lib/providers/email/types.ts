@@ -2,6 +2,7 @@ export type ApprovalMode = "AUTO" | "MANUAL";
 
 export interface BookingEmailInput {
   bookingNumber: string;
+  pin?: string | null;
   serviceName: string;
   approvalMode: ApprovalMode;
   customerName: string;

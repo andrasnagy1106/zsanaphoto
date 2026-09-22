@@ -29,9 +29,9 @@ export default function HomePage() {
           <ServiceCard
             index={1}
             title="Intézményi fotózás"
-            description="Óvodák, iskolák és cégek csoportos fotózása, egyedi ajánlat alapján."
+            description="Óvodák, iskolák és cégek csoportos fotózása, személyes egyeztetéssel."
             href="/intezmenyi-fotozas"
-            ctaLabel="Ajánlatot kérek"
+            ctaLabel="Részletek és időpontfoglalás"
           />
         </div>
       </section>

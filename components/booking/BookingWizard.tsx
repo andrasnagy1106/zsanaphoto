@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import type { Service } from "@/db/schema";
-import { INSTITUTION_SERVICE_SLUG } from "@/lib/constants";
 import { createBookingAction } from "@/app/actions/booking-actions";
-import { InstitutionInquiryForm } from "@/components/public/InstitutionInquiryForm";
 import { StepIndicator } from "./StepIndicator";
 import { ServiceStep } from "./ServiceStep";
 import { DatePicker } from "./DatePicker";
@@ -31,11 +29,7 @@ export function BookingWizard({ services }: BookingWizardProps) {
 
   function handleServiceSelect(service: Service) {
     setSelectedService(service);
-    if (service.slug === INSTITUTION_SERVICE_SLUG) {
-      setStep("details"); // reused as "institution inquiry" step for this branch
-    } else {
-      setStep("date");
-    }
+    setStep("date");
   }
 
   async function handleConfirm() {
@@ -65,15 +59,6 @@ export function BookingWizard({ services }: BookingWizardProps) {
     } else {
       setSubmitError(response.error ?? "Valami hiba történt. Kérjük, próbáld meg újra.");
     }
-  }
-
-  if (selectedService?.slug === INSTITUTION_SERVICE_SLUG) {
-    return (
-      <div className="rounded-xl border border-border bg-white/60 p-6 sm:p-8">
-        <p className="mb-6 text-sm font-medium text-foreground/60">Ajánlatkérés intézményi fotózáshoz</p>
-        <InstitutionInquiryForm />
-      </div>
-    );
   }
 
   if (step === "success" && result) {

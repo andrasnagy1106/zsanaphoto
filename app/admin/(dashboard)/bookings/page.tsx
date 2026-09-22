@@ -216,6 +216,7 @@ export default async function AdminBookingsPage({ searchParams }: AdminBookingsP
                   </Link>
                 ),
               },
+              { key: "pin", header: "PIN", render: (b) => <span className="font-mono">{b.pin ?? "-"}</span> },
               { key: "date", header: "Dátum", render: (b) => formatZonedHungarianDate(b.startAt) },
               { key: "time", header: "Időpont", render: (b) => `${formatZonedTime(b.startAt)} - ${formatZonedTime(b.endAt)}` },
               { key: "customer", header: "Ügyfél", render: (b) => b.customerName },
@@ -232,6 +233,7 @@ export default async function AdminBookingsPage({ searchParams }: AdminBookingsP
                   <StatusBadge status={b.status} />
                 </div>
                 <p className="mt-1 text-sm text-foreground/70">{b.customerName}</p>
+                <p className="font-mono text-sm text-foreground/70">PIN: {b.pin ?? "-"}</p>
                 <p className="text-sm text-foreground/70">
                   {formatZonedHungarianDate(b.startAt)} · {formatZonedTime(b.startAt)} - {formatZonedTime(b.endAt)}
                 </p>
