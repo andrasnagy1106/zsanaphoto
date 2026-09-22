@@ -7,8 +7,10 @@ import {
   buildBookingConfirmedEmail,
   buildBookingCreatedEmail,
   buildBookingRescheduledEmail,
+  buildAdminPhotoOrderNotificationEmail,
+  buildPhotoOrderConfirmationEmail,
 } from "./templates";
-import type { BookingEmailInput, EmailProvider } from "./types";
+import type { BookingEmailInput, EmailProvider, PhotoOrderEmailInput } from "./types";
 
 /** Sends real emails via Resend. Used in production and locally when RESEND_API_KEY is set. */
 export class ResendEmailProvider implements EmailProvider {
@@ -66,6 +68,16 @@ export class ResendEmailProvider implements EmailProvider {
 
   async sendAdminBookingRescheduledEmail(input: BookingEmailInput): Promise<void> {
     const { subject, text } = buildAdminBookingRescheduledEmail(input);
+    await this.send(input.adminNotificationEmail, subject, text);
+  }
+
+  async sendPhotoOrderConfirmationEmail(input: PhotoOrderEmailInput): Promise<void> {
+    const { subject, text } = buildPhotoOrderConfirmationEmail(input);
+    await this.send(input.customerEmail, subject, text);
+  }
+
+  async sendAdminPhotoOrderNotificationEmail(input: PhotoOrderEmailInput): Promise<void> {
+    const { subject, text } = buildAdminPhotoOrderNotificationEmail(input);
     await this.send(input.adminNotificationEmail, subject, text);
   }
 }

@@ -9,6 +9,7 @@ import {
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const approvalModeEnum = pgEnum("approval_mode", ["AUTO", "MANUAL"]);
 export const serviceAvailabilityModeEnum = pgEnum("service_availability_mode", ["GLOBAL", "CUSTOM"]);
@@ -25,6 +26,13 @@ export const inquiryStatusEnum = pgEnum("inquiry_status", [
   "NEW",
   "CONTACTED",
   "CLOSED",
+]);
+
+export const photoOrderStatusEnum = pgEnum("photo_order_status", [
+  "NEW",
+  "PROCESSING",
+  "COMPLETED",
+  "CANCELLED",
 ]);
 
 const id = () =>
@@ -131,6 +139,39 @@ export const bookings = pgTable("bookings", {
   index("bookings_customer_email_idx").on(table.customerEmail),
 ]);
 
+export const photoOrders = pgTable("photo_orders", {
+  id: id(),
+  orderNumber: text("order_number").notNull(),
+  bookingId: text("booking_id")
+    .notNull()
+    .references(() => bookings.id, { onDelete: "restrict" }),
+  status: photoOrderStatusEnum("status").notNull().default("NEW"),
+  notes: text("notes"),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("photo_orders_order_number_idx").on(table.orderNumber),
+  uniqueIndex("photo_orders_one_active_per_booking_idx")
+    .on(table.bookingId)
+    .where(sql`${table.status} IN ('NEW', 'PROCESSING')`),
+  index("photo_orders_booking_id_idx").on(table.bookingId),
+  index("photo_orders_status_idx").on(table.status),
+  index("photo_orders_created_at_idx").on(table.createdAt),
+]);
+
+export const photoOrderItems = pgTable("photo_order_items", {
+  id: id(),
+  orderId: text("order_id")
+    .notNull()
+    .references(() => photoOrders.id, { onDelete: "cascade" }),
+  photoId: text("photo_id").notNull(),
+  photoTitle: text("photo_title").notNull(),
+  size: text("size").notNull(),
+  quantity: integer("quantity").notNull(),
+  ...timestamps,
+}, (table) => [
+  index("photo_order_items_order_id_idx").on(table.orderId),
+]);
+
 export const adminUsers = pgTable("admin_users", {
   id: id(),
   email: text("email").notNull(),
@@ -178,6 +219,10 @@ export type BlockedPeriod = typeof blockedPeriods.$inferSelect;
 export type NewBlockedPeriod = typeof blockedPeriods.$inferInsert;
 export type Booking = typeof bookings.$inferSelect;
 export type NewBooking = typeof bookings.$inferInsert;
+export type PhotoOrder = typeof photoOrders.$inferSelect;
+export type NewPhotoOrder = typeof photoOrders.$inferInsert;
+export type PhotoOrderItem = typeof photoOrderItems.$inferSelect;
+export type NewPhotoOrderItem = typeof photoOrderItems.$inferInsert;
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type SiteSettings = typeof siteSettings.$inferSelect;
 export type InstitutionInquiry = typeof institutionInquiries.$inferSelect;

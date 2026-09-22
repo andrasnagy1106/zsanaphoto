@@ -16,6 +16,22 @@ export interface BookingEmailInput {
   manageUrl?: string;
 }
 
+export interface PhotoOrderEmailInput {
+  orderNumber: string;
+  bookingNumber: string;
+  customerName: string;
+  customerEmail: string;
+  serviceName: string;
+  adminNotificationEmail: string;
+  notes?: string | null;
+  isUpdate: boolean;
+  items: Array<{
+    photoTitle: string;
+    size: string;
+    quantity: number;
+  }>;
+}
+
 export interface EmailProvider {
   sendBookingCreatedEmail(input: BookingEmailInput): Promise<void>;
   sendAdminNewBookingEmail(input: BookingEmailInput): Promise<void>;
@@ -24,4 +40,6 @@ export interface EmailProvider {
   sendAdminBookingCancelledEmail(input: BookingEmailInput): Promise<void>;
   sendBookingRescheduledEmail(input: BookingEmailInput): Promise<void>;
   sendAdminBookingRescheduledEmail(input: BookingEmailInput): Promise<void>;
+  sendPhotoOrderConfirmationEmail(input: PhotoOrderEmailInput): Promise<void>;
+  sendAdminPhotoOrderNotificationEmail(input: PhotoOrderEmailInput): Promise<void>;
 }

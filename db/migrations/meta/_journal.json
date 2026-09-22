@@ -50,6 +50,20 @@
       "when": 1790067918794,
       "tag": "0006_panoramic_inhumans",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790079315116,
+      "tag": "0007_sloppy_warbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790080579069,
+      "tag": "0008_rich_kid_colt",
+      "breakpoints": true
     }
   ]
 }

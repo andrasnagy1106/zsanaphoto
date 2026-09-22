@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils/cn";
+import { PhotoOrderPinDialog } from "./PhotoOrderPinDialog";
 
 const NAV_LINKS = [
   { href: "/csaladi-fotozas", label: "Családi fotózás" },
@@ -39,7 +40,8 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden lg:block">
+        <div className="hidden items-center gap-3 lg:flex">
+          <PhotoOrderPinDialog />
           <Link
             href="/idopontfoglalas"
             className="inline-flex min-h-11 items-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-dark"
@@ -89,6 +91,9 @@ export function Header() {
                 </Link>
               </li>
             ))}
+            <li className="pt-2">
+              <PhotoOrderPinDialog mobile onNavigate={() => setMenuOpen(false)} />
+            </li>
             <li className="pt-2">
               <Link
                 href="/idopontfoglalas"

@@ -1,7 +1,11 @@
 import { and, asc, desc, eq, gte, inArray, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { bookings, services, type Booking, type Service } from "@/db/schema";
-import { ACTIVE_BOOKING_STATUSES, BOOKING_NUMBER_PREFIX } from "@/lib/constants";
+import {
+  ACTIVE_BOOKING_STATUSES,
+  BOOKING_NUMBER_PREFIX,
+  INSTITUTION_SERVICE_SLUG,
+} from "@/lib/constants";
 import { getEmailProvider } from "@/lib/providers/email";
 import { generateBookingPin } from "@/lib/utils/booking-pin";
 import { BookingConflictError, NotFoundError } from "@/lib/utils/errors";
@@ -88,7 +92,7 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
 
       for (let attempt = 0; attempt < 5; attempt += 1) {
         try {
-          const pin = generateBookingPin();
+          const pin = service.slug === INSTITUTION_SERVICE_SLUG ? generateBookingPin() : null;
           const [row] = await tx
             .insert(bookings)
             .values({

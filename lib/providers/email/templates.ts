@@ -1,5 +1,5 @@
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
-import type { BookingEmailInput } from "./types";
+import type { BookingEmailInput, PhotoOrderEmailInput } from "./types";
 
 function formatWhen(input: BookingEmailInput): { date: string; time: string } {
   return {
@@ -11,6 +11,10 @@ function formatWhen(input: BookingEmailInput): { date: string; time: string } {
 function formatManageSection(manageUrl?: string): string {
   if (!manageUrl) return "";
   return `\n\nIdőpont módosítása vagy lemondása:\n${manageUrl}`;
+}
+
+function formatBookingPin(pin?: string | null): string {
+  return pin ? `\nPIN: ${pin}` : "";
 }
 
 function formatPhotoPublicationConsent(consent?: boolean | null): string {
@@ -34,8 +38,7 @@ Fotózás: ${input.serviceName}
 Dátum: ${date}
 Időpont: ${time}
 
-Foglalási azonosító: ${input.bookingNumber}
-PIN: ${input.pin ?? "-"}${manageSection}
+Foglalási azonosító: ${input.bookingNumber}${formatBookingPin(input.pin)}${manageSection}
 ${consentSection}
 
 Várunk szeretettel!
@@ -54,8 +57,7 @@ Fotózás: ${input.serviceName}
 Dátum: ${date}
 Időpont: ${time}
 
-Foglalási azonosító: ${input.bookingNumber}
-PIN: ${input.pin ?? "-"}${manageSection}
+Foglalási azonosító: ${input.bookingNumber}${formatBookingPin(input.pin)}${manageSection}
 ${consentSection}
 
 A végleges visszaigazolásról e-mailben értesítünk, amint a fotós jóváhagyta a foglalást.
@@ -78,7 +80,7 @@ Szolgáltatás: ${input.serviceName}
 Dátum: ${date}
 Időpont: ${time}
 Megjegyzés: ${input.notes ?? "-"}
-PIN: ${input.pin ?? "-"}
+${input.pin ? `PIN: ${input.pin}` : ""}
 ${formatPhotoPublicationConsent(input.photoPublicationConsent)}
 Státusz: ${input.approvalMode === "AUTO" ? "CONFIRMED" : "PENDING"}`,
   };
@@ -179,5 +181,49 @@ Telefon: ${input.customerPhone}
 Szolgáltatás: ${input.serviceName}
 Új dátum: ${date}
 Új időpont: ${time}`,
+  };
+}
+
+function formatPhotoOrderItems(input: PhotoOrderEmailInput): string {
+  return input.items
+    .map((item) => `- ${item.photoTitle} · ${item.size} · ${item.quantity} db`)
+    .join("\n");
+}
+
+export function buildPhotoOrderConfirmationEmail(input: PhotoOrderEmailInput) {
+  return {
+    subject: `${input.isUpdate ? "Fotórendelés módosítva" : "Fotórendelés visszaigazolása"} - ${input.orderNumber}`,
+    text: `Kedves ${input.customerName}!
+
+${input.isUpdate ? "Sikeresen módosítottuk" : "Sikeresen rögzítettük"} a fotórendelésedet.
+
+Rendelési azonosító: ${input.orderNumber}
+Foglalási azonosító: ${input.bookingNumber}
+Fotózás: ${input.serviceName}
+Megjegyzés: ${input.notes ?? "-"}
+
+Rendelt képek:
+${formatPhotoOrderItems(input)}
+
+A rendelés feldolgozásáról értesítünk.
+
+Zsana Photo`,
+  };
+}
+
+export function buildAdminPhotoOrderNotificationEmail(input: PhotoOrderEmailInput) {
+  return {
+    subject: `${input.isUpdate ? "Fotórendelés módosítva" : "Új fotórendelés"} - ${input.orderNumber}`,
+    text: `${input.isUpdate ? "Egy fotórendelést módosítottak." : "Új fotórendelés érkezett."}
+
+Rendelési azonosító: ${input.orderNumber}
+Foglalási azonosító: ${input.bookingNumber}
+Ügyfél: ${input.customerName}
+E-mail: ${input.customerEmail}
+Fotózás: ${input.serviceName}
+Megjegyzés: ${input.notes ?? "-"}
+
+Rendelt képek:
+${formatPhotoOrderItems(input)}`,
   };
 }

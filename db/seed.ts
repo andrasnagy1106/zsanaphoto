@@ -12,6 +12,13 @@ import { FAMILY_SERVICE_SLUG, INSTITUTION_SERVICE_SLUG } from "../lib/constants"
 
 const DEV_ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? "admin@zsanaphoto.dev";
 const DEV_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "ChangeMe123!";
+const SHOULD_SEED_DEMO_PHOTO_ORDER = process.env.SEED_DEMO_PHOTO_ORDER === "true";
+const DEMO_PHOTO_ORDER_PIN = process.env.SEED_DEMO_PHOTO_ORDER_PIN ?? "DE12345";
+const DEMO_PHOTO_ORDER_EMAIL =
+  process.env.SEED_DEMO_PHOTO_ORDER_EMAIL ??
+  process.env.ADMIN_NOTIFICATION_EMAIL ??
+  DEV_ADMIN_EMAIL;
+const DEMO_BOOKING_NUMBER = "ZS-DEMO-0001";
 
 async function main() {
   const connectionString = process.env.DATABASE_URL;
@@ -45,14 +52,14 @@ async function main() {
     });
   }
 
-  const [existingInstitution] = await db
+  let [institutionService] = await db
     .select()
     .from(schema.services)
     .where(eq(schema.services.slug, INSTITUTION_SERVICE_SLUG))
     .limit(1);
 
-  if (!existingInstitution) {
-    await db.insert(schema.services).values({
+  if (!institutionService) {
+    [institutionService] = await db.insert(schema.services).values({
       name: "Intézményi fotózás",
       slug: INSTITUTION_SERVICE_SLUG,
       description: "Óvodai, iskolai és céges csoportos fotózás, személyes egyeztetéssel.",
@@ -61,7 +68,45 @@ async function main() {
       approvalMode: "MANUAL",
       active: true,
       sortOrder: 2,
-    });
+    }).returning();
+  }
+
+  if (SHOULD_SEED_DEMO_PHOTO_ORDER) {
+    console.log("Seeding institutional photo-order demo PIN...");
+    const [existingDemoBooking] = await db
+      .select()
+      .from(schema.bookings)
+      .where(eq(schema.bookings.bookingNumber, DEMO_BOOKING_NUMBER))
+      .limit(1);
+
+    if (existingDemoBooking) {
+      await db
+        .update(schema.bookings)
+        .set({
+          pin: DEMO_PHOTO_ORDER_PIN,
+          serviceId: institutionService.id,
+          customerEmail: DEMO_PHOTO_ORDER_EMAIL,
+          status: "COMPLETED",
+          cancelledAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.bookings.id, existingDemoBooking.id));
+    } else {
+      await db.insert(schema.bookings).values({
+        bookingNumber: DEMO_BOOKING_NUMBER,
+        pin: DEMO_PHOTO_ORDER_PIN,
+        serviceId: institutionService.id,
+        customerName: "Demo Szülő",
+        customerEmail: DEMO_PHOTO_ORDER_EMAIL,
+        customerPhone: "+36 30 000 0000",
+        startAt: new Date("2026-09-01T08:00:00Z"),
+        endAt: new Date("2026-09-01T09:00:00Z"),
+        status: "COMPLETED",
+        notes: "Fotórendelési bemutató foglalás.",
+        confirmedAt: new Date("2026-09-01T07:00:00Z"),
+      });
+    }
+    console.log(`Demo photo-order PIN ready: ${DEMO_PHOTO_ORDER_PIN}`);
   }
 
   console.log("Seeding availability rules (Mon-Fri)...");

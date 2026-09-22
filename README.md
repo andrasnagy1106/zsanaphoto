@@ -21,7 +21,8 @@ app/
   (public)/        publikus oldalak (Header/Footer layout)
   admin/
     (auth)/        /admin/login - guard nélkül
-    (dashboard)/    /admin, /admin/bookings, ... - requireAdmin() véd
+    (dashboard)/    /admin, /admin/bookings, /admin/photo-orders, ... - requireAdmin() véd
+  (public)/fotorendeles/  PIN-nel megnyitható intézményi fotórendelő
   api/availability/  publikus GET route handlerek (elérhető napok/időpontok)
   actions/          "use server" Server Actionök (booking, inquiry, auth, admin mutációk)
 components/
@@ -29,7 +30,8 @@ components/
 db/
   schema.ts, client.ts, migrate.ts, seed.ts, migrations/
 lib/
-  services/        booking-service, availability-service, inquiry-service, service-service,
+  services/        booking-service, photo-order-service, availability-service, inquiry-service,
+                    service-service,
                     availability-rule-service, blocked-period-service, settings-service
   providers/email/  EmailProvider absztrakció (Resend / Console)
   auth/             session.ts (HMAC token), password.ts (bcrypt), guard.ts (requireAdmin)
@@ -79,6 +81,17 @@ lib/
    e-mail:  admin@zsanaphoto.dev
    jelszó:  ChangeMe123!
    ```
+
+  Opcionális fotórendelési demó foglalás és PIN létrehozása:
+
+  ```powershell
+  $env:SEED_DEMO_PHOTO_ORDER="true"
+  pnpm db:seed
+  ```
+
+  A demó PIN alapértelmezetten `DE12345`. A `SEED_DEMO_PHOTO_ORDER_PIN` változóval felülírható.
+  A visszaigazolás az `ADMIN_NOTIFICATION_EMAIL` címre érkezik, vagy külön megadható a
+  `SEED_DEMO_PHOTO_ORDER_EMAIL` változóval. Production adatbázisban ne engedélyezd a demó seedet.
 
    Productionben ezt kötelező lecserélni (lásd lentebb).
 
@@ -136,6 +149,12 @@ Ajánlott két külön Neon adatbázis: `zsanaphoto-dev` (helyi fejlesztés) és
   foglalásokat - ez race condition esetén is garantáltan megakadályozza a dupla foglalást.
 - `approvalMode = AUTO`: a foglalás azonnal `CONFIRMED`. `MANUAL`: `PENDING`, admin jóváhagyása
   szükséges (`/admin/bookings`).
+- Az egyedi, két nagybetűből és öt számjegyből álló PIN kizárólag intézményi foglaláshoz készül.
+  Megerősített vagy teljesített foglalás PIN-jével a fejlécből megnyitható a privát fotórendelő.
+- A fotórendelő jelenleg stock képekkel működik. Képenként méret és darabszám választható, a rendelés
+  e-mailes visszaigazolást küld az ügyfélnek és az adminnak, majd az `/admin/photo-orders` oldalon
+  követhető és státuszolható. Egy PIN-hez egyszerre egy aktív (`NEW`/`PROCESSING`) rendelés tartozhat;
+  ismételt belépéskor a tételek, darabszámok, méretek és a rendelési megjegyzés módosíthatók.
 - Minden foglalási/admin mutáció szerveroldali Server Actionön keresztül történik, Zod validációval,
   és admin műveletek `requireAdmin()` guard mögött futnak.
 - Rate limiting: booking submit, intézményi érdeklődés és admin login is korlátozva van (egyszerű,

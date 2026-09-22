@@ -1,0 +1,2 @@
+ALTER TABLE "photo_orders" ADD COLUMN "notes" text;--> statement-breakpoint
+CREATE UNIQUE INDEX "photo_orders_one_active_per_booking_idx" ON "photo_orders" USING btree ("booking_id") WHERE "photo_orders"."status" IN ('NEW', 'PROCESSING');

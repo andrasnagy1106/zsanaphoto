@@ -9,6 +9,7 @@ import { logoutAction } from "@/app/actions/auth-actions";
 const NAV_ITEMS = [
   { href: "/admin", label: "Áttekintés" },
   { href: "/admin/bookings", label: "Foglalások" },
+  { href: "/admin/photo-orders", label: "Fotórendelések" },
   { href: "/admin/inquiries", label: "Érdeklődések" },
   { href: "/admin/services", label: "Szolgáltatások" },
   { href: "/admin/availability", label: "Elérhetőség" },
