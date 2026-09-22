@@ -2,9 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBookingById } from "@/lib/services/booking-service";
 import { getServiceById } from "@/lib/services/service-service";
+import { getPhotoOrdersForBooking } from "@/lib/services/photo-order-service";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
+import { formatPrice } from "@/lib/photo-order-catalog";
 import { BookingDetailActions } from "@/components/admin/BookingDetailActions";
+import { BookingPhotoPricingForm } from "@/components/admin/BookingPhotoPricingForm";
+import { PhotoOrderDetailsDialog } from "@/components/admin/PhotoOrderDetailsDialog";
+import { PhotoOrderStatusControl } from "@/components/admin/PhotoOrderStatusControl";
 
 interface AdminBookingDetailPageProps {
   params: Promise<{ id: string }>;
@@ -15,7 +20,15 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
   const booking = await getBookingById(id);
   if (!booking) notFound();
 
-  const service = await getServiceById(booking.serviceId);
+  const [service, photoOrders] = await Promise.all([
+    getServiceById(booking.serviceId),
+    getPhotoOrdersForBooking(booking.id),
+  ]);
+
+  const totalPhotoOrdersRevenue = photoOrders.reduce(
+    (sum, o) => sum + (o.order.totalAmount > 0 ? o.order.totalAmount : o.items.reduce((s, i) => s + i.totalPrice, 0)),
+    0,
+  );
 
   return (
     <div>
@@ -97,6 +110,56 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
       <div className="mt-6">
         <BookingDetailActions booking={booking} />
       </div>
+
+      {/* Event Photo Pricing */}
+      <div className="mt-6">
+        <BookingPhotoPricingForm
+          bookingId={booking.id}
+          customPrices={booking.customPhotoPrices}
+        />
+      </div>
+
+      {/* Photo Orders for this booking/event */}
+      {photoOrders.length > 0 && (
+        <div className="mt-6 rounded-xl border border-border bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Kapcsolódó fotórendelések ({photoOrders.length})</h2>
+              <p className="mt-1 text-xs text-foreground/60">
+                Ehhez az eseményhez leadott fotórendelések. Összérték: <strong className="text-accent">{formatPrice(totalPhotoOrdersRevenue)}</strong>
+              </p>
+            </div>
+            <Link
+              href="/admin/photo-orders"
+              className="text-xs font-semibold text-accent hover:text-accent-dark hover:underline"
+            >
+              Összes fotórendelés →
+            </Link>
+          </div>
+
+          <div className="mt-4 divide-y divide-border border-t border-border">
+            {photoOrders.map((orderRow) => (
+              <div key={orderRow.order.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <div>
+                  <span className="font-mono text-sm font-semibold text-foreground">{orderRow.order.orderNumber}</span>
+                  <span className="ml-3 text-xs text-foreground/60">
+                    {formatZonedHungarianDate(orderRow.order.createdAt)} {formatZonedTime(orderRow.order.createdAt)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <PhotoOrderDetailsDialog
+                    order={orderRow.order}
+                    customerName={orderRow.booking.customerName}
+                    bookingNumber={orderRow.booking.bookingNumber}
+                    items={orderRow.items}
+                  />
+                  <PhotoOrderStatusControl order={orderRow.order} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

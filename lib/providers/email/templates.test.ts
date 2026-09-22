@@ -47,7 +47,7 @@ describe("buildBookingCreatedEmail", () => {
 });
 
 describe("buildPhotoOrderConfirmationEmail", () => {
-  it("includes the order identifiers and every line item", () => {
+  it("includes the order identifiers, line item prices, and total amount", () => {
     const input = {
       orderNumber: "ZR-2026-12345",
       bookingNumber: "ZS-2026-0001",
@@ -57,16 +57,20 @@ describe("buildPhotoOrderConfirmationEmail", () => {
       adminNotificationEmail: "admin@example.com",
       notes: "Egy csomagba kérem.",
       isUpdate: false,
+      totalAmount: 3100,
       items: [
-        { photoTitle: "Családi séta", size: "10x15 cm", quantity: 2 },
-        { photoTitle: "Közös játék", size: "20x30 cm", quantity: 1 },
+        { photoTitle: "Családi séta", size: "10x15 cm", quantity: 2, unitPrice: 600, totalPrice: 1200 },
+        { photoTitle: "Közös játék", size: "A4 21x30 cm", quantity: 1, unitPrice: 1900, totalPrice: 1900 },
       ],
     } satisfies PhotoOrderEmailInput;
 
     const email = buildPhotoOrderConfirmationEmail(input);
     expect(email.text).toContain("ZR-2026-12345");
     expect(email.text).toContain("Családi séta · 10x15 cm · 2 db");
-    expect(email.text).toContain("Közös játék · 20x30 cm · 1 db");
+    expect(email.text).toContain("600 Ft");
+    expect(email.text).toContain("1"); // 1 200 Ft or 1200 Ft
+    expect(email.text).toContain("Közös játék · A4 21x30 cm · 1 db");
+    expect(email.text).toContain("Végösszeg:");
     expect(email.text).toContain("Megjegyzés: Egy csomagba kérem.");
   });
 
@@ -79,7 +83,8 @@ describe("buildPhotoOrderConfirmationEmail", () => {
       serviceName: "Intézményi fotózás",
       adminNotificationEmail: "admin@example.com",
       isUpdate: true,
-      items: [{ photoTitle: "Családi séta", size: "10x15 cm", quantity: 3 }],
+      totalAmount: 1800,
+      items: [{ photoTitle: "Családi séta", size: "10x15 cm", quantity: 3, unitPrice: 600, totalPrice: 1800 }],
     });
 
     expect(email.subject).toContain("módosítva");

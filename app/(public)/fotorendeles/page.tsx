@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PhotoOrderForm } from "@/components/booking/PhotoOrderForm";
+import { resolvePhotoPrices } from "@/lib/photo-order-catalog";
 import {
   getActivePhotoOrderForBooking,
   getPhotoOrderAccessByToken,
@@ -37,6 +38,7 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
   }
 
   const activeOrder = await getActivePhotoOrderForBooking(access.booking.id);
+  const prices = resolvePhotoPrices(access.booking.customPhotoPrices);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
@@ -44,6 +46,7 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
         accessToken={token!}
         customerName={access.booking.customerName}
         bookingNumber={access.booking.bookingNumber}
+        prices={prices}
         initialOrder={activeOrder ? {
           orderNumber: activeOrder.order.orderNumber,
           notes: activeOrder.order.notes,

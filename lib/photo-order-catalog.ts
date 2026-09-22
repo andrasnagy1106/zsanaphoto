@@ -1,4 +1,41 @@
-export const PHOTO_PRINT_SIZES = ["10x15 cm", "13x18 cm", "15x21 cm", "20x30 cm"] as const;
+export const PHOTO_PRINT_SIZES = [
+  "10x15 cm",
+  "13x18 cm",
+  "15x21 cm",
+  "A4 21x30 cm",
+] as const;
+
+export type PhotoPrintSize = (typeof PHOTO_PRINT_SIZES)[number];
+
+export const DEFAULT_PHOTO_PRICES: Record<PhotoPrintSize, number> = {
+  "10x15 cm": 600,
+  "13x18 cm": 750,
+  "15x21 cm": 1200,
+  "A4 21x30 cm": 1900,
+};
+
+export function formatPrice(amount: number): string {
+  return `${amount.toLocaleString("hu-HU")} Ft`;
+}
+
+export function resolvePhotoPrices(
+  customPrices?: Partial<Record<PhotoPrintSize, number>> | Record<string, number> | null,
+): Record<PhotoPrintSize, number> {
+  return {
+    "10x15 cm": typeof customPrices?.["10x15 cm"] === "number" && customPrices["10x15 cm"] >= 0
+      ? customPrices["10x15 cm"]
+      : DEFAULT_PHOTO_PRICES["10x15 cm"],
+    "13x18 cm": typeof customPrices?.["13x18 cm"] === "number" && customPrices["13x18 cm"] >= 0
+      ? customPrices["13x18 cm"]
+      : DEFAULT_PHOTO_PRICES["13x18 cm"],
+    "15x21 cm": typeof customPrices?.["15x21 cm"] === "number" && customPrices["15x21 cm"] >= 0
+      ? customPrices["15x21 cm"]
+      : DEFAULT_PHOTO_PRICES["15x21 cm"],
+    "A4 21x30 cm": typeof customPrices?.["A4 21x30 cm"] === "number" && customPrices["A4 21x30 cm"] >= 0
+      ? customPrices["A4 21x30 cm"]
+      : DEFAULT_PHOTO_PRICES["A4 21x30 cm"],
+  };
+}
 
 export const STOCK_PHOTOS = [
   {
@@ -38,5 +75,3 @@ export const STOCK_PHOTOS = [
     src: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=82",
   },
 ] as const;
-
-export type PhotoPrintSize = (typeof PHOTO_PRINT_SIZES)[number];

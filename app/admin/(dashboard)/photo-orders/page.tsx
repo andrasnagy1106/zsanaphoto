@@ -2,6 +2,7 @@ import { AdminTable } from "@/components/admin/AdminTable";
 import { PhotoOrderDetailsDialog } from "@/components/admin/PhotoOrderDetailsDialog";
 import { PhotoOrderStatusControl } from "@/components/admin/PhotoOrderStatusControl";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { formatPrice } from "@/lib/photo-order-catalog";
 import { listPhotoOrders } from "@/lib/services/photo-order-service";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
 
@@ -18,11 +19,17 @@ function renderOrderDetails(row: Awaited<ReturnType<typeof listPhotoOrders>>[num
 
 export default async function AdminPhotoOrdersPage() {
   const orders = await listPhotoOrders();
+  const totalRevenue = orders.reduce(
+    (sum, o) => sum + (o.order.totalAmount > 0 ? o.order.totalAmount : o.items.reduce((s, i) => s + i.totalPrice, 0)),
+    0,
+  );
 
   return (
     <div>
       <h1 className="font-display text-2xl text-foreground">Fotórendelések</h1>
-      <p className="mt-1 text-sm text-foreground/60">Összesen {orders.length} rendelés.</p>
+      <p className="mt-1 text-sm text-foreground/60">
+        Összesen {orders.length} rendelés · Összbevétel: <strong className="text-foreground">{formatPrice(totalRevenue)}</strong>
+      </p>
 
       <div className="mt-6">
         {orders.length === 0 ? (

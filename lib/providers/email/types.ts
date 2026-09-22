@@ -25,10 +25,13 @@ export interface PhotoOrderEmailInput {
   adminNotificationEmail: string;
   notes?: string | null;
   isUpdate: boolean;
+  totalAmount: number;
   items: Array<{
     photoTitle: string;
     size: string;
     quantity: number;
+    unitPrice: number;
+    totalPrice: number;
   }>;
 }
 

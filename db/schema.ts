@@ -6,10 +6,12 @@ import {
   integer,
   smallint,
   boolean,
+  jsonb,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import type { PhotoPrintSize } from "@/lib/photo-order-catalog";
 
 export const approvalModeEnum = pgEnum("approval_mode", ["AUTO", "MANUAL"]);
 export const serviceAvailabilityModeEnum = pgEnum("service_availability_mode", ["GLOBAL", "CUSTOM"]);
@@ -121,6 +123,7 @@ export const bookings = pgTable("bookings", {
   customerEmail: text("customer_email").notNull(),
   customerPhone: text("customer_phone").notNull(),
   photoPublicationConsent: boolean("photo_publication_consent"),
+  customPhotoPrices: jsonb("custom_photo_prices").$type<Partial<Record<PhotoPrintSize, number>> | null>(),
   startAt: timestamp("start_at", { withTimezone: true }).notNull(),
   endAt: timestamp("end_at", { withTimezone: true }).notNull(),
   status: bookingStatusEnum("status").notNull().default("PENDING"),
@@ -145,6 +148,7 @@ export const photoOrders = pgTable("photo_orders", {
   bookingId: text("booking_id")
     .notNull()
     .references(() => bookings.id, { onDelete: "restrict" }),
+  totalAmount: integer("total_amount").notNull().default(0),
   status: photoOrderStatusEnum("status").notNull().default("NEW"),
   notes: text("notes"),
   ...timestamps,
@@ -167,6 +171,8 @@ export const photoOrderItems = pgTable("photo_order_items", {
   photoTitle: text("photo_title").notNull(),
   size: text("size").notNull(),
   quantity: integer("quantity").notNull(),
+  unitPrice: integer("unit_price").notNull().default(0),
+  totalPrice: integer("total_price").notNull().default(0),
   ...timestamps,
 }, (table) => [
   index("photo_order_items_order_id_idx").on(table.orderId),

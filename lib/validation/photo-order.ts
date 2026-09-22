@@ -31,4 +31,18 @@ export const updatePhotoOrderStatusSchema = z.object({
   status: z.enum(["NEW", "PROCESSING", "COMPLETED", "CANCELLED"]),
 });
 
+export const updateBookingPhotoPricesSchema = z.object({
+  bookingId: z.string().uuid("Érvénytelen foglalás azonosító."),
+  prices: z
+    .object({
+      "10x15 cm": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
+      "13x18 cm": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
+      "15x21 cm": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
+      "A4 21x30 cm": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),
+    })
+    .nullable()
+    .optional(),
+});
+
 export type SavePhotoOrderForm = z.infer<typeof savePhotoOrderSchema>;
+export type UpdateBookingPhotoPricesForm = z.infer<typeof updateBookingPhotoPricesSchema>;

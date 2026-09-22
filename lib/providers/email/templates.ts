@@ -1,3 +1,4 @@
+import { formatPrice } from "@/lib/photo-order-catalog";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
 import type { BookingEmailInput, PhotoOrderEmailInput } from "./types";
 
@@ -186,7 +187,10 @@ Szolgáltatás: ${input.serviceName}
 
 function formatPhotoOrderItems(input: PhotoOrderEmailInput): string {
   return input.items
-    .map((item) => `- ${item.photoTitle} · ${item.size} · ${item.quantity} db`)
+    .map(
+      (item) =>
+        `- ${item.photoTitle} · ${item.size} · ${item.quantity} db × ${formatPrice(item.unitPrice)} = ${formatPrice(item.totalPrice)}`,
+    )
     .join("\n");
 }
 
@@ -204,6 +208,8 @@ Megjegyzés: ${input.notes ?? "-"}
 
 Rendelt képek:
 ${formatPhotoOrderItems(input)}
+
+Végösszeg: ${formatPrice(input.totalAmount)}
 
 A rendelés feldolgozásáról értesítünk.
 
@@ -224,6 +230,8 @@ Fotózás: ${input.serviceName}
 Megjegyzés: ${input.notes ?? "-"}
 
 Rendelt képek:
-${formatPhotoOrderItems(input)}`,
+${formatPhotoOrderItems(input)}
+
+Végösszeg: ${formatPrice(input.totalAmount)}`,
   };
 }

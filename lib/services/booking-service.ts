@@ -6,6 +6,7 @@ import {
   BOOKING_NUMBER_PREFIX,
   INSTITUTION_SERVICE_SLUG,
 } from "@/lib/constants";
+import type { PhotoPrintSize } from "@/lib/photo-order-catalog";
 import { getEmailProvider } from "@/lib/providers/email";
 import { generateBookingPin } from "@/lib/utils/booking-pin";
 import { BookingConflictError, NotFoundError } from "@/lib/utils/errors";
@@ -346,6 +347,25 @@ export async function completeBooking(id: string): Promise<Booking> {
     .update(bookings)
     .set({ status: "COMPLETED", updatedAt: new Date() })
     .where(eq(bookings.id, id))
+    .returning();
+
+  return updated;
+}
+
+export async function updateBookingPhotoPrices(
+  bookingId: string,
+  customPrices: Partial<Record<PhotoPrintSize, number>> | null,
+): Promise<Booking> {
+  const booking = await getBookingById(bookingId);
+  if (!booking) throw new NotFoundError("A foglalás nem található.");
+
+  const [updated] = await db
+    .update(bookings)
+    .set({
+      customPhotoPrices: customPrices && Object.keys(customPrices).length > 0 ? customPrices : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(bookings.id, bookingId))
     .returning();
 
   return updated;

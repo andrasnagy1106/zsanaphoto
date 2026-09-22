@@ -71,6 +71,13 @@
       "when": 1790084400994,
       "tag": "0009_correct_zsana_brand_name",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790106229252,
+      "tag": "0010_special_stark_industries",
+      "breakpoints": true
     }
   ]
 }

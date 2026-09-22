@@ -11,7 +11,11 @@ import {
   type PhotoOrderItem,
   type Service,
 } from "@/db/schema";
-import { STOCK_PHOTOS, type PhotoPrintSize } from "@/lib/photo-order-catalog";
+import {
+  STOCK_PHOTOS,
+  resolvePhotoPrices,
+  type PhotoPrintSize,
+} from "@/lib/photo-order-catalog";
 import { INSTITUTION_SERVICE_SLUG } from "@/lib/constants";
 import { getEmailProvider } from "@/lib/providers/email";
 import { NotFoundError } from "@/lib/utils/errors";
@@ -114,11 +118,16 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
   const catalogById = new Map<string, (typeof STOCK_PHOTOS)[number]>(
     STOCK_PHOTOS.map((photo) => [photo.id, photo]),
   );
+  const prices = resolvePhotoPrices(access.booking.customPhotoPrices);
   const trustedItems = input.items.map((item) => {
     const photo = catalogById.get(item.photoId);
     if (!photo) throw new NotFoundError("A kiválasztott fotó nem található.");
-    return { ...item, photoTitle: photo.title };
+    const unitPrice = prices[item.size] ?? 0;
+    const totalPrice = unitPrice * item.quantity;
+    return { ...item, photoTitle: photo.title, unitPrice, totalPrice };
   });
+
+  const totalAmount = trustedItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
   const saved = await db.transaction(async (tx) => {
     await tx.execute(
@@ -143,6 +152,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
       [savedOrder] = await tx
         .update(photoOrders)
         .set({
+          totalAmount,
           notes: input.notes?.trim() || null,
           status: "NEW",
           updatedAt: new Date(),
@@ -158,6 +168,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
         .values({
           orderNumber: generatePhotoOrderNumber(),
           bookingId: access.booking.id,
+          totalAmount,
           notes: input.notes?.trim() || null,
         })
         .onConflictDoNothing({ target: photoOrders.orderNumber })
@@ -175,6 +186,8 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
           photoTitle: item.photoTitle,
           size: item.size,
           quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
         })),
       )
       .returning();
@@ -199,7 +212,14 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
       adminNotificationEmail: settings.adminNotificationEmail,
       notes: saved.order.notes,
       isUpdate: saved.wasUpdated,
-      items: saved.items,
+      totalAmount: saved.order.totalAmount,
+      items: saved.items.map((item) => ({
+        photoTitle: item.photoTitle,
+        size: item.size,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice,
+      })),
     };
     const provider = getEmailProvider();
     await Promise.all([
@@ -211,6 +231,26 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
   }
 
   return saved;
+}
+
+export async function getPhotoOrdersForBooking(bookingId: string): Promise<PhotoOrderWithDetails[]> {
+  const rows = await db
+    .select({ order: photoOrders, booking: bookings, service: services })
+    .from(photoOrders)
+    .innerJoin(bookings, eq(photoOrders.bookingId, bookings.id))
+    .innerJoin(services, eq(bookings.serviceId, services.id))
+    .where(eq(photoOrders.bookingId, bookingId))
+    .orderBy(desc(photoOrders.createdAt));
+
+  if (rows.length === 0) return [];
+
+  const items = await db
+    .select()
+    .from(photoOrderItems)
+    .where(inArray(photoOrderItems.orderId, rows.map((row) => row.order.id)));
+  const itemsByOrderId = Map.groupBy(items, (item) => item.orderId);
+
+  return rows.map((row) => ({ ...row, items: itemsByOrderId.get(row.order.id) ?? [] }));
 }
 
 export async function listPhotoOrders(): Promise<PhotoOrderWithDetails[]> {
