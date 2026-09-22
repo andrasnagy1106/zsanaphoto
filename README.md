@@ -157,14 +157,18 @@ Ajánlott két külön Neon adatbázis: `zsanaphoto-dev` (helyi fejlesztés) és
 - Az egyedi, két nagybetűből és öt számjegyből álló PIN kizárólag intézményi foglaláshoz készül.
   Megerősített vagy teljesített foglalás PIN-jével a fejlécből megnyitható a privát fotórendelő.
 - **Esemény fotók & PIN kezelés az adminban (`/admin/event-photos` és `/admin/bookings`):**
-  - **Új ügyfél & PIN létrehozása:** Az admin felületen modál ablakban bármikor létrehozható új ügyfél bármelyik eseményhez/szolgáltatáshoz, egyedi vagy automatikusan generált PIN-kóddal és opcionális értesítő e-maillel.
+  - **Új ügyfél & PIN létrehozása:** Az admin felületen modál ablakban bármikor létrehozható új ügyfél bármelyik eseményhez/szolgáltatáshoz, egyedi vagy böngészőkompatibilisen generált PIN-kóddal és opcionális értesítő e-maillel.
   - **Esemény/Szolgáltatás szerinti szűrés:** A fotókezelőben eseménykategóriák szerint szűrhető a PIN-kódok és ügyfelek listája.
-  - **Nézetváltó:**
+  - **Ügyfél hozzáférési nézet kapcsoló (`ORDER_ONLY` / `GALLERY_ONLY`):**
+    - Az adminban egy gombnyomással beállítható, hogy az adott PIN-kóddal belépő ügyfél a **Megrendelő felületet** (`/fotorendeles`) kapja meg, vagy a **Teljes képgalériát** (`/fotogaleria`).
+    - **Szigorú szerveroldali védelem:** Közvetlen URL megnyitása esetén a szerver ellenőrzi a jogosultságot, és automatikusan átirányítja az ügyfelet a számára engedélyezett felületre.
+  - **Admin nézetváltó:**
     - **📸 Teljes képek galériában:** Képek feltöltése a PIN Cloudinary mappájába (`zsanaphoto/events/{PIN}`), vízjelezett előnézet, nagyfelbontású lightbox, metaadatok és tömeges kijelölés/törlés.
-    - **📋 Megrendelő / Leadott rendelés:** Valós idejű rendeléskövetés az adott PIN-hez (státuszállítás, tételes papírkép táblázat árakkal, digitális változat csomag, megjegyzés, végösszeg).
-- A fotórendelő felületen a rendelési árak folyamatosan és valós időben kalkulálódnak méretenkénti bontásban és végösszeggel.
-  - Alapértelmezett méretek és árak: `10x15 cm` (600 Ft / db), `13x18 cm` (750 Ft / db),
-    `15x21 cm` (1 200 Ft / db), `A4 21x30 cm` (1 900 Ft / db).
+    - **📋 Megrendelő / Leadott rendelés:** Valós idejű rendeléskövetés az adott PIN-hez (státuszállítás, tételes fotótáblázat egységárakkal és darabszámokkal, megjegyzés, végösszeg).
+- A fotórendelő felületen a rendelési árak folyamatosan és valós időben kalkulálódnak tételes bontásban és végösszeggel.
+  - Alapértelmezett méretek és darabárak: `10x15 cm` (600 Ft / db), `13x18 cm` (750 Ft / db),
+    `15x21 cm` (1 200 Ft / db), `A4 21x30 cm` (1 900 Ft / db), `Digitális kép` (2 000 Ft / db).
+  - **Digitális képek rendelése:** Képenként külön kérhető digitális átadás (2 000 Ft / db), melyről az információs doboz részletes tájékoztatást ad (digitálisan átadott, megszerkesztett képek online galériában, szabad sokszorosítási joggal).
   - **Globális alapárak módosítása:** Az `/admin/settings` oldalon a rendszer globális alapértelmezett darabárai
     is közvetlenül szerkeszthetők és adatbázisban tárolódnak.
   - **Egyedi esemény-árazás:** Az admin felületen az adott foglalás/esemény adatlapján (`/admin/bookings/[id]`)
@@ -174,6 +178,8 @@ Ajánlott két külön Neon adatbázis: `zsanaphoto-dev` (helyi fejlesztés) és
   - Az `/admin/photo-orders` oldalon követhető az összes rendelés állapota, összbevétele, valamint a tételes
     egységárak és összegek. Egy PIN-hez egyszerre egy aktív (`NEW`/`PROCESSING`) rendelés tartozhat;
     ismételt belépéskor a tételek, darabszámok, méretek és a rendelési megjegyzés módosíthatók.
+- **Google Naptár (Google Calendar) integráció:**
+  - A visszaigazoló és időpontmódosító e-mailek automatikusan tartalmaznak egy egykattintásos Google Naptár esemény-linket a fotózás időpontjával, részleteivel és helyszínével.
 - Minden foglalási/admin mutáció szerveroldali Server Actionön keresztül történik, Zod validációval,
   és admin műveletek `requireAdmin()` guard mögött futnak.
 - Rate limiting: booking submit, intézményi érdeklődés és admin login is korlátozva van (egyszerű,
