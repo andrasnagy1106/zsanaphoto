@@ -38,6 +38,8 @@ export const photoOrderStatusEnum = pgEnum("photo_order_status", [
   "CANCELLED",
 ]);
 
+export const emailOutboxStatusEnum = pgEnum("email_outbox_status", ["SENT", "QUEUED"]);
+
 const id = () =>
   text("id")
     .primaryKey()
@@ -245,6 +247,19 @@ export const institutionInquiries = pgTable("institution_inquiries", {
   index("institution_inquiries_status_idx").on(table.status),
 ]);
 
+export const emailOutbox = pgTable("email_outbox", {
+  id: id(),
+  toAddress: text("to_address").notNull(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  status: emailOutboxStatusEnum("status").notNull().default("QUEUED"),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  index("email_outbox_status_idx").on(table.status),
+  index("email_outbox_sent_at_idx").on(table.sentAt),
+]);
+
 export type Service = typeof services.$inferSelect;
 export type NewService = typeof services.$inferInsert;
 export type AvailabilityRule = typeof availabilityRules.$inferSelect;
@@ -265,3 +280,5 @@ export type AdminUser = typeof adminUsers.$inferSelect;
 export type SiteSettings = typeof siteSettings.$inferSelect;
 export type InstitutionInquiry = typeof institutionInquiries.$inferSelect;
 export type NewInstitutionInquiry = typeof institutionInquiries.$inferInsert;
+export type EmailOutbox = typeof emailOutbox.$inferSelect;
+export type NewEmailOutbox = typeof emailOutbox.$inferInsert;

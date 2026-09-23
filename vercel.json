@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/admin/cron/flush-email-queue",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}

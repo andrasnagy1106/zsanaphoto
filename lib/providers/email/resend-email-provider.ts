@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { sendOrQueueEmail } from "@/lib/services/email-outbox-service";
 import {
   buildAdminBookingCancelledEmail,
   buildAdminBookingRescheduledEmail,
@@ -23,17 +24,15 @@ export class ResendEmailProvider implements EmailProvider {
   }
 
   private async send(to: string, subject: string, text: string) {
-    try {
-      await this.client.emails.send({
-        from: this.from,
-        to,
-        subject,
-        text,
-      });
-    } catch (error) {
-      // Booking persistence must not depend on email delivery succeeding.
-      console.error(`[ResendEmailProvider] Failed to send email to ${to}:`, error);
-    }
+    // Resend's free tier caps daily sends; over the cap, queue for the next scheduled flush.
+    await sendOrQueueEmail({
+      to,
+      subject,
+      body: text,
+      deliver: async () => {
+        await this.client.emails.send({ from: this.from, to, subject, text });
+      },
+    });
   }
 
   async sendBookingCreatedEmail(input: BookingEmailInput): Promise<void> {

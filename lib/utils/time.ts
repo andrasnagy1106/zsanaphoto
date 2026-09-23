@@ -40,6 +40,14 @@ export function getZonedYear(
   return Number(formatInTimeZone(date, timeZone, "yyyy"));
 }
 
+/** Returns the hour (0-23) for a UTC instant, evaluated in the given timezone. */
+export function getZonedHour(
+  date: Date,
+  timeZone: string = BUSINESS_TIMEZONE,
+): number {
+  return Number(formatInTimeZone(date, timeZone, "H"));
+}
+
 /** Formats a UTC instant as "HH:mm" in the given timezone. */
 export function formatZonedTime(
   date: Date,

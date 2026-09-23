@@ -59,6 +59,7 @@ lib/
    ADMIN_NOTIFICATION_EMAIL=admin@example.com
    ADMIN_AUTH_SECRET=<hosszú, véletlenszerű string>
    NEXT_PUBLIC_SITE_URL=http://localhost:3000
+   CRON_SECRET=<hosszú, véletlenszerű string, a Vercel Cron hitelesítéséhez>
 
    # Cloudinary (fotótárhely és vízjelezés)
    CLOUDINARY_CLOUD_NAME=
@@ -68,6 +69,11 @@ lib/
 
    `RESEND_API_KEY` és `EMAIL_FROM` nélkül az app a `ConsoleEmailProvider`-t használja: az e-mailek
    tartalma a terminálba lesz logolva, az alkalmazás Resend kulcs nélkül is teljes értékűen fut.
+
+   A Resend napi 99 e-mailes ingyenes limitje miatt az ezt meghaladó e-mailek a `email_outbox`
+   táblába kerülnek "QUEUED" státusszal, és a `vercel.json`-ban definiált napi cron job
+   (`/api/admin/cron/flush-email-queue`, ~02:00 Európa/Budapest időben) küldi ki őket, amint a
+   következő nap elindul a limit-számláló elölről.
 
 2. Telepítés és adatbázis előkészítés:
 
