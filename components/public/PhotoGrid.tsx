@@ -31,6 +31,13 @@ interface PhotoGridProps {
   category?: GalleryCategory;
 }
 
+/** Returns the first photo of each of the first `categoryCount` gallery categories, in order. */
+export function getFeaturedGalleryPhotos(categoryCount: number) {
+  return GALLERY_CATEGORIES.slice(0, categoryCount)
+    .map((category) => REFERENCE_PHOTOS.find((photo) => photo.category === category))
+    .filter((photo): photo is (typeof REFERENCE_PHOTOS)[number] => photo !== undefined);
+}
+
 export function PhotoGrid({ limit, category }: PhotoGridProps) {
   const matchingPhotos = category
     ? REFERENCE_PHOTOS.filter((photo) => photo.category === category)

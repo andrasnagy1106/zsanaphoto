@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PhotoCard } from "./PhotoCard";
+import { GALLERY_CATEGORIES, getFeaturedGalleryPhotos } from "./PhotoGrid";
 
 const FEATURES = [
   {
@@ -29,10 +31,34 @@ const FEATURES = [
 
 export function Footer() {
   const year = new Date().getFullYear();
+  const featuredPhotos = getFeaturedGalleryPhotos(6);
 
   return (
     <footer className="mt-24">
       <div className="border-t border-b border-border bg-background">
+        <div className="mx-auto max-w-6xl px-4 pt-14 sm:px-6">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="mb-2 text-sm font-medium uppercase tracking-wide text-accent">Galéria</p>
+              <h2 className="font-display text-2xl text-foreground sm:text-3xl">Nézz körül a galériában</h2>
+            </div>
+            <Link href="/galeria" className="text-sm font-semibold text-accent hover:text-accent-dark">
+              Galéria megnyitása →
+            </Link>
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+            {featuredPhotos.map((photo) => (
+              <PhotoCard
+                key={photo.category}
+                caption={photo.caption}
+                index={GALLERY_CATEGORIES.indexOf(photo.category)}
+                aspect="square"
+              />
+            ))}
+          </div>
+        </div>
+
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:gap-0 lg:divide-x-2 lg:divide-accent">
           {FEATURES.map((feature) => (
             <div key={feature.label} className="flex flex-col items-center gap-3 text-center lg:px-6">
