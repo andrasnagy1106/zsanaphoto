@@ -20,6 +20,7 @@ export function CreateServiceModal() {
   const startInputId = useId();
   const endInputId = useId();
   const activeInputId = useId();
+  const requiresChildNameInputId = useId();
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -30,6 +31,7 @@ export function CreateServiceModal() {
   const [availabilityMode, setAvailabilityMode] = useState<"GLOBAL" | "CUSTOM">("GLOBAL");
   const [dateRangeStart, setDateRangeStart] = useState("");
   const [dateRangeEnd, setDateRangeEnd] = useState("");
+  const [requiresChildName, setRequiresChildName] = useState(false);
   const [active, setActive] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +66,7 @@ export function CreateServiceModal() {
         availabilityMode,
         dateRangeStart: dateRangeStart || null,
         dateRangeEnd: dateRangeEnd || null,
+        requiresChildName,
         active,
       });
 
@@ -284,6 +287,22 @@ export function CreateServiceModal() {
               />
               <label htmlFor={activeInputId} className="text-xs font-medium text-foreground cursor-pointer select-none">
                 Aktív (azonnal megjelenik a foglalási listában)
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id={requiresChildNameInputId}
+                type="checkbox"
+                checked={requiresChildName}
+                onChange={(e) => setRequiresChildName(e.target.checked)}
+                className="size-4 rounded border-border text-accent focus:ring-accent accent-accent cursor-pointer"
+              />
+              <label
+                htmlFor={requiresChildNameInputId}
+                className="text-xs font-medium text-foreground cursor-pointer select-none"
+              >
+                Kérje be a gyermek nevét is a foglalási űrlapon
               </label>
             </div>
 

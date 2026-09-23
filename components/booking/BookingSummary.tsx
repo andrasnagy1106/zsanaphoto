@@ -7,6 +7,7 @@ interface BookingSummaryProps {
   slot: Slot;
   customer: CustomerFormData;
   showPhotoPublicationConsent?: boolean;
+  showChildNameField?: boolean;
   submitting: boolean;
   error: string | null;
   onBack: () => void;
@@ -18,6 +19,7 @@ export function BookingSummary({
   slot,
   customer,
   showPhotoPublicationConsent = false,
+  showChildNameField = false,
   submitting,
   error,
   onBack,
@@ -40,6 +42,12 @@ export function BookingSummary({
             <dt className="text-foreground/60">Név</dt>
             <dd className="text-foreground">{customer.name}</dd>
           </div>
+          {showChildNameField && customer.childName ? (
+            <div className="flex justify-between gap-4">
+              <dt className="text-foreground/60">Gyermek neve</dt>
+              <dd className="text-foreground">{customer.childName}</dd>
+            </div>
+          ) : null}
           <div className="flex justify-between gap-4">
             <dt className="text-foreground/60">E-mail</dt>
             <dd className="text-foreground">{customer.email}</dd>

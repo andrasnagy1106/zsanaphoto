@@ -85,6 +85,7 @@ export async function createBookingAction(formData: unknown): Promise<CreateBook
       start: startAt,
       end: endAt,
       customerName: parsed.data.name,
+      childName: service.requiresChildName ? parsed.data.childName : null,
       customerEmail: parsed.data.email,
       customerPhone: parsed.data.phone,
       photoPublicationConsent:

@@ -6,6 +6,7 @@ import { z } from "zod";
 
 const customerFormSchema = z.object({
   name: z.string().trim().min(2, "A név legalább 2 karakter legyen.").max(100),
+  childName: z.string().trim().max(100).optional(),
   email: z.string().trim().email("Adj meg érvényes e-mail címet.").max(200),
   phone: z.string().trim().min(6, "Adj meg érvényes telefonszámot.").max(30),
   notes: z.string().trim().max(1000).optional(),
@@ -18,12 +19,14 @@ export type CustomerFormData = z.infer<typeof customerFormSchema>;
 interface CustomerFormProps {
   defaultValues?: Partial<CustomerFormData>;
   showPhotoPublicationConsent?: boolean;
+  showChildNameField?: boolean;
   onSubmit: (data: CustomerFormData) => void;
 }
 
 export function CustomerForm({
   defaultValues,
   showPhotoPublicationConsent = false,
+  showChildNameField = false,
   onSubmit,
 }: CustomerFormProps) {
   const {
@@ -52,6 +55,21 @@ export function CustomerForm({
         />
         {errors.name ? <p className="mt-1 text-sm text-red-600">{errors.name.message}</p> : null}
       </div>
+
+      {showChildNameField ? (
+        <div>
+          <label htmlFor="childName" className="block text-sm font-medium text-foreground">
+            Gyermek neve
+          </label>
+          <input
+            id="childName"
+            type="text"
+            className="mt-1.5 block w-full min-h-11 rounded-md border border-border bg-white px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            {...register("childName")}
+          />
+          {errors.childName ? <p className="mt-1 text-sm text-red-600">{errors.childName.message}</p> : null}
+        </div>
+      ) : null}
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-foreground">

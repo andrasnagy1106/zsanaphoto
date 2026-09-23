@@ -93,6 +93,12 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
               <dt className="text-foreground/60">Név</dt>
               <dd className="text-foreground">{booking.customerName}</dd>
             </div>
+            {booking.childName ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-foreground/60">Gyermek neve</dt>
+                <dd className="text-foreground">{booking.childName}</dd>
+              </div>
+            ) : null}
             <div className="flex justify-between gap-4">
               <dt className="text-foreground/60">E-mail</dt>
               <dd className="text-foreground">{booking.customerEmail}</dd>

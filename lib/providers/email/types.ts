@@ -6,6 +6,7 @@ export interface BookingEmailInput {
   serviceName: string;
   approvalMode: ApprovalMode;
   customerName: string;
+  childName?: string | null;
   customerEmail: string;
   customerPhone: string;
   photoPublicationConsent?: boolean | null;

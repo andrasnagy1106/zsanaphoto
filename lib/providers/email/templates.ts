@@ -18,6 +18,10 @@ function formatBookingPin(pin?: string | null): string {
   return pin ? `\nPIN: ${pin}` : "";
 }
 
+function formatChildName(childName?: string | null): string {
+  return childName ? `\nGyermek neve: ${childName}` : "";
+}
+
 function formatPhotoPublicationConsent(consent?: boolean | null): string {
   if (consent === null || consent === undefined) return "";
   return `\nOnline képmegjelenés: ${consent ? "Hozzájárult" : "Nem járult hozzá"}`;
@@ -62,6 +66,7 @@ function formatGoogleCalendarSection(input: BookingEmailInput): string {
 export function buildBookingCreatedEmail(input: BookingEmailInput) {
   const { date, time } = formatWhen(input);
   const manageSection = formatManageSection(input.manageUrl);
+  const childNameSection = formatChildName(input.childName);
   const consentSection = formatPhotoPublicationConsent(input.photoPublicationConsent);
   const calendarSection =
     input.approvalMode === "AUTO" ? formatGoogleCalendarSection(input) : "";
@@ -77,7 +82,7 @@ Fotózás: ${input.serviceName}
 Dátum: ${date}
 Időpont: ${time}
 
-Foglalási azonosító: ${input.bookingNumber}${formatBookingPin(input.pin)}${manageSection}${calendarSection}
+Foglalási azonosító: ${input.bookingNumber}${formatBookingPin(input.pin)}${childNameSection}${manageSection}${calendarSection}
 ${consentSection}
 
 Várunk szeretettel!
@@ -96,7 +101,7 @@ Fotózás: ${input.serviceName}
 Dátum: ${date}
 Időpont: ${time}
 
-Foglalási azonosító: ${input.bookingNumber}${formatBookingPin(input.pin)}${manageSection}
+Foglalási azonosító: ${input.bookingNumber}${formatBookingPin(input.pin)}${childNameSection}${manageSection}
 ${consentSection}
 
 A végleges visszaigazolásról e-mailben értesítünk, amint a fotós jóváhagyta a foglalást.
@@ -112,7 +117,7 @@ export function buildAdminNewBookingEmail(input: BookingEmailInput) {
     subject: `Új foglalás érkezett - ${input.bookingNumber}`,
     text: `Új foglalás érkezett.
 
-Ügyfél: ${input.customerName}
+Ügyfél: ${input.customerName}${formatChildName(input.childName)}
 E-mail: ${input.customerEmail}
 Telefon: ${input.customerPhone}
 Szolgáltatás: ${input.serviceName}

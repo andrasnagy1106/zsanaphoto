@@ -42,6 +42,7 @@ export function BookingWizard({ services }: BookingWizardProps) {
       serviceId: selectedService.id,
       startAt: selectedSlot.startAt,
       name: customer.name,
+      childName: customer.childName,
       email: customer.email,
       phone: customer.phone,
       notes: customer.notes,
@@ -140,6 +141,7 @@ export function BookingWizard({ services }: BookingWizardProps) {
           <CustomerForm
             defaultValues={customer ?? undefined}
             showPhotoPublicationConsent={selectedService?.slug === INSTITUTION_SERVICE_SLUG}
+            showChildNameField={Boolean(selectedService?.requiresChildName)}
             onSubmit={(data) => {
               setCustomer(data);
               setStep("summary");
@@ -161,6 +163,7 @@ export function BookingWizard({ services }: BookingWizardProps) {
           slot={selectedSlot}
           customer={customer}
           showPhotoPublicationConsent={selectedService.slug === INSTITUTION_SERVICE_SLUG}
+          showChildNameField={selectedService.requiresChildName}
           submitting={submitting}
           error={submitError}
           onBack={() => setStep("details")}

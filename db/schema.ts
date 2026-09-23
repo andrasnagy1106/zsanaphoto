@@ -63,6 +63,7 @@ export const services = pgTable("services", {
   availabilityMode: serviceAvailabilityModeEnum("availability_mode").notNull().default("GLOBAL"),
   dateRangeStart: text("date_range_start"), // "YYYY-MM-DD" or null
   dateRangeEnd: text("date_range_end"), // "YYYY-MM-DD" or null
+  requiresChildName: boolean("requires_child_name").notNull().default(false),
   active: boolean("active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   ...timestamps,
@@ -121,6 +122,7 @@ export const bookings = pgTable("bookings", {
     .notNull()
     .references(() => services.id, { onDelete: "restrict" }),
   customerName: text("customer_name").notNull(),
+  childName: text("child_name"),
   customerEmail: text("customer_email").notNull(),
   customerPhone: text("customer_phone").notNull(),
   photoPublicationConsent: boolean("photo_publication_consent"),

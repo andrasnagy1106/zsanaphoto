@@ -18,6 +18,7 @@ function makeService(overrides: Partial<Service> = {}): Service {
     availabilityMode: "GLOBAL",
     dateRangeStart: null,
     dateRangeEnd: null,
+    requiresChildName: false,
     active: true,
     sortOrder: 1,
     createdAt: new Date(),

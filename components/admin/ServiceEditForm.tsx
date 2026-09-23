@@ -40,6 +40,7 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
       availabilityMode: service.availabilityMode,
       dateRangeStart: service.dateRangeStart ?? "",
       dateRangeEnd: service.dateRangeEnd ?? "",
+      requiresChildName: service.requiresChildName,
       active: service.active,
     },
   });
@@ -186,6 +187,18 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
             <input id={`${service.id}-active`} type="checkbox" className="h-5 w-5" {...register("active")} />
             <label htmlFor={`${service.id}-active`} className="text-sm font-medium text-foreground">
               Aktív (megjelenik a foglalási oldalon)
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2 sm:col-span-2">
+            <input
+              id={`${service.id}-requiresChildName`}
+              type="checkbox"
+              className="h-5 w-5"
+              {...register("requiresChildName")}
+            />
+            <label htmlFor={`${service.id}-requiresChildName`} className="text-sm font-medium text-foreground">
+              Kérje be a gyermek nevét is a foglalási űrlapon
             </label>
           </div>
         </div>

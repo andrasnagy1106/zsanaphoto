@@ -32,6 +32,7 @@ export async function createServiceAction(formData: unknown): Promise<AdminActio
     availabilityMode: parsed.data.availabilityMode,
     dateRangeStart: parsed.data.dateRangeStart,
     dateRangeEnd: parsed.data.dateRangeEnd,
+    requiresChildName: parsed.data.requiresChildName,
     active: parsed.data.active,
   };
 
@@ -64,6 +65,7 @@ export async function updateServiceAction(formData: unknown): Promise<AdminActio
     availabilityMode: parsed.data.availabilityMode,
     dateRangeStart: parsed.data.dateRangeStart,
     dateRangeEnd: parsed.data.dateRangeEnd,
+    requiresChildName: parsed.data.requiresChildName,
     active: parsed.data.active,
   };
 

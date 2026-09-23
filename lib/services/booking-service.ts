@@ -21,6 +21,7 @@ export interface CreateBookingInput {
   start: Date;
   end: Date;
   customerName: string;
+  childName?: string | null;
   customerEmail: string;
   customerPhone: string;
   photoPublicationConsent?: boolean | null;
@@ -101,6 +102,7 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
               pin,
               serviceId: input.serviceId,
               customerName: input.customerName,
+              childName: input.childName ?? null,
               customerEmail: input.customerEmail,
               customerPhone: input.customerPhone,
               photoPublicationConsent: input.photoPublicationConsent ?? null,
@@ -152,6 +154,7 @@ async function sendBookingCreatedEmails(
     serviceName,
     approvalMode,
     customerName: booking.customerName,
+    childName: booking.childName,
     customerEmail: booking.customerEmail,
     customerPhone: booking.customerPhone,
     photoPublicationConsent: booking.photoPublicationConsent,

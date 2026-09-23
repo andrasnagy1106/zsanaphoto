@@ -47,6 +47,7 @@ export type CreateServiceInput = {
   availabilityMode?: "GLOBAL" | "CUSTOM";
   dateRangeStart?: string | null;
   dateRangeEnd?: string | null;
+  requiresChildName?: boolean;
   active?: boolean;
 };
 
@@ -82,6 +83,7 @@ export async function createService(input: CreateServiceInput): Promise<Service>
       availabilityMode: input.availabilityMode ?? "GLOBAL",
       dateRangeStart: input.dateRangeStart || null,
       dateRangeEnd: input.dateRangeEnd || null,
+      requiresChildName: input.requiresChildName ?? false,
       active: input.active ?? true,
       sortOrder: nextSortOrder,
     })
@@ -101,6 +103,7 @@ export type UpdateServiceInput = Partial<
     | "availabilityMode"
     | "dateRangeStart"
     | "dateRangeEnd"
+    | "requiresChildName"
     | "active"
     | "sortOrder"
   >
