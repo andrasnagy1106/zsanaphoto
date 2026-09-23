@@ -41,6 +41,7 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
       dateRangeStart: service.dateRangeStart ?? "",
       dateRangeEnd: service.dateRangeEnd ?? "",
       requiresChildName: service.requiresChildName,
+      generatesPin: service.generatesPin,
       active: service.active,
     },
   });
@@ -199,6 +200,18 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
             />
             <label htmlFor={`${service.id}-requiresChildName`} className="text-sm font-medium text-foreground">
               Kérje be a gyermek nevét is a foglalási űrlapon
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2 sm:col-span-2">
+            <input
+              id={`${service.id}-generatesPin`}
+              type="checkbox"
+              className="h-5 w-5"
+              {...register("generatesPin")}
+            />
+            <label htmlFor={`${service.id}-generatesPin`} className="text-sm font-medium text-foreground">
+              Generáljon PIN kódot foglaláskor (privát fotógaléria eléréséhez, e-mailben ki lesz küldve)
             </label>
           </div>
         </div>

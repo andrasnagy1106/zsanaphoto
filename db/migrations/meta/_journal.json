@@ -134,6 +134,13 @@
       "when": 1790164733119,
       "tag": "0018_warm_emma_frost",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790170766173,
+      "tag": "0019_lowly_daredevil",
+      "breakpoints": true
     }
   ]
 }

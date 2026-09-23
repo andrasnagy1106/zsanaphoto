@@ -4,7 +4,6 @@ import { bookings, services, type Booking, type Service } from "@/db/schema";
 import {
   ACTIVE_BOOKING_STATUSES,
   BOOKING_NUMBER_PREFIX,
-  INSTITUTION_SERVICE_SLUG,
 } from "@/lib/constants";
 import type { PhotoPrintSize } from "@/lib/photo-order-catalog";
 import { getEmailProvider } from "@/lib/providers/email";
@@ -94,7 +93,7 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
 
       for (let attempt = 0; attempt < 5; attempt += 1) {
         try {
-          const pin = service.slug === INSTITUTION_SERVICE_SLUG ? generateBookingPin() : null;
+          const pin = service.generatesPin ? generateBookingPin() : null;
           const [row] = await tx
             .insert(bookings)
             .values({

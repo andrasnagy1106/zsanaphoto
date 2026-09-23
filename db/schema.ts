@@ -66,6 +66,7 @@ export const services = pgTable("services", {
   dateRangeStart: text("date_range_start"), // "YYYY-MM-DD" or null
   dateRangeEnd: text("date_range_end"), // "YYYY-MM-DD" or null
   requiresChildName: boolean("requires_child_name").notNull().default(false),
+  generatesPin: boolean("generates_pin").notNull().default(false),
   active: boolean("active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   ...timestamps,

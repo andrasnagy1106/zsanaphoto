@@ -21,6 +21,7 @@ export function CreateServiceModal() {
   const endInputId = useId();
   const activeInputId = useId();
   const requiresChildNameInputId = useId();
+  const generatesPinInputId = useId();
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -32,6 +33,7 @@ export function CreateServiceModal() {
   const [dateRangeStart, setDateRangeStart] = useState("");
   const [dateRangeEnd, setDateRangeEnd] = useState("");
   const [requiresChildName, setRequiresChildName] = useState(false);
+  const [generatesPin, setGeneratesPin] = useState(false);
   const [active, setActive] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,6 +69,7 @@ export function CreateServiceModal() {
         dateRangeStart: dateRangeStart || null,
         dateRangeEnd: dateRangeEnd || null,
         requiresChildName,
+        generatesPin,
         active,
       });
 
@@ -303,6 +306,22 @@ export function CreateServiceModal() {
                 className="text-xs font-medium text-foreground cursor-pointer select-none"
               >
                 Kérje be a gyermek nevét is a foglalási űrlapon
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id={generatesPinInputId}
+                type="checkbox"
+                checked={generatesPin}
+                onChange={(e) => setGeneratesPin(e.target.checked)}
+                className="size-4 rounded border-border text-accent focus:ring-accent accent-accent cursor-pointer"
+              />
+              <label
+                htmlFor={generatesPinInputId}
+                className="text-xs font-medium text-foreground cursor-pointer select-none"
+              >
+                Generáljon PIN kódot foglaláskor (privát fotógaléria eléréséhez, e-mailben ki lesz küldve)
               </label>
             </div>
 
