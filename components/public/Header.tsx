@@ -58,13 +58,18 @@ export function Header() {
         </Link>
 
         <nav className="hidden lg:flex items-center gap-8" aria-label="Fő navigáció">
-          <div className="relative" ref={servicesMenuRef}>
-            <button
-              type="button"
-              onClick={() => setServicesOpen((open) => !open)}
+          <div
+            className="relative"
+            ref={servicesMenuRef}
+            onMouseEnter={() => setServicesOpen(true)}
+            onMouseLeave={() => setServicesOpen(false)}
+          >
+            <Link
+              href="/szolgaltatasok"
+              onClick={() => setServicesOpen(false)}
               aria-expanded={servicesOpen}
               className={cn(
-                "flex items-center gap-1 text-sm font-medium transition-colors hover:text-accent",
+                "flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors hover:text-accent",
                 isServicesActive ? "text-accent" : "text-foreground/80",
               )}
             >
@@ -72,7 +77,7 @@ export function Header() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </button>
+            </Link>
 
             {servicesOpen ? (
               <div className="absolute left-0 top-full pt-3">
