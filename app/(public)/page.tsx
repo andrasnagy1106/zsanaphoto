@@ -38,33 +38,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6 sm:py-20">
-        <SectionHeading align="center" title="Foglalj időpontot még ma" />
-        <div className="mt-8">
-          <Link
-            href="/idopontfoglalas"
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-8 py-3 text-sm font-semibold text-white transition-colors hover:bg-accent-dark"
-          >
-            Időpontot foglalok
-          </Link>
-        </div>
-      </section>
-
-      <section className="border-t border-border">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <SectionHeading eyebrow="Kapcsolat" title="Kérdésed van?" />
-          <p className="mt-4 max-w-xl text-foreground/70 leading-relaxed">
-            Írj bátran, vagy nézd meg az elérhetőségeimet a kapcsolati oldalon.
-          </p>
-          <Link
-            href="/kapcsolat"
-            className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-accent hover:text-accent-dark"
-          >
-            Kapcsolati adatok →
-          </Link>
-        </div>
-      </section>
-
       <HomeAboutSection />
       <HomeGallerySection />
     </>
