@@ -6,6 +6,7 @@ import { HomeServicesSection } from "@/components/public/HomeServicesSection";
 import { PhotoGrid } from "@/components/public/PhotoGrid";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GALLERY_CATEGORIES } from "@/lib/gallery-categories";
+import { getFeaturedGalleryPhotos } from "@/lib/services/gallery-service";
 
 const HOW_IT_WORKS = [
   { title: "Válassz szolgáltatást", description: "Családi vagy intézményi fotózás." },
@@ -15,27 +16,12 @@ const HOW_IT_WORKS = [
 ];
 
 export default async function HomePage() {
-  const featuredPhotos = await getFeaturedGalleryPhotos(GALLERY_CATEGORIES.slice(0, 8));
 
   return (
     <>
       <Hero />
 
       <HomeServicesSection />
-
-      <section className="border-t border-border bg-muted/30">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <SectionHeading eyebrow="Portfólió" title="Válogatott referenciafotók" />
-          <div className="mt-8">
-            <PhotoGrid photos={featuredPhotos} />
-          </div>
-          <div className="mt-8">
-            <Link href="/galeria" className="text-sm font-semibold text-accent hover:text-accent-dark">
-              Teljes galéria megtekintése →
-            </Link>
-          </div>
-        </div>
-      </section>
 
       <section className="border-t border-border bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
