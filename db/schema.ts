@@ -279,6 +279,13 @@ export const galleryPhotos = pgTable("gallery_photos", {
   index("gallery_photos_sort_order_idx").on(table.sortOrder),
 ]);
 
+export const sitePhotos = pgTable("site_photos", {
+  key: text("key").primaryKey(),
+  publicId: text("public_id").notNull(),
+  secureUrl: text("secure_url").notNull(),
+  ...timestamps,
+});
+
 export type Service = typeof services.$inferSelect;
 export type NewService = typeof services.$inferInsert;
 export type AvailabilityRule = typeof availabilityRules.$inferSelect;
@@ -303,3 +310,5 @@ export type EmailOutbox = typeof emailOutbox.$inferSelect;
 export type NewEmailOutbox = typeof emailOutbox.$inferInsert;
 export type GalleryPhoto = typeof galleryPhotos.$inferSelect;
 export type NewGalleryPhoto = typeof galleryPhotos.$inferInsert;
+export type SitePhoto = typeof sitePhotos.$inferSelect;
+export type NewSitePhoto = typeof sitePhotos.$inferInsert;

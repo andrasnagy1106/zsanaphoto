@@ -2,13 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ServiceCard } from "@/components/public/ServiceCard";
+import { HOME_SERVICE_CARDS } from "@/lib/home-service-cards";
+import { getSitePhotoUrls } from "@/lib/services/site-photo-service";
 
 export const metadata: Metadata = {
   title: "Szolgáltatások",
   description: "Családi és intézményi fotózás természetes, időtálló képekkel.",
 };
 
-export default function ServicesOverviewPage() {
+export default async function ServicesOverviewPage() {
+  const photoUrlsByKey = await getSitePhotoUrls(HOME_SERVICE_CARDS.map((card) => card.key));
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <SectionHeading
@@ -18,20 +22,17 @@ export default function ServicesOverviewPage() {
       />
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2">
-        <ServiceCard
-          index={0}
-          title="Családi fotózás"
-          description="Természetes, oldott hangulatú fotózás a családodról, otthon vagy a szabadban."
-          href="/csaladi-fotozas"
-          ctaLabel="Részletek és időpontfoglalás"
-        />
-        <ServiceCard
-          index={1}
-          title="Intézményi fotózás"
-          description="Óvodák, iskolák és cégek csoportos fotózása, személyes egyeztetéssel."
-          href="/intezmenyi-fotozas"
-          ctaLabel="Részletek és időpontfoglalás"
-        />
+        {HOME_SERVICE_CARDS.map((card, index) => (
+          <ServiceCard
+            key={card.key}
+            index={index}
+            title={card.title}
+            description={card.description}
+            href={card.href}
+            ctaLabel="Tovább"
+            imageUrl={photoUrlsByKey[card.key]}
+          />
+        ))}
       </div>
 
       <div className="mt-12 text-center">

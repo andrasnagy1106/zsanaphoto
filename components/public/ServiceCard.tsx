@@ -7,15 +7,16 @@ interface ServiceCardProps {
   description: string;
   href: string;
   ctaLabel: string;
+  imageUrl?: string | null;
   index?: number;
 }
 
-export function ServiceCard({ title, description, href, ctaLabel, index = 0 }: ServiceCardProps) {
+export function ServiceCard({ title, description, href, ctaLabel, imageUrl, index = 0 }: ServiceCardProps) {
   return (
     <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-white/60">
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <Image
-          src={getPlaceholderImageUrl(`zsana-service-${index}`, 800, 600)}
+          src={imageUrl || getPlaceholderImageUrl(`zsana-service-${index}`, 800, 600)}
           alt=""
           fill
           sizes="(max-width: 640px) 100vw, 50vw"
@@ -27,10 +28,10 @@ export function ServiceCard({ title, description, href, ctaLabel, index = 0 }: S
         <p className="mt-3 flex-1 text-foreground/70 leading-relaxed">{description}</p>
         <Link
           href={href}
-          className="mt-6 inline-flex min-h-11 w-fit items-center gap-1 text-sm font-semibold text-accent hover:text-accent-dark"
+          className="mt-6 inline-flex min-h-11 w-fit items-center gap-1 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-dark"
         >
           {ctaLabel}
-          <span aria-hidden="true">→</span>
+          <span aria-hidden="true">»</span>
         </Link>
       </div>
     </div>

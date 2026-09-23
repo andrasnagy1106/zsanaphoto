@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Hero } from "@/components/public/Hero";
 import { HomeAboutSection } from "@/components/public/HomeAboutSection";
 import { HomeGallerySection } from "@/components/public/HomeGallerySection";
+import { HomeServicesSection } from "@/components/public/HomeServicesSection";
 import { PhotoGrid } from "@/components/public/PhotoGrid";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { ServiceCard } from "@/components/public/ServiceCard";
 import { GALLERY_CATEGORIES } from "@/lib/gallery-categories";
 import { getFeaturedGalleryPhotos } from "@/lib/services/gallery-service";
 
@@ -22,25 +22,7 @@ export default async function HomePage() {
     <>
       <Hero />
 
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <SectionHeading eyebrow="Szolgáltatások" title="Miben segíthetek?" />
-        <div className="mt-8 grid gap-6 sm:grid-cols-2">
-          <ServiceCard
-            index={0}
-            title="Családi fotózás"
-            description="Természetes, oldott hangulatú fotózás a családodról, otthon vagy a szabadban."
-            href="/csaladi-fotozas"
-            ctaLabel="Részletek és időpontfoglalás"
-          />
-          <ServiceCard
-            index={1}
-            title="Intézményi fotózás"
-            description="Óvodák, iskolák és cégek csoportos fotózása, személyes egyeztetéssel."
-            href="/intezmenyi-fotozas"
-            ctaLabel="Részletek és időpontfoglalás"
-          />
-        </div>
-      </section>
+      <HomeServicesSection />
 
       <section className="border-t border-border bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
