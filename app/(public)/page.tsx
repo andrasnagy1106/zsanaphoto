@@ -1,8 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Hero } from "@/components/public/Hero";
 import { PhotoGrid } from "@/components/public/PhotoGrid";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ServiceCard } from "@/components/public/ServiceCard";
+import { getPlaceholderImageUrl } from "@/lib/utils/placeholder-image";
 
 const HOW_IT_WORKS = [
   { title: "Válassz szolgáltatást", description: "Családi vagy intézményi fotózás." },
@@ -66,7 +68,15 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="max-w-xs justify-self-center lg:justify-self-end">
-            <div className="aspect-[3/4] rounded-xl border border-border bg-gradient-to-br from-[#efe6da] to-[#c9b8a3]" />
+            <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-border">
+              <Image
+                src={getPlaceholderImageUrl("zsana-portre", 600, 800)}
+                alt=""
+                fill
+                sizes="(max-width: 1024px) 60vw, 320px"
+                className="object-cover"
+              />
+            </div>
           </div>
         </div>
       </section>

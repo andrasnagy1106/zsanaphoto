@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { getPlaceholderImageUrl } from "@/lib/utils/placeholder-image";
 
 export const metadata: Metadata = {
   title: "Rólam",
@@ -30,7 +32,15 @@ export default function AboutPage() {
             Időpontot foglalok
           </Link>
         </div>
-        <div className="aspect-[3/4] rounded-xl border border-border bg-gradient-to-br from-[#efe6da] to-[#c9b8a3]" />
+        <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-border">
+          <Image
+            src={getPlaceholderImageUrl("zsana-portre", 600, 800)}
+            alt=""
+            fill
+            sizes="(max-width: 1024px) 60vw, 320px"
+            className="object-cover"
+          />
+        </div>
       </div>
     </div>
   );
