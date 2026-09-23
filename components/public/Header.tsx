@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { PhotoOrderPinDialog } from "./PhotoOrderPinDialog";
 
-const NAV_LINKS = [
+const SERVICE_LINKS = [
+  { href: "/szolgaltatasok", label: "Összes szolgáltatás" },
   { href: "/csaladi-fotozas", label: "Családi fotózás" },
   { href: "/intezmenyi-fotozas", label: "Intézményi fotózás" },
+];
+
+const NAV_LINKS = [
   { href: "/galeria", label: "Galéria" },
   { href: "/rolam", label: "Rólam" },
   { href: "/kapcsolat", label: "Kapcsolat" },
@@ -17,6 +21,24 @@ const NAV_LINKS = [
 export function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
+  const servicesMenuRef = useRef<HTMLDivElement>(null);
+
+  const isServicesActive = SERVICE_LINKS.some((link) => link.href === pathname);
+
+  useEffect(() => {
+    if (!servicesOpen) return;
+
+    function closeServicesMenuOnOutsideClick(event: MouseEvent) {
+      if (servicesMenuRef.current && !servicesMenuRef.current.contains(event.target as Node)) {
+        setServicesOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", closeServicesMenuOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeServicesMenuOnOutsideClick);
+  }, [servicesOpen]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -26,6 +48,44 @@ export function Header() {
         </Link>
 
         <nav className="hidden lg:flex items-center gap-8" aria-label="Fő navigáció">
+          <div className="relative" ref={servicesMenuRef}>
+            <button
+              type="button"
+              onClick={() => setServicesOpen((open) => !open)}
+              aria-expanded={servicesOpen}
+              className={cn(
+                "flex items-center gap-1 text-sm font-medium transition-colors hover:text-accent",
+                isServicesActive ? "text-accent" : "text-foreground/80",
+              )}
+            >
+              Szolgáltatások
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {servicesOpen ? (
+              <div className="absolute left-0 top-full pt-3">
+                <ul className="w-56 rounded-lg border border-border bg-background py-2 shadow-lg">
+                  {SERVICE_LINKS.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        onClick={() => setServicesOpen(false)}
+                        className={cn(
+                          "block px-4 py-2.5 text-sm font-medium hover:bg-muted hover:text-accent",
+                          pathname === link.href ? "text-accent" : "text-foreground/80",
+                        )}
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -77,6 +137,47 @@ export function Header() {
           className="lg:hidden border-t border-border bg-background px-4 pb-4 pt-2"
         >
           <ul className="flex flex-col gap-1">
+            <li>
+              <button
+                type="button"
+                onClick={() => setMobileServicesOpen((open) => !open)}
+                aria-expanded={mobileServicesOpen}
+                className={cn(
+                  "flex w-full min-h-11 items-center justify-between rounded-md px-3 py-2.5 text-base font-medium",
+                  isServicesActive ? "bg-muted text-accent" : "text-foreground/80",
+                )}
+              >
+                Szolgáltatások
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                  className={cn("transition-transform", mobileServicesOpen ? "rotate-180" : "")}
+                >
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              {mobileServicesOpen ? (
+                <ul className="mt-1 flex flex-col gap-1 pl-4">
+                  {SERVICE_LINKS.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        onClick={() => setMenuOpen(false)}
+                        className={cn(
+                          "block min-h-11 rounded-md px-3 py-2.5 text-sm font-medium",
+                          pathname === link.href ? "bg-muted text-accent" : "text-foreground/70",
+                        )}
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </li>
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
                 <Link

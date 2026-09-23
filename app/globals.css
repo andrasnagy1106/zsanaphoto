@@ -7,6 +7,7 @@
   --color-accent-dark: #8f0e22;
   --color-muted: #f1eee8;
   --color-border: #e6e1d8;
+  --color-footer: #4a0f1c;
 }
 
 @theme inline {
@@ -16,6 +17,7 @@
   --color-accent-dark: var(--color-accent-dark);
   --color-muted: var(--color-muted);
   --color-border: var(--color-border);
+  --color-footer: var(--color-footer);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-display);

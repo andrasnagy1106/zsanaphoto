@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 const ROUTES = [
   "",
+  "/szolgaltatasok",
   "/csaladi-fotozas",
   "/intezmenyi-fotozas",
   "/galeria",
