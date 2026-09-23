@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Hero } from "@/components/public/Hero";
+import { HomeGallerySection } from "@/components/public/HomeGallerySection";
 import { PhotoGrid } from "@/components/public/PhotoGrid";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ServiceCard } from "@/components/public/ServiceCard";
@@ -126,6 +127,8 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+
+      <HomeGallerySection />
     </>
   );
 }
