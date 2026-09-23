@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -41,10 +42,17 @@ export function Header() {
   }, [servicesOpen]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-50 border-b border-border bg-background">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="font-display text-xl text-foreground" onClick={() => setMenuOpen(false)}>
-          ZsaNa Photo
+        <Link href="/" className="shrink-0" onClick={() => setMenuOpen(false)}>
+          <Image
+            src="/zsana-logo.png"
+            alt="ZsaNa Photo"
+            width={220}
+            height={44}
+            priority
+            style={{ height: "44px", width: "auto" }}
+          />
         </Link>
 
         <nav className="hidden lg:flex items-center gap-8" aria-label="Fő navigáció">
