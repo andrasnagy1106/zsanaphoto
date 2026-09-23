@@ -33,13 +33,13 @@ export function Footer() {
   return (
     <footer className="mt-24">
       <div className="border-t border-b border-border bg-background">
-        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:divide-x lg:divide-border">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:gap-0 lg:divide-x-2 lg:divide-accent">
           {FEATURES.map((feature) => (
-            <div key={feature.label} className="flex items-center justify-center gap-3 lg:px-4">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="shrink-0 text-accent" aria-hidden="true">
+            <div key={feature.label} className="flex flex-col items-center gap-3 text-center lg:px-6">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" className="shrink-0 text-accent" aria-hidden="true">
                 {feature.icon}
               </svg>
-              <span className="text-sm font-medium text-foreground/80">{feature.label}</span>
+              <span className="max-w-[9rem] text-sm font-medium leading-snug text-foreground/80">{feature.label}</span>
             </div>
           ))}
         </div>
