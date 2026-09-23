@@ -1,11 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Hero } from "@/components/public/Hero";
+import { HomeAboutSection } from "@/components/public/HomeAboutSection";
 import { HomeGallerySection } from "@/components/public/HomeGallerySection";
 import { PhotoGrid } from "@/components/public/PhotoGrid";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ServiceCard } from "@/components/public/ServiceCard";
-import { getPlaceholderImageUrl } from "@/lib/utils/placeholder-image";
 import { GALLERY_CATEGORIES } from "@/lib/gallery-categories";
 import { getFeaturedGalleryPhotos } from "@/lib/services/gallery-service";
 
@@ -57,35 +56,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-          <div>
-            <SectionHeading eyebrow="Rólam" title="A fotós, aki a pillanatot keresi" />
-            <p className="mt-4 text-foreground/70 leading-relaxed">
-              Több éve fotózok családokat és intézményeket, célom, hogy természetes, őszinte pillanatok
-              maradjanak meg évtizedekre. Minden fotózás egyedi, a ti tempótokhoz igazodva.
-            </p>
-            <Link
-              href="/rolam"
-              className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-accent hover:text-accent-dark"
-            >
-              Tudj meg többet rólam →
-            </Link>
-          </div>
-          <div className="max-w-xs justify-self-center lg:justify-self-end">
-            <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-border">
-              <Image
-                src={getPlaceholderImageUrl("zsana-portre", 600, 800)}
-                alt=""
-                fill
-                sizes="(max-width: 1024px) 60vw, 320px"
-                className="object-cover"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="border-t border-border bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
           <SectionHeading align="center" eyebrow="Folyamat" title="Hogyan működik?" />
@@ -128,6 +98,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <HomeAboutSection />
       <HomeGallerySection />
     </>
   );

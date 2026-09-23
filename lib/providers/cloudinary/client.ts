@@ -176,6 +176,33 @@ export async function uploadGalleryPhotoToCloudinary(
   };
 }
 
+const SITE_FOLDER_PREFIX = process.env.CLOUDINARY_SITE_FOLDER_PREFIX ?? "zsanaphoto/site";
+
+export interface UploadSitePhotoOptions {
+  file: Buffer | string;
+  key: string;
+  filename?: string;
+}
+
+export interface SitePhotoUploadResult {
+  publicId: string;
+  secureUrl: string;
+}
+
+/** Uploads a singleton site-wide marketing photo (e.g. the homepage "about" portrait). */
+export async function uploadSitePhotoToCloudinary(
+  options: UploadSitePhotoOptions,
+): Promise<SitePhotoUploadResult> {
+  const uploadResponse = await uploadToCloudinaryFolder({
+    file: options.file,
+    folder: SITE_FOLDER_PREFIX,
+    filename: options.filename,
+    tags: ["site", options.key],
+  });
+
+  return { publicId: uploadResponse.public_id, secureUrl: uploadResponse.secure_url };
+}
+
 interface UploadToCloudinaryFolderOptions {
   file: Buffer | string;
   folder: string;

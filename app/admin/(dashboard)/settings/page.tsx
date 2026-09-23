@@ -3,6 +3,7 @@ import { listAdminUsers } from "@/lib/services/admin-user-service";
 import { requireAdmin } from "@/lib/auth/guard";
 import { SettingsForm } from "@/components/admin/SettingsForm";
 import { AdminUserManager } from "@/components/admin/AdminUserManager";
+import { AboutPhotoUploadForm } from "@/components/admin/AboutPhotoUploadForm";
 
 export default async function AdminSettingsPage() {
   const [settings, adminList, currentAdmin] = await Promise.all([
@@ -36,6 +37,8 @@ export default async function AdminSettingsPage() {
           adminUsers={adminList}
           currentAdminId={currentAdmin.id}
         />
+
+        <AboutPhotoUploadForm currentPhotoUrl={settings.aboutPhotoUrl} />
       </div>
     </div>
   );

@@ -36,6 +36,8 @@ function makeSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
     minimumLeadTimeHours: 2,
     maxAdvanceDays: 90,
     defaultPhotoPrices: null,
+    aboutPhotoPublicId: null,
+    aboutPhotoUrl: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

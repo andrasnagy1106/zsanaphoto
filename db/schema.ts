@@ -229,6 +229,8 @@ export const siteSettings = pgTable("site_settings", {
     .default(2),
   maxAdvanceDays: integer("max_advance_days").notNull().default(90),
   defaultPhotoPrices: jsonb("default_photo_prices").$type<Partial<Record<PhotoPrintSize, number>> | null>(),
+  aboutPhotoPublicId: text("about_photo_public_id"),
+  aboutPhotoUrl: text("about_photo_url"),
   ...timestamps,
 });
 

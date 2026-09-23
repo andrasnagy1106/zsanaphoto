@@ -7,10 +7,13 @@ import {
   deleteAdminUser,
   type SafeAdminUser,
 } from "@/lib/services/admin-user-service";
-import { updateSettings } from "@/lib/services/settings-service";
+import { updateAboutPhoto, updateSettings } from "@/lib/services/settings-service";
 import { createAdminUserSchema } from "@/lib/validation/admin-user";
 import { settingsSchema } from "@/lib/validation/settings";
 import type { AdminActionResult } from "./admin-booking-actions";
+
+const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif"]);
+const MAX_IMAGE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 
 export async function updateSettingsAction(formData: unknown): Promise<AdminActionResult> {
   await requireAdmin();
@@ -27,6 +30,36 @@ export async function updateSettingsAction(formData: unknown): Promise<AdminActi
   } catch (error) {
     console.error("[updateSettingsAction] Failed:", error);
     return { success: false, error: "Valami hiba történt. Kérjük, próbáld meg újra." };
+  }
+}
+
+export async function uploadAboutPhotoAction(formData: FormData): Promise<AdminActionResult> {
+  await requireAdmin();
+
+  try {
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      return { success: false, error: "Válassz ki egy képfájlt." };
+    }
+    if (!ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
+      return { success: false, error: `Nem támogatott fájlformátum: ${file.name} (${file.type}).` };
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      return { success: false, error: `A fájl túl nagy: ${file.name} (max 25 MB megengedett).` };
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await updateAboutPhoto(buffer, file.name);
+
+    revalidatePath("/admin/settings");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("[uploadAboutPhotoAction] Failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "A kép feltöltése sikertelen volt.",
+    };
   }
 }
 
