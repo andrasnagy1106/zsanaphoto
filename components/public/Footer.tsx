@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PhotoCard } from "./PhotoCard";
-import { GALLERY_CATEGORIES, getFeaturedGalleryPhotos } from "./PhotoGrid";
+import { GALLERY_CATEGORIES } from "@/lib/gallery-categories";
+import { getFeaturedGalleryPhotos } from "@/lib/services/gallery-service";
 
 const FEATURES = [
   {
@@ -29,9 +30,9 @@ const FEATURES = [
   },
 ];
 
-export function Footer() {
+export async function Footer() {
   const year = new Date().getFullYear();
-  const featuredPhotos = getFeaturedGalleryPhotos(6);
+  const featuredPhotos = await getFeaturedGalleryPhotos(GALLERY_CATEGORIES.slice(0, 6));
 
   return (
     <footer className="mt-24">
@@ -50,8 +51,9 @@ export function Footer() {
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
             {featuredPhotos.map((photo) => (
               <PhotoCard
-                key={photo.category}
+                key={photo.id ?? photo.category}
                 caption={photo.caption}
+                src={photo.src}
                 index={GALLERY_CATEGORIES.indexOf(photo.category)}
                 aspect="square"
               />

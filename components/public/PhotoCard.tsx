@@ -3,6 +3,8 @@ import { getPlaceholderImageUrl } from "@/lib/utils/placeholder-image";
 
 interface PhotoCardProps {
   caption: string;
+  /** Real uploaded photo URL. When missing, a neutral filler image is shown instead. */
+  src?: string | null;
   index?: number;
   aspect?: "square" | "portrait" | "landscape";
 }
@@ -14,14 +16,16 @@ const ASPECT_CLASSES: Record<NonNullable<PhotoCardProps["aspect"]>, string> = {
 };
 
 /**
- * Renders a neutral filler image in place of a real reference photo.
- * Swap these out for actual photography before launch.
+ * Renders a real gallery photo when available, otherwise a neutral filler image so the
+ * page never breaks while a category still has no uploaded photo.
  */
-export function PhotoCard({ caption, index = 0, aspect = "portrait" }: PhotoCardProps) {
+export function PhotoCard({ caption, src, index = 0, aspect = "portrait" }: PhotoCardProps) {
+  const imageSrc = src || getPlaceholderImageUrl(`zsana-gallery-${index}`, 600, 800);
+
   return (
     <figure className={`group relative overflow-hidden rounded-lg border border-border ${ASPECT_CLASSES[aspect]}`}>
       <Image
-        src={getPlaceholderImageUrl(`zsana-gallery-${index}`, 600, 800)}
+        src={imageSrc}
         alt=""
         fill
         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

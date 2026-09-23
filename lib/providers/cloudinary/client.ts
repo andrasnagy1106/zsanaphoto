@@ -100,42 +100,13 @@ export interface UploadResult {
 export async function uploadPhotoToCloudinary(
   options: UploadFileOptions,
 ): Promise<UploadResult> {
-  const client = configureCloudinary();
   const folder = getCloudinaryFolderForPin(options.pin);
-
-  let uploadResponse: UploadApiResponse;
-
-  if (Buffer.isBuffer(options.file)) {
-    uploadResponse = await new Promise<UploadApiResponse>((resolve, reject) => {
-      const stream = client.uploader.upload_stream(
-        {
-          folder,
-          resource_type: "image",
-          use_filename: Boolean(options.filename),
-          filename_override: options.filename,
-          unique_filename: true,
-          tags: [options.pin, ...(options.tags ?? [])],
-        },
-        (error, result) => {
-          if (error || !result) {
-            reject(error ?? new Error("Cloudinary upload failed: empty result"));
-          } else {
-            resolve(result);
-          }
-        },
-      );
-      stream.end(options.file);
-    });
-  } else {
-    uploadResponse = await client.uploader.upload(options.file, {
-      folder,
-      resource_type: "image",
-      use_filename: Boolean(options.filename),
-      filename_override: options.filename,
-      unique_filename: true,
-      tags: [options.pin, ...(options.tags ?? [])],
-    });
-  }
+  const uploadResponse = await uploadToCloudinaryFolder({
+    file: options.file,
+    folder,
+    filename: options.filename,
+    tags: [options.pin, ...(options.tags ?? [])],
+  });
 
   const watermarkedUrl = buildWatermarkedUrl(
     uploadResponse.public_id,
@@ -152,6 +123,93 @@ export async function uploadPhotoToCloudinary(
     format: uploadResponse.format,
     originalFilename: options.filename ?? uploadResponse.original_filename,
   };
+}
+
+export interface UploadGalleryPhotoOptions {
+  file: Buffer | string;
+  category: string;
+  filename?: string;
+}
+
+export interface GalleryUploadResult {
+  publicId: string;
+  secureUrl: string;
+  width?: number;
+  height?: number;
+  bytes?: number;
+  format?: string;
+  originalFilename?: string;
+}
+
+const GALLERY_FOLDER_PREFIX = process.env.CLOUDINARY_GALLERY_FOLDER_PREFIX ?? "zsanaphoto/gallery";
+
+function getGalleryCloudinaryFolder(category: string): string {
+  const slug = category
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  return `${GALLERY_FOLDER_PREFIX}/${slug || "egyeb"}`;
+}
+
+/** Uploads a public portfolio gallery photo (no watermark) under a category folder. */
+export async function uploadGalleryPhotoToCloudinary(
+  options: UploadGalleryPhotoOptions,
+): Promise<GalleryUploadResult> {
+  const folder = getGalleryCloudinaryFolder(options.category);
+  const uploadResponse = await uploadToCloudinaryFolder({
+    file: options.file,
+    folder,
+    filename: options.filename,
+    tags: ["gallery", options.category],
+  });
+
+  return {
+    publicId: uploadResponse.public_id,
+    secureUrl: uploadResponse.secure_url,
+    width: uploadResponse.width,
+    height: uploadResponse.height,
+    bytes: uploadResponse.bytes,
+    format: uploadResponse.format,
+    originalFilename: options.filename ?? uploadResponse.original_filename,
+  };
+}
+
+interface UploadToCloudinaryFolderOptions {
+  file: Buffer | string;
+  folder: string;
+  filename?: string;
+  tags?: string[];
+}
+
+async function uploadToCloudinaryFolder(
+  options: UploadToCloudinaryFolderOptions,
+): Promise<UploadApiResponse> {
+  const client = configureCloudinary();
+  const uploadOptions = {
+    folder: options.folder,
+    resource_type: "image" as const,
+    use_filename: Boolean(options.filename),
+    filename_override: options.filename,
+    unique_filename: true,
+    tags: options.tags,
+  };
+
+  if (Buffer.isBuffer(options.file)) {
+    return new Promise<UploadApiResponse>((resolve, reject) => {
+      const stream = client.uploader.upload_stream(uploadOptions, (error, result) => {
+        if (error || !result) {
+          reject(error ?? new Error("Cloudinary upload failed: empty result"));
+        } else {
+          resolve(result);
+        }
+      });
+      stream.end(options.file);
+    });
+  }
+
+  return client.uploader.upload(options.file, uploadOptions);
 }
 
 export async function deletePhotoFromCloudinary(publicId: string): Promise<boolean> {

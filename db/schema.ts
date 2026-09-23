@@ -260,6 +260,22 @@ export const emailOutbox = pgTable("email_outbox", {
   index("email_outbox_sent_at_idx").on(table.sentAt),
 ]);
 
+export const galleryPhotos = pgTable("gallery_photos", {
+  id: id(),
+  category: text("category").notNull(),
+  publicId: text("public_id").notNull(),
+  secureUrl: text("secure_url").notNull(),
+  caption: text("caption").notNull(),
+  width: integer("width"),
+  height: integer("height"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("gallery_photos_public_id_idx").on(table.publicId),
+  index("gallery_photos_category_idx").on(table.category),
+  index("gallery_photos_sort_order_idx").on(table.sortOrder),
+]);
+
 export type Service = typeof services.$inferSelect;
 export type NewService = typeof services.$inferInsert;
 export type AvailabilityRule = typeof availabilityRules.$inferSelect;
@@ -282,3 +298,5 @@ export type InstitutionInquiry = typeof institutionInquiries.$inferSelect;
 export type NewInstitutionInquiry = typeof institutionInquiries.$inferInsert;
 export type EmailOutbox = typeof emailOutbox.$inferSelect;
 export type NewEmailOutbox = typeof emailOutbox.$inferInsert;
+export type GalleryPhoto = typeof galleryPhotos.$inferSelect;
+export type NewGalleryPhoto = typeof galleryPhotos.$inferInsert;
