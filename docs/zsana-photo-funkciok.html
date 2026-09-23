@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8" />
+<title>ZsaNa Photo – Funkciók és beállítási lehetőségek</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #2b2420;
+    font-size: 11.5px;
+    line-height: 1.55;
+    margin: 0;
+  }
+  .cover {
+    min-height: 230mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    page-break-after: always;
+    background: linear-gradient(160deg, #fbf4ec 0%, #f3e6d8 60%, #eddcc7 100%);
+    padding: 16mm 14mm;
+    border-radius: 4px;
+  }
+  .cover .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 700;
+    color: #a8632c;
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+  .cover h1 {
+    font-size: 34px;
+    margin: 0 0 10px 0;
+    color: #3a2a1a;
+    line-height: 1.2;
+  }
+  .cover p.lead {
+    font-size: 14px;
+    max-width: 120mm;
+    color: #55442f;
+    margin-top: 6px;
+  }
+  .cover .meta {
+    margin-top: 40px;
+    font-size: 11px;
+    color: #6b5842;
+  }
+  .cover .meta div { margin-bottom: 4px; }
+
+  h2.section {
+    font-size: 18px;
+    color: #a8632c;
+    border-bottom: 2px solid #eddcc7;
+    padding-bottom: 6px;
+    margin: 0 0 12px 0;
+    page-break-after: avoid;
+  }
+  h3.feature {
+    font-size: 13.5px;
+    color: #3a2a1a;
+    margin: 16px 0 4px 0;
+    page-break-after: avoid;
+  }
+  .section-block { page-break-inside: avoid; margin-bottom: 6px; }
+  p { margin: 4px 0 8px 0; }
+  ul { margin: 4px 0 10px 0; padding-left: 18px; }
+  li { margin-bottom: 3px; }
+  .badge {
+    display: inline-block;
+    background: #f3e6d8;
+    color: #a8632c;
+    border-radius: 999px;
+    padding: 1px 9px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .badge.auto { background: #e3f3ea; color: #1f7a4d; }
+  .badge.manual { background: #fdecec; color: #b3372c; }
+  .config-box {
+    background: #faf7f2;
+    border: 1px solid #eddcc7;
+    border-left: 4px solid #a8632c;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 6px 0 10px 0;
+  }
+  .config-box .title {
+    font-weight: 700;
+    color: #a8632c;
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 14px 0;
+    font-size: 11px;
+  }
+  th, td {
+    border: 1px solid #e6dccc;
+    padding: 5px 8px;
+    text-align: left;
+  }
+  th { background: #f3e6d8; color: #3a2a1a; }
+  .page { page-break-before: always; }
+  .toc { columns: 2; column-gap: 24px; }
+  .toc a { text-decoration: none; color: #3a2a1a; }
+  .toc li { list-style: none; margin-bottom: 6px; }
+  .footer-note {
+    margin-top: 20px;
+    font-size: 10px;
+    color: #8a7a63;
+    border-top: 1px solid #eddcc7;
+    padding-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="eyebrow">ZsaNa Photo · Weboldal &amp; foglalási rendszer</div>
+  <h1>Funkciók és beállítási<br/>lehetőségek áttekintése</h1>
+  <p class="lead">
+    Ez a dokumentum összefoglalja a weboldal és az admin felület minden jelenleg elérhető funkcióját,
+    valamint azt, hogy mit lehet ezekből saját magad, adminként testre szabni – bejelentkezés nélküli
+    technikai részletek nélkül, üzemeltetői szemszögből.
+  </p>
+  <div class="meta">
+    <div>Verzió: 2026. szeptember</div>
+    <div>Készítette: fejlesztői csapat</div>
+    <div>Célközönség: tulajdonos / üzemeltető</div>
+  </div>
+</div>
+
+<!-- TOC -->
+<h2 class="section">Tartalomjegyzék</h2>
+<ul class="toc">
+  <li>1. Publikus weboldal</li>
+  <li>2. Online időpontfoglalás</li>
+  <li>3. Intézményi ajánlatkérés</li>
+  <li>4. Privát fotógaléria és PIN</li>
+  <li>5. Fotórendelés (nyomtatott képek)</li>
+  <li>6. Admin felület – Áttekintés</li>
+  <li>7. Foglalások kezelése</li>
+  <li>8. Szolgáltatások / események kezelése</li>
+  <li>9. Elérhetőség és nyitvatartás</li>
+  <li>10. Szüneteltetett időszakok</li>
+  <li>11. Fotók kezelése és galéria feltöltés</li>
+  <li>12. Fotórendelések adminisztrációja</li>
+  <li>13. Intézményi megkeresések kezelése</li>
+  <li>14. Admin felhasználók</li>
+  <li>15. Általános beállítások</li>
+  <li>16. E-mail értesítések</li>
+  <li>17. Biztonság és adatvédelem</li>
+</ul>
+
+<!-- 1 -->
+<div class="page"></div>
+<h2 class="section">1. Publikus weboldal</h2>
+<p>A weboldal modern, mobilbarát megjelenésű, minden aloldala reszponzív (mobilon, tableten és
+asztali gépen egyaránt jól használható).</p>
+<h3 class="feature">Elérhető aloldalak</h3>
+<ul>
+  <li><strong>Főoldal</strong> – bemutatkozás, szolgáltatások kiemelése, hívás cselekvésre (foglalás gomb)</li>
+  <li><strong>Rólam</strong> – a fotós bemutatkozó oldala</li>
+  <li><strong>Családi fotózás</strong> – a szolgáltatás részletes bemutatása</li>
+  <li><strong>Intézményi fotózás</strong> – óvodai/iskolai fotózás bemutatása és ajánlatkérési lehetőség</li>
+  <li><strong>Galéria</strong> – referenciaképek bemutatása látogatóknak</li>
+  <li><strong>Kapcsolat</strong> – elérhetőségek</li>
+  <li><strong>ÁSZF és Adatvédelmi tájékoztató</strong> – jogi oldalak</li>
+  <li><strong>Fotógaléria (privát, PIN-nel védett)</strong> – ügyfelek saját fotóinak megtekintése/letöltése</li>
+  <li><strong>Fotórendelés</strong> – ügyfelek nyomtatott/digitális képrendelése</li>
+  <li><strong>Foglalás kezelése</strong> – ügyfél saját foglalásának módosítása/lemondása egyedi linkkel</li>
+</ul>
+
+<!-- 2 -->
+<h2 class="section">2. Online időpontfoglalás</h2>
+<p>Az időpontfoglalás egy 5 lépéses, könnyen követhető folyamat (varázsló):</p>
+<ol>
+  <li>Szolgáltatás kiválasztása</li>
+  <li>Dátum kiválasztása</li>
+  <li>Szabad időpont (idősáv) kiválasztása</li>
+  <li>Ügyfél adatainak megadása (Név, opcionálisan Gyermek neve, e-mail, telefon, megjegyzés)</li>
+  <li>Összegzés és véglegesítés</li>
+</ol>
+<div class="config-box">
+  <div class="title">Mit tud a rendszer automatikusan?</div>
+  <ul>
+    <li>Kizárja az ütköző, már lefoglalt időpontokat (adatbázis szintű dupla-foglalás védelemmel)</li>
+    <li>Betartja a minimum előfoglalási időt és a maximum előre foglalható napok számát (admin beállítás)</li>
+    <li>Automatikus egyedi foglalási azonosítót generál (pl. <em>ZS-2026-0001</em>)</li>
+  </ul>
+</div>
+<h3 class="feature">Jóváhagyási mód szolgáltatásonként</h3>
+<p>
+  <span class="badge auto">AUTOMATIKUS</span> a foglalás azonnal visszaigazolásra kerül.<br/>
+  <span class="badge manual">MANUÁLIS</span> a foglalás "függőben" státuszba kerül, és az adminnak
+  kézzel kell jóváhagynia.
+</p>
+<h3 class="feature">Gyermek neve mező (új funkció)</h3>
+<p>
+  Az admin felületen, szolgáltatásonként (eseményenként) egy jelölőnégyzettel bekapcsolható, hogy a
+  foglalási űrlapon a Név mező után megjelenjen egy külön <strong>„Gyermek neve”</strong> mező is.
+  Ha egy szolgáltatásnál nincs bejelölve, a mező nem jelenik meg az ügyfélnek.
+</p>
+<h3 class="feature">Ügyfél önkiszolgáló foglaláskezelés</h3>
+<p>
+  Minden foglalás-visszaigazoló e-mail tartalmaz egy egyedi, biztonságos linket, amellyel az ügyfél
+  saját maga tudja <strong>módosítani</strong> vagy <strong>lemondani</strong> az időpontját, admin
+  segítsége nélkül.
+</p>
+<h3 class="feature">Spam- és visszaélés-védelem</h3>
+<ul>
+  <li>Rejtett "honeypot" mező szűri a robotokat</li>
+  <li>IP-alapú túlterhelés-védelem (rate limit) a foglalási űrlapon</li>
+</ul>
+
+<!-- 3 -->
+<h2 class="section">3. Intézményi ajánlatkérés</h2>
+<p>
+  Óvodák/iskolák nem közvetlenül foglalnak időpontot, hanem egy ajánlatkérési űrlapon keresztül
+  veszik fel a kapcsolatot (intézmény neve, kapcsolattartó, létszám, preferált időszak, üzenet).
+  Ezek a megkeresések az admin felületen jelennek meg feldolgozásra.
+</p>
+
+<!-- 4 -->
+<h2 class="section">4. Privát fotógaléria és PIN kódos hozzáférés</h2>
+<p>
+  Minden intézményi eseményhez egyedi, 7 karakteres PIN kód tartozik (pl. <em>AB12345</em>), amit az
+  ügyfél e-mailben kap meg. A PIN megadása után az ügyfél eléri a saját, privát galériáját.
+</p>
+<h3 class="feature">Galéria élmény</h3>
+<ul>
+  <li>Igényes, "mozaik" elrendezésű, mobilon is jól használható galéria nézet</li>
+  <li>Képre kattintva nagyított, teljes képernyős megtekintés (lapozható nyilakkal, billentyűzettel is)</li>
+  <li>Minden kép egyenként letölthető egy kattintással</li>
+  <li>Az összes kép egyetlen gombnyomással, egy ZIP csomagban is letölthető, folyamatjelzővel</li>
+  <li>A képek vízjellel védettek, amíg meg nem történik a végleges átadás</li>
+</ul>
+<div class="config-box">
+  <div class="title">Admin oldali beállítási lehetőség</div>
+  <p>Az admin dönti el eseményenként, hogy az ügyfél a PIN megadása után a teljes galériát lássa,
+  vagy a fotórendelési felületre jusson (lásd következő pont).</p>
+</div>
+
+<!-- 5 -->
+<h2 class="section">5. Fotórendelés (nyomtatott képek)</h2>
+<p>Az ügyfél a PIN kóddal a fotóiból nyomtatott képeket is rendelhet, mennyiség és méret szerint.</p>
+<table>
+  <tr><th>Méret</th><th>Alapértelmezett ár</th></tr>
+  <tr><td>10×15 cm</td><td>600 Ft / db</td></tr>
+  <tr><td>13×18 cm</td><td>750 Ft / db</td></tr>
+  <tr><td>15×21 cm</td><td>1 200 Ft / db</td></tr>
+  <tr><td>A4 (21×30 cm)</td><td>1 900 Ft / db</td></tr>
+  <tr><td>Digitális kép</td><td>2 000 Ft / db</td></tr>
+</table>
+<div class="config-box">
+  <div class="title">Beállítható</div>
+  <ul>
+    <li>Az alapárak globálisan módosíthatók az admin Beállítások menüjében</li>
+    <li>Egyedi árak is beállíthatók egy-egy konkrét foglaláshoz/eseményhez, felülírva az alapárat</li>
+  </ul>
+</div>
+<p>A rendelés leadása után visszaigazoló e-mail megy ki az ügyfélnek, és értesítés az adminnak. A
+rendelés állapotát (Új / Feldolgozás alatt / Kész / Törölve) az admin kezeli.</p>
+
+<!-- 6 -->
+<h2 class="section">6. Admin felület – Áttekintés (Dashboard)</h2>
+<p>Bejelentkezés után az admin egy áttekintő oldalt lát, ahol azonnal látszik:</p>
+<ul>
+  <li>Mai foglalások száma</li>
+  <li>Függőben lévő (jóváhagyásra váró) foglalások száma</li>
+  <li>Megerősített foglalások száma</li>
+  <li>Következő 7 nap foglalásainak száma</li>
+  <li>Lemondott foglalások száma</li>
+</ul>
+<p>Minden kártyára kattintva a kapcsolódó, szűrt foglalási lista nyílik meg.</p>
+
+<!-- 7 -->
+<h2 class="section">7. Foglalások kezelése</h2>
+<ul>
+  <li>Teljes foglalási lista, státusz szerinti szűréssel (Függőben / Megerősítve / Lemondva / Teljesítve / Nem jelent meg)</li>
+  <li>Foglalás részletes adatlapja: ügyfél adatai (név, opcionális gyermeknév, e-mail, telefon, megjegyzés), időpont, PIN</li>
+  <li>Foglalás jóváhagyása, lemondása, áthelyezése új időpontra</li>
+  <li>Egyedi fotónyomtatási árak beállítása az adott foglaláshoz</li>
+  <li>Foglalási lista exportálása (pl. táblázatos formában)</li>
+  <li>Gyors hivatkozás az adott PIN-hez tartozó fotókezelő felületre</li>
+</ul>
+
+<!-- 8 -->
+<h2 class="section">8. Szolgáltatások / események kezelése</h2>
+<p>Az admin tetszőleges számú szolgáltatást / időszakos eseményt hozhat létre és szerkeszthet.</p>
+<div class="config-box">
+  <div class="title">Beállítható jellemzők szolgáltatásonként</div>
+  <ul>
+    <li>Név, leírás, egyedi URL-azonosító (slug)</li>
+    <li>Foglalás időtartama (perc) és puffer/szünet a foglalások között</li>
+    <li>Jóváhagyás módja: <span class="badge auto">AUTOMATIKUS</span> vagy <span class="badge manual">MANUÁLIS</span></li>
+    <li>Elérhetőségi mód: általános heti nyitvatartás vagy esemény-specifikus egyedi idősávok</li>
+    <li>Érvényességi dátumtartomány (mettől-meddig foglalható, pl. csak egy kampány idejére)</li>
+    <li><strong>„Gyermek neve” mező bekérése</strong> ki/bekapcsolható</li>
+    <li>Aktív/inaktív állapot (inaktív szolgáltatás nem jelenik meg a foglalási oldalon)</li>
+  </ul>
+</div>
+<p>Szolgáltatás törlésekor a rendszer előre jelzi, hány foglalás, fotó és PIN érintett, hogy elkerülhető
+legyen a véletlen adatvesztés.</p>
+
+<!-- 9 -->
+<h2 class="section">9. Elérhetőség és nyitvatartás</h2>
+<ul>
+  <li>Általános, heti szintű nyitvatartási szabályok (naponta eltérő nyitás/zárás időponttal)</li>
+  <li>Szolgáltatásonként felülírható, egyedi heti idősáv-beállítás, ha egy esemény csak bizonyos
+  napokon/órákban foglalható</li>
+</ul>
+
+<!-- 10 -->
+<h2 class="section">10. Szüneteltetett időszakok</h2>
+<p>
+  Az admin tetszőleges időszakot (pl. szabadság, ünnepnap) zárolhat, indoklással együtt – ez alatt az
+  időszak alatt senki nem tud foglalni, függetlenül az általános nyitvatartástól.
+</p>
+
+<!-- 11 -->
+<h2 class="section">11. Fotók kezelése és galéria feltöltés</h2>
+<ul>
+  <li>Képek feltöltése egy adott esemény (PIN) mappájába, akár egyszerre több képpel</li>
+  <li>Automatikus vízjelezés minden feltöltött előnézeti képen</li>
+  <li>Képek törlése egyenként vagy tömegesen</li>
+  <li>Címek, metaadatok (méret, fájlméret) megtekintése</li>
+  <li>Teljes esemény-mappa törlése a tárhelyről egy lépésben</li>
+</ul>
+
+<!-- 12 -->
+<h2 class="section">12. Fotórendelések adminisztrációja</h2>
+<ul>
+  <li>Beérkezett rendelések listája, tételes bontással (méret, mennyiség, egységár, összesen)</li>
+  <li>Rendelés állapotának kezelése: Új → Feldolgozás alatt → Kész (vagy Törölve)</li>
+</ul>
+
+<!-- 13 -->
+<h2 class="section">13. Intézményi megkeresések kezelése</h2>
+<ul>
+  <li>Beérkezett ajánlatkérések listája</li>
+  <li>Állapot kezelése: Új → Kapcsolatba lépve → Lezárva</li>
+</ul>
+
+<!-- 14 -->
+<h2 class="section">14. Admin felhasználók kezelése</h2>
+<p>Több admin felhasználó is létrehozható, saját belépési adatokkal (e-mail + jelszó), biztonságos
+jelszó-tárolással.</p>
+
+<!-- 15 -->
+<h2 class="section">15. Általános beállítások</h2>
+<div class="config-box">
+  <div class="title">Az admin Beállítások menüben módosítható</div>
+  <ul>
+    <li>Időzóna</li>
+    <li>Admin értesítési e-mail cím (ide érkeznek az új foglalások/rendelések értesítései)</li>
+    <li>Publikus kapcsolattartási e-mail cím (a weboldalon megjelenő elérhetőség)</li>
+    <li>Minimum előfoglalási idő (hány órával korábban foglalható legalább egy időpont)</li>
+    <li>Maximum előrefoglalási időtáv (hány napra előre lehet foglalni)</li>
+    <li>Alapértelmezett fotónyomtatási árak méretenként</li>
+  </ul>
+</div>
+
+<!-- 16 -->
+<h2 class="section">16. E-mail értesítések</h2>
+<p>A rendszer minden fontos eseményről automatikusan e-mailt küld, magyarul, az ügyfélnek és/vagy
+az adminnak:</p>
+<ul>
+  <li>Új foglalás létrehozása (visszaigazolás vagy "függőben" értesítés, a jóváhagyási módtól függően)</li>
+  <li>Foglalás jóváhagyása, lemondása, áthelyezése – mindkét irányban (ügyfél és admin)</li>
+  <li>Fotórendelés visszaigazolása</li>
+  <li>Minden visszaigazoló e-mail tartalmaz egy "Hozzáadás a Google Naptárhoz" gombot/linket</li>
+</ul>
+<h3 class="feature">Napi e-mail küldési korlát kezelése (új funkció)</h3>
+<p>
+  A használt levelezőszolgáltatás naponta legfeljebb 99 e-mail kiküldését teszi lehetővé ingyenesen.
+  A rendszer folyamatosan számolja, hogy egy adott napon hány e-mail ment már ki:
+</p>
+<ul>
+  <li>Amíg a napi 99-es keret nem telt be, minden e-mail azonnal kimegy, ahogy eddig is</li>
+  <li>Ha a keret betelik, az azon felüli e-maileket a rendszer <strong>eltárolja</strong>, és nem vesznek el</li>
+  <li>Másnap hajnalban (kb. 02:00 órakor) a rendszer automatikusan kiküldi a várakozó e-maileket,
+  ugyanúgy figyelve az újra induló napi 99-es keretet</li>
+</ul>
+<p>Ez biztosítja, hogy forgalmasabb napokon se vesszen el egyetlen értesítés sem – csak egy nappal
+később érkezik meg.</p>
+
+<!-- 17 -->
+<h2 class="section">17. Biztonság és adatvédelem</h2>
+<ul>
+  <li>Az admin felület jelszóval védett, biztonságosan titkosított jelszó-tárolással</li>
+  <li>A privát galériák és fotórendelések kizárólag egyedi PIN kóddal érhetők el</li>
+  <li>Az ügyfél saját foglalását csak az e-mailben kapott, egyedi, nem kitalálható linkkel tudja kezelni</li>
+  <li>Az oldal automatikusan kiszűri az automata (bot) beküldéseket a foglalási űrlapon</li>
+  <li>ÁSZF és Adatvédelmi tájékoztató elérhető minden látogató számára</li>
+</ul>
+
+<div class="footer-note">
+  ZsaNa Photo – funkciók és beállítási lehetőségek áttekintése. A dokumentum a weboldal aktuális,
+  élesített funkcióit mutatja be; új funkció bevezetésekor ez a dokumentum frissíthető.
+</div>
+
+</body>
+</html>

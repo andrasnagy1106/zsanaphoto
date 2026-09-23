@@ -1,3 +1,4 @@
+import { EMAIL_FROM_ADDRESS } from "@/lib/constants";
 import { ConsoleEmailProvider } from "./console-email-provider";
 import { ResendEmailProvider } from "./resend-email-provider";
 import type { EmailProvider } from "./types";
@@ -9,9 +10,9 @@ export function getEmailProvider(): EmailProvider {
   if (cachedProvider) return cachedProvider;
 
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
+  const from = process.env.EMAIL_FROM || EMAIL_FROM_ADDRESS;
 
-  if (apiKey && from) {
+  if (apiKey) {
     cachedProvider = new ResendEmailProvider(apiKey, from);
   } else {
     cachedProvider = new ConsoleEmailProvider();

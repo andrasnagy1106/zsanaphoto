@@ -67,8 +67,10 @@ lib/
    CLOUDINARY_API_SECRET=
    ```
 
-   `RESEND_API_KEY` és `EMAIL_FROM` nélkül az app a `ConsoleEmailProvider`-t használja: az e-mailek
-   tartalma a terminálba lesz logolva, az alkalmazás Resend kulcs nélkül is teljes értékűen fut.
+   `RESEND_API_KEY` nélkül az app a `ConsoleEmailProvider`-t használja: az e-mailek tartalma a
+   terminálba lesz logolva, az alkalmazás Resend kulcs nélkül is teljes értékűen fut. Ha
+   `EMAIL_FROM` üresen marad, a feladó alapértelmezetten `ZsaNa Photo <noreply@zsanaphoto.hu>`;
+   a válaszcím (reply-to) minden e-mailen `zsanafoto@gmail.com`.
 
    A Resend napi 99 e-mailes ingyenes limitje miatt az ezt meghaladó e-mailek a `email_outbox`
    táblába kerülnek "QUEUED" státusszal, és a `vercel.json`-ban definiált napi cron job

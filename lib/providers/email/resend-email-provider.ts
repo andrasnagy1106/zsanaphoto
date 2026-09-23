@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { EMAIL_REPLY_TO_ADDRESS } from "@/lib/constants";
 import { sendOrQueueEmail } from "@/lib/services/email-outbox-service";
 import {
   buildAdminBookingCancelledEmail,
@@ -30,7 +31,13 @@ export class ResendEmailProvider implements EmailProvider {
       subject,
       body: text,
       deliver: async () => {
-        await this.client.emails.send({ from: this.from, to, subject, text });
+        await this.client.emails.send({
+          from: this.from,
+          to,
+          subject,
+          text,
+          replyTo: EMAIL_REPLY_TO_ADDRESS,
+        });
       },
     });
   }

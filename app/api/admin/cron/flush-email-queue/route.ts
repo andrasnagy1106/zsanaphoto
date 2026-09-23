@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { EMAIL_FROM_ADDRESS, EMAIL_REPLY_TO_ADDRESS } from "@/lib/constants";
 import { flushQueuedEmails } from "@/lib/services/email-outbox-service";
 
 export const dynamic = "force-dynamic";
@@ -19,16 +20,16 @@ export async function GET(request: Request) {
   }
 
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
+  const from = process.env.EMAIL_FROM || EMAIL_FROM_ADDRESS;
 
-  if (!apiKey || !from) {
+  if (!apiKey) {
     // No real email provider configured (dev/console mode) — nothing to flush.
     return NextResponse.json({ sent: 0, remaining: 0, skipped: true });
   }
 
   const client = new Resend(apiKey);
   const result = await flushQueuedEmails(async (to, subject, text) => {
-    await client.emails.send({ from, to, subject, text });
+    await client.emails.send({ from, to, subject, text, replyTo: EMAIL_REPLY_TO_ADDRESS });
   });
 
   return NextResponse.json(result);
