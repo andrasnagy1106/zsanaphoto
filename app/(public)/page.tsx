@@ -6,7 +6,6 @@ import { HomeServicesSection } from "@/components/public/HomeServicesSection";
 import { PhotoGrid } from "@/components/public/PhotoGrid";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GALLERY_CATEGORIES } from "@/lib/gallery-categories";
-import { getFeaturedGalleryPhotos } from "@/lib/services/gallery-service";
 
 const HOW_IT_WORKS = [
   { title: "Válassz szolgáltatást", description: "Családi vagy intézményi fotózás." },
