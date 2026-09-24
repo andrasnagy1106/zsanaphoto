@@ -10,7 +10,7 @@ import {
   formatPrice,
   type PhotoPrintSize,
 } from "@/lib/photo-order-catalog";
-import { getHungarianCityByPostalCode } from "@/lib/utils/hungarian-postal-codes";
+import { formatHungarianCityName, getHungarianCityByPostalCode } from "@/lib/utils/hungarian-postal-codes";
 
 export interface PhotoOrderItemDisplay {
   id: string;
@@ -67,7 +67,9 @@ export function PhotoOrderForm({
   const [quantities, setQuantities] = useState<Record<string, number>>(() => buildInitialQuantities(initialOrder));
   const [billingName, setBillingName] = useState(initialOrder?.billingName ?? customerName);
   const [billingPostalCode, setBillingPostalCode] = useState(initialOrder?.billingPostalCode ?? "");
-  const [billingCity, setBillingCity] = useState(initialOrder?.billingCity ?? "");
+  const [billingCity, setBillingCity] = useState(
+    initialOrder?.billingCity ? formatHungarianCityName(initialOrder.billingCity) : "",
+  );
   const [billingAddress, setBillingAddress] = useState(initialOrder?.billingAddress ?? "");
   const [notes, setNotes] = useState(initialOrder?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -104,8 +106,14 @@ export function PhotoOrderForm({
     setBillingPostalCode(newPostalCode);
     const resolvedCity = getHungarianCityByPostalCode(newPostalCode);
     if (resolvedCity) {
-      setBillingCity(resolvedCity);
+      setBillingCity(formatHungarianCityName(resolvedCity));
     }
+  }
+
+  function handleCityChange(rawCity: string) {
+    const formattedCity = formatHungarianCityName(rawCity);
+    setBillingCity(formattedCity);
+    setBillingPostalCode("");
   }
 
   function submitPhotoOrder() {
@@ -366,7 +374,7 @@ export function PhotoOrderForm({
                 maxLength={10}
                 value={billingPostalCode}
                 onChange={(e) => handlePostalCodeChange(e.target.value)}
-                placeholder="pl. 6411"
+                placeholder="pl. 1011"
                 className="mt-1.5 block w-full min-h-11 rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
               />
             </div>
@@ -380,8 +388,8 @@ export function PhotoOrderForm({
                 type="text"
                 required
                 value={billingCity}
-                onChange={(e) => setBillingCity(e.target.value)}
-                placeholder="pl. Zsana"
+                onChange={(e) => handleCityChange(e.target.value)}
+                placeholder="pl. Budapest"
                 className="mt-1.5 block w-full min-h-11 rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
               />
             </div>

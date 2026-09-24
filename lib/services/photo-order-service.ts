@@ -17,6 +17,7 @@ import {
   type PhotoPrintSize,
 } from "@/lib/photo-order-catalog";
 import { getEmailProvider } from "@/lib/providers/email";
+import { formatHungarianCityName } from "@/lib/utils/hungarian-postal-codes";
 import { NotFoundError } from "@/lib/utils/errors";
 import { getSiteSettings } from "./availability-service";
 import { listPhotosByBookingId } from "./photo-storage-service";
@@ -146,6 +147,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
   });
 
   const totalAmount = trustedItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  const formattedCity = input.billingCity ? formatHungarianCityName(input.billingCity.trim()) : null;
 
   const saved = await db.transaction(async (tx) => {
     await tx.execute(
@@ -172,7 +174,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
         .set({
           billingName: input.billingName?.trim() || null,
           billingPostalCode: input.billingPostalCode?.trim() || null,
-          billingCity: input.billingCity?.trim() || null,
+          billingCity: formattedCity,
           billingAddress: input.billingAddress?.trim() || null,
           totalAmount,
           includesDigital: input.includesDigital ?? false,
@@ -193,7 +195,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
           bookingId: access.booking.id,
           billingName: input.billingName?.trim() || null,
           billingPostalCode: input.billingPostalCode?.trim() || null,
-          billingCity: input.billingCity?.trim() || null,
+          billingCity: formattedCity,
           billingAddress: input.billingAddress?.trim() || null,
           totalAmount,
           includesDigital: input.includesDigital ?? false,

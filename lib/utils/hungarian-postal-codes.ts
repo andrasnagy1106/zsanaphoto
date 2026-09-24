@@ -2900,3 +2900,12 @@ export function getHungarianCityByPostalCode(postalCode: string): string | null 
   if (/^1\d{3}$/.test(clean)) return "Budapest";
   return HUNGARIAN_POSTAL_CODES[clean] ?? null;
 }
+
+/**
+ * Formats a settlement / city name so that first letters of words and hyphenated segments are capitalized.
+ */
+export function formatHungarianCityName(input: string): string {
+  if (!input) return "";
+  return input.replace(/(^|[\s\-])(\p{L})/gu, (_, prefix, char) => `${prefix}${char.toLocaleUpperCase("hu-HU")}`);
+}
+

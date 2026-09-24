@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getHungarianCityByPostalCode } from "./hungarian-postal-codes";
+import { formatHungarianCityName, getHungarianCityByPostalCode } from "./hungarian-postal-codes";
 
 describe("getHungarianCityByPostalCode", () => {
   it("resolves Budapest for 1xxx postal codes", () => {
@@ -30,3 +30,19 @@ describe("getHungarianCityByPostalCode", () => {
     expect(getHungarianCityByPostalCode("99999")).toBe(null);
   });
 });
+
+describe("formatHungarianCityName", () => {
+  it("capitalizes the first letter of cities and words", () => {
+    expect(formatHungarianCityName("budapest")).toBe("Budapest");
+    expect(formatHungarianCityName("kiskunhalas")).toBe("Kiskunhalas");
+    expect(formatHungarianCityName("érd")).toBe("Érd");
+    expect(formatHungarianCityName("újfehértó")).toBe("Újfehértó");
+    expect(formatHungarianCityName("balaton-füred")).toBe("Balaton-Füred");
+    expect(formatHungarianCityName("hódmezővásárhely")).toBe("Hódmezővásárhely");
+  });
+
+  it("handles empty string", () => {
+    expect(formatHungarianCityName("")).toBe("");
+  });
+});
+
