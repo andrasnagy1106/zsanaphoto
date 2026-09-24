@@ -5,15 +5,16 @@ import { requireAdmin } from "@/lib/auth/guard";
 import { SettingsForm } from "@/components/admin/SettingsForm";
 import { AdminUserManager } from "@/components/admin/AdminUserManager";
 import { AboutPhotoUploadForm } from "@/components/admin/AboutPhotoUploadForm";
+import { HeroPhotoUploadForm } from "@/components/admin/HeroPhotoUploadForm";
 import { HomeServiceCardPhotosManager } from "@/components/admin/HomeServiceCardPhotosManager";
 import { HOME_SERVICE_CARDS } from "@/lib/home-service-cards";
 
 export default async function AdminSettingsPage() {
-  const [settings, adminList, currentAdmin, serviceCardPhotoUrls] = await Promise.all([
+  const [settings, adminList, currentAdmin, sitePhotos] = await Promise.all([
     getSettings(),
     listAdminUsers(),
     requireAdmin(),
-    getSitePhotoUrls(HOME_SERVICE_CARDS.map((card) => card.key)),
+    getSitePhotoUrls(["hero", ...HOME_SERVICE_CARDS.map((card) => card.key)]),
   ]);
 
   return (
@@ -42,9 +43,13 @@ export default async function AdminSettingsPage() {
           currentAdminId={currentAdmin.id}
         />
 
+        <HeroPhotoUploadForm currentPhotoUrl={sitePhotos["hero"] ?? null} />
+
         <AboutPhotoUploadForm currentPhotoUrl={settings.aboutPhotoUrl} />
 
-        <HomeServiceCardPhotosManager photoUrlsByKey={serviceCardPhotoUrls} />
+        <div className="lg:col-span-2">
+          <HomeServiceCardPhotosManager photoUrlsByKey={sitePhotos} />
+        </div>
       </div>
     </div>
   );

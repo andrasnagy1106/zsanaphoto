@@ -182,6 +182,7 @@ Ajánlott két külön Neon adatbázis: `zsanaphoto-dev` (helyi fejlesztés) és
   - **Képek vízjelezése és privát galéria:**
     - A fotórendelés felületén (`/fotorendeles`) a képek Cloudinary által vízjelezett formátumban jelennek meg a kiválasztáshoz és rendeléshez.
     - A privát teljes képgalériában (`/fotogaleria`) a rendszer az eredeti, vízjelmentes fotókat jeleníti meg és teszi letölthetővé (egyedi és kötegelt ZIP formátumban).
+  - **Főoldali fotók kezelése az adminban:** Az `/admin/settings` oldalon közvetlenül feltölthető és cserélhető a főoldali Hero borítókép, a "Rólam" portré, valamint a "Miben segíthetek?" szolgáltatáskártyák egyedi képei.
   - **Globális alapárak módosítása:** Az `/admin/settings` oldalon a rendszer globális alapértelmezett darabárai
     is közvetlenül szerkeszthetők és adatbázisban tárolódnak.
   - **Adminisztrátori fiókok kezelése:** Az `/admin/settings` oldalon közvetlenül hozzáadhatók új admin felhasználók (név, e-mail, min. 8 karakteres jelszó), illetve törölhetők a meglévő adminok (a saját fiók és az utolsó admin törlése védett).
