@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { savePhotoOrderAction } from "@/app/actions/photo-order-actions";
 import {
   DEFAULT_PHOTO_PRICES,
@@ -10,6 +10,7 @@ import {
   formatPrice,
   type PhotoPrintSize,
 } from "@/lib/photo-order-catalog";
+import { getHungarianCityByPostalCode } from "@/lib/utils/hungarian-postal-codes";
 
 export interface PhotoOrderItemDisplay {
   id: string;
@@ -28,6 +29,10 @@ interface PhotoOrderFormProps {
   prices?: Record<PhotoPrintSize, number>;
   initialOrder?: {
     orderNumber: string;
+    billingName?: string | null;
+    billingPostalCode?: string | null;
+    billingCity?: string | null;
+    billingAddress?: string | null;
     notes: string | null;
     items: Array<{ photoId: string; size: string; quantity: number }>;
   };
@@ -53,7 +58,17 @@ export function PhotoOrderForm({
   prices = DEFAULT_PHOTO_PRICES,
   initialOrder,
 }: PhotoOrderFormProps) {
+  const billingNameInputId = useId();
+  const billingPostalCodeInputId = useId();
+  const billingCityInputId = useId();
+  const billingAddressInputId = useId();
+  const notesInputId = useId();
+
   const [quantities, setQuantities] = useState<Record<string, number>>(() => buildInitialQuantities(initialOrder));
+  const [billingName, setBillingName] = useState(initialOrder?.billingName ?? customerName);
+  const [billingPostalCode, setBillingPostalCode] = useState(initialOrder?.billingPostalCode ?? "");
+  const [billingCity, setBillingCity] = useState(initialOrder?.billingCity ?? "");
+  const [billingAddress, setBillingAddress] = useState(initialOrder?.billingAddress ?? "");
   const [notes, setNotes] = useState(initialOrder?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
   const [activeOrderNumber, setActiveOrderNumber] = useState(initialOrder?.orderNumber ?? null);
@@ -85,6 +100,14 @@ export function PhotoOrderForm({
     setQuantities((current) => ({ ...current, [key]: Math.max(0, Math.min(99, quantity || 0)) }));
   }
 
+  function handlePostalCodeChange(newPostalCode: string) {
+    setBillingPostalCode(newPostalCode);
+    const resolvedCity = getHungarianCityByPostalCode(newPostalCode);
+    if (resolvedCity) {
+      setBillingCity(resolvedCity);
+    }
+  }
+
   function submitPhotoOrder() {
     const items = photos.flatMap((photo) =>
       PHOTO_PRINT_SIZES.flatMap((size) => {
@@ -98,9 +121,37 @@ export function PhotoOrderForm({
       return;
     }
 
+    if (!billingName.trim()) {
+      setError("Add meg a számlázási nevet.");
+      return;
+    }
+
+    if (!billingPostalCode.trim()) {
+      setError("Add meg az irányítószámot.");
+      return;
+    }
+
+    if (!billingCity.trim()) {
+      setError("Add meg a települést.");
+      return;
+    }
+
+    if (!billingAddress.trim()) {
+      setError("Add meg a számlázási címet (utca, házszám stb.).");
+      return;
+    }
+
     setError(null);
     startTransition(async () => {
-      const result = await savePhotoOrderAction({ accessToken, notes, items });
+      const result = await savePhotoOrderAction({
+        accessToken,
+        billingName: billingName.trim(),
+        billingPostalCode: billingPostalCode.trim(),
+        billingCity: billingCity.trim(),
+        billingAddress: billingAddress.trim(),
+        notes,
+        items,
+      });
       if (!result.success || !result.orderNumber) {
         setError(result.error ?? "A rendelés nem sikerült.");
         return;
@@ -277,12 +328,88 @@ export function PhotoOrderForm({
         </div>
       )}
 
+      {/* Billing Information Section */}
+      <div className="mt-10 rounded-xl border border-border bg-white p-6 shadow-sm">
+        <div className="border-b border-border/60 pb-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">Számlázás</p>
+          <h2 className="mt-1 font-display text-xl text-foreground">Számlázási adatok</h2>
+          <p className="mt-1 text-xs text-foreground/60">
+            Kérjük, add meg a számla kiállításához szükséges adatokat.
+          </p>
+        </div>
+
+        <div className="mt-5 space-y-4">
+          <div>
+            <label htmlFor={billingNameInputId} className="block text-sm font-medium text-foreground">
+              Számlázási név <span className="text-red-500">*</span>
+            </label>
+            <input
+              id={billingNameInputId}
+              type="text"
+              required
+              value={billingName}
+              onChange={(e) => setBillingName(e.target.value)}
+              placeholder="pl. Kovács Anna vagy Minta Kft."
+              className="mt-1.5 block w-full min-h-11 rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label htmlFor={billingPostalCodeInputId} className="block text-sm font-medium text-foreground">
+                Irányítószám <span className="text-red-500">*</span>
+              </label>
+              <input
+                id={billingPostalCodeInputId}
+                type="text"
+                required
+                maxLength={10}
+                value={billingPostalCode}
+                onChange={(e) => handlePostalCodeChange(e.target.value)}
+                placeholder="pl. 6411"
+                className="mt-1.5 block w-full min-h-11 rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor={billingCityInputId} className="block text-sm font-medium text-foreground">
+                Település / Város <span className="text-red-500">*</span>
+              </label>
+              <input
+                id={billingCityInputId}
+                type="text"
+                required
+                value={billingCity}
+                onChange={(e) => setBillingCity(e.target.value)}
+                placeholder="pl. Zsana"
+                className="mt-1.5 block w-full min-h-11 rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor={billingAddressInputId} className="block text-sm font-medium text-foreground">
+              Cím (utca, házszám, emelet/ajtó) <span className="text-red-500">*</span>
+            </label>
+            <input
+              id={billingAddressInputId}
+              type="text"
+              required
+              value={billingAddress}
+              onChange={(e) => setBillingAddress(e.target.value)}
+              placeholder="pl. Kossuth Lajos utca 12. 2/4."
+              className="mt-1.5 block w-full min-h-11 rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="mt-8 max-w-2xl">
-        <label htmlFor="photo-order-notes" className="text-sm font-medium text-foreground">
+        <label htmlFor={notesInputId} className="text-sm font-medium text-foreground">
           Megjegyzés a rendeléshez (opcionális)
         </label>
         <textarea
-          id="photo-order-notes"
+          id={notesInputId}
           rows={3}
           maxLength={1000}
           value={notes}

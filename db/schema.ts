@@ -155,6 +155,10 @@ export const photoOrders = pgTable("photo_orders", {
   bookingId: text("booking_id")
     .notNull()
     .references(() => bookings.id, { onDelete: "restrict" }),
+  billingName: text("billing_name"),
+  billingPostalCode: text("billing_postal_code"),
+  billingCity: text("billing_city"),
+  billingAddress: text("billing_address"),
   totalAmount: integer("total_amount").notNull().default(0),
   includesDigital: boolean("includes_digital").notNull().default(false),
   status: photoOrderStatusEnum("status").notNull().default("NEW"),

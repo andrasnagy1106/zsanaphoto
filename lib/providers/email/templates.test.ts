@@ -116,6 +116,31 @@ describe("buildPhotoOrderConfirmationEmail", () => {
     expect(email.text).toContain("Megjegyzés: Egy csomagba kérem.");
   });
 
+  it("includes billing details in confirmation email when provided", () => {
+    const input = {
+      orderNumber: "ZR-2026-12345",
+      bookingNumber: "ZS-2026-0001",
+      customerName: "Teszt Elek",
+      customerEmail: "teszt@example.com",
+      serviceName: "Intézményi fotózás",
+      adminNotificationEmail: "admin@example.com",
+      billingName: "Teszt Kft.",
+      billingPostalCode: "6411",
+      billingCity: "Zsana",
+      billingAddress: "Fő utca 1.",
+      isUpdate: false,
+      totalAmount: 1200,
+      items: [
+        { photoTitle: "Családi séta", size: "10x15 cm", quantity: 2, unitPrice: 600, totalPrice: 1200 },
+      ],
+    } satisfies PhotoOrderEmailInput;
+
+    const email = buildPhotoOrderConfirmationEmail(input);
+    expect(email.text).toContain("Számlázási adatok:");
+    expect(email.text).toContain("Név: Teszt Kft.");
+    expect(email.text).toContain("Cím: 6411 Zsana, Fő utca 1.");
+  });
+
   it("includes digital version notice when selected", () => {
     const email = buildPhotoOrderConfirmationEmail({
       orderNumber: "ZR-2026-12345",

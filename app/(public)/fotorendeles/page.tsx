@@ -83,6 +83,10 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
         prices={prices}
         initialOrder={activeOrder ? {
           orderNumber: activeOrder.order.orderNumber,
+          billingName: activeOrder.order.billingName ?? access.booking.customerName,
+          billingPostalCode: activeOrder.order.billingPostalCode ?? undefined,
+          billingCity: activeOrder.order.billingCity ?? undefined,
+          billingAddress: activeOrder.order.billingAddress ?? undefined,
           notes: activeOrder.order.notes,
           items: activeOrder.items,
         } : undefined}

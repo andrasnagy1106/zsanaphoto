@@ -725,6 +725,27 @@ export function EventPhotoManager({
                 </div>
               </div>
 
+              {/* Billing Information */}
+              {(activeOrder.order.billingName || activeOrder.order.billingAddress) && (
+                <div className="rounded-lg border border-border bg-muted/20 p-4">
+                  <p className="text-xs font-semibold uppercase text-foreground/60">Számlázási adatok</p>
+                  <div className="mt-2 text-sm text-foreground/80 space-y-1">
+                    {activeOrder.order.billingName && (
+                      <p>
+                        <span className="text-foreground/50">Név:</span> <strong>{activeOrder.order.billingName}</strong>
+                      </p>
+                    )}
+                    {(activeOrder.order.billingPostalCode || activeOrder.order.billingCity || activeOrder.order.billingAddress) && (
+                      <p>
+                        <span className="text-foreground/50">Cím:</span>{" "}
+                        {[activeOrder.order.billingPostalCode, activeOrder.order.billingCity].filter(Boolean).join(" ")}
+                        {activeOrder.order.billingAddress ? `, ${activeOrder.order.billingAddress}` : ""}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Order Notes */}
               {activeOrder.order.notes && (
                 <div className="rounded-lg border border-border bg-muted/20 p-4">

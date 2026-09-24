@@ -148,6 +148,13 @@
       "when": 1790173725620,
       "tag": "0020_ancient_wolfsbane",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790259613324,
+      "tag": "0021_lethal_banshee",
+      "breakpoints": true
     }
   ]
 }

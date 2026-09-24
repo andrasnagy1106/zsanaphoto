@@ -243,7 +243,21 @@ function formatPhotoOrderItems(input: PhotoOrderEmailInput): string {
   return lines.length > 0 ? lines.join("\n") : "- Nincs kiválasztva papírkép (csak digitális átadás)";
 }
 
+function formatBillingDetails(input: PhotoOrderEmailInput): string {
+  if (!input.billingName && !input.billingAddress) return "";
+  const nameLine = input.billingName ? `Név: ${input.billingName}` : "";
+  const addressLine =
+    input.billingPostalCode || input.billingCity || input.billingAddress
+      ? `Cím: ${[input.billingPostalCode, input.billingCity].filter(Boolean).join(" ")}, ${input.billingAddress ?? ""}`
+      : "";
+  const lines = [nameLine, addressLine].filter(Boolean);
+  if (lines.length === 0) return "";
+  return `\n\nSzámlázási adatok:\n${lines.join("\n")}`;
+}
+
 export function buildPhotoOrderConfirmationEmail(input: PhotoOrderEmailInput) {
+  const billingSection = formatBillingDetails(input);
+
   return {
     subject: `${input.isUpdate ? "Fotórendelés módosítva" : "Fotórendelés visszaigazolása"} - ${input.orderNumber}`,
     text: `Kedves ${input.customerName}!
@@ -253,7 +267,7 @@ ${input.isUpdate ? "Sikeresen módosítottuk" : "Sikeresen rögzítettük"} a fo
 Rendelési azonosító: ${input.orderNumber}
 Foglalási azonosító: ${input.bookingNumber}
 Fotózás: ${input.serviceName}
-${input.includesDigital ? "Digitális változat: Igen (digitálisan átadott, megszerkesztett képek online galériában)\n" : ""}Megjegyzés: ${input.notes ?? "-"}
+${input.includesDigital ? "Digitális változat: Igen (digitálisan átadott, megszerkesztett képek online galériában)\n" : ""}Megjegyzés: ${input.notes ?? "-"}${billingSection}
 
 Rendelt tételek:
 ${formatPhotoOrderItems(input)}
@@ -267,6 +281,8 @@ ZsaNa Photo`,
 }
 
 export function buildAdminPhotoOrderNotificationEmail(input: PhotoOrderEmailInput) {
+  const billingSection = formatBillingDetails(input);
+
   return {
     subject: `${input.isUpdate ? "Fotórendelés módosítva" : "Új fotórendelés"} - ${input.orderNumber}`,
     text: `${input.isUpdate ? "Egy fotórendelést módosítottak." : "Új fotórendelés érkezett."}
@@ -276,7 +292,7 @@ Foglalási azonosító: ${input.bookingNumber}
 Ügyfél: ${input.customerName}
 E-mail: ${input.customerEmail}
 Fotózás: ${input.serviceName}
-${input.includesDigital ? "Digitális változat: Igen\n" : ""}Megjegyzés: ${input.notes ?? "-"}
+${input.includesDigital ? "Digitális változat: Igen\n" : ""}Megjegyzés: ${input.notes ?? "-"}${billingSection}
 
 Rendelt tételek:
 ${formatPhotoOrderItems(input)}

@@ -58,7 +58,13 @@ export async function savePhotoOrderAction(input: unknown): Promise<PhotoOrderAc
   }
 
   const parsed = savePhotoOrderSchema.safeParse(input);
-  if (!parsed.success) return { success: false, error: "Ellenőrizd a kiválasztott képeket és darabszámokat." };
+  if (!parsed.success) {
+    const firstErrorMessage = parsed.error.issues[0]?.message;
+    return {
+      success: false,
+      error: firstErrorMessage || "Ellenőrizd a számlázási adatokat és a kiválasztott képeket.",
+    };
+  }
 
   try {
     const saved = await savePhotoOrder(parsed.data);

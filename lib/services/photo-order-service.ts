@@ -31,6 +31,10 @@ export interface PhotoOrderAccess {
 
 export interface SavePhotoOrderInput {
   accessToken: string;
+  billingName?: string;
+  billingPostalCode?: string;
+  billingCity?: string;
+  billingAddress?: string;
   notes?: string;
   includesDigital?: boolean;
   items: Array<{
@@ -166,6 +170,10 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
       [savedOrder] = await tx
         .update(photoOrders)
         .set({
+          billingName: input.billingName?.trim() || null,
+          billingPostalCode: input.billingPostalCode?.trim() || null,
+          billingCity: input.billingCity?.trim() || null,
+          billingAddress: input.billingAddress?.trim() || null,
           totalAmount,
           includesDigital: input.includesDigital ?? false,
           notes: input.notes?.trim() || null,
@@ -183,6 +191,10 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
         .values({
           orderNumber: generatePhotoOrderNumber(),
           bookingId: access.booking.id,
+          billingName: input.billingName?.trim() || null,
+          billingPostalCode: input.billingPostalCode?.trim() || null,
+          billingCity: input.billingCity?.trim() || null,
+          billingAddress: input.billingAddress?.trim() || null,
           totalAmount,
           includesDigital: input.includesDigital ?? false,
           notes: input.notes?.trim() || null,
@@ -229,6 +241,10 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
       customerEmail: saved.booking.customerEmail,
       serviceName: saved.service.name,
       adminNotificationEmail: settings.adminNotificationEmail,
+      billingName: saved.order.billingName,
+      billingPostalCode: saved.order.billingPostalCode,
+      billingCity: saved.order.billingCity,
+      billingAddress: saved.order.billingAddress,
       notes: saved.order.notes,
       isUpdate: saved.wasUpdated,
       totalAmount: saved.order.totalAmount,

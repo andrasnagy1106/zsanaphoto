@@ -17,11 +17,18 @@ describe("verifyPhotoOrderPinSchema", () => {
 
 describe("savePhotoOrderSchema", () => {
   const accessToken = "c6d64d12-8018-4c7c-8079-4841e2017892";
+  const validBilling = {
+    billingName: "Kovács Anna",
+    billingPostalCode: "6411",
+    billingCity: "Zsana",
+    billingAddress: "Kossuth Lajos u. 12.",
+  };
 
   it("accepts valid photo order lines including A4 21x30 cm", () => {
     expect(
       savePhotoOrderSchema.safeParse({
         accessToken,
+        ...validBilling,
         items: [
           { photoId: "family-meadow", size: "10x15 cm", quantity: 2 },
           { photoId: "children-playing", size: "A4 21x30 cm", quantity: 1 },
@@ -34,6 +41,7 @@ describe("savePhotoOrderSchema", () => {
     expect(
       savePhotoOrderSchema.safeParse({
         accessToken,
+        ...validBilling,
         includesDigital: true,
         items: [],
       }).success,
@@ -44,6 +52,7 @@ describe("savePhotoOrderSchema", () => {
     expect(
       savePhotoOrderSchema.safeParse({
         accessToken,
+        ...validBilling,
         includesDigital: false,
         items: [],
       }).success,
@@ -52,7 +61,33 @@ describe("savePhotoOrderSchema", () => {
 
   it("rejects duplicate photo and size lines", () => {
     const item = { photoId: "family-meadow", size: "10x15 cm", quantity: 1 };
-    expect(savePhotoOrderSchema.safeParse({ accessToken, items: [item, item] }).success).toBe(false);
+    expect(savePhotoOrderSchema.safeParse({ accessToken, ...validBilling, items: [item, item] }).success).toBe(false);
+  });
+
+  it("rejects missing billing information", () => {
+    expect(
+      savePhotoOrderSchema.safeParse({
+        accessToken,
+        billingName: "",
+        billingPostalCode: "6411",
+        billingCity: "Zsana",
+        billingAddress: "Fő u. 1",
+        includesDigital: true,
+        items: [],
+      }).success,
+    ).toBe(false);
+
+    expect(
+      savePhotoOrderSchema.safeParse({
+        accessToken,
+        billingName: "Kovács Anna",
+        billingPostalCode: "",
+        billingCity: "Zsana",
+        billingAddress: "Fő u. 1",
+        includesDigital: true,
+        items: [],
+      }).success,
+    ).toBe(false);
   });
 });
 

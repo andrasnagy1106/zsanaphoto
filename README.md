@@ -22,7 +22,8 @@ app/
   admin/
     (auth)/        /admin/login - guard nélkül
     (dashboard)/    /admin, /admin/bookings, /admin/event-photos, /admin/photo-orders, ... - requireAdmin() véd
-  (public)/fotorendeles/  PIN-nel megnyitható intézményi fotórendelő
+  (public)/fotorendeles/  PIN-nel megnyitható fotórendelő (vízjelezett képek, számlázási adatokkal)
+  (public)/fotogaleria/   PIN-nel megnyitható privát galéria (teljes felbontású vízjelmentes képek, ZIP letöltés)
   api/availability/  publikus GET route handlerek (elérhető napok/időpontok)
   actions/          "use server" Server Actionök (booking, inquiry, auth, admin mutációk)
 components/
@@ -177,6 +178,10 @@ Ajánlott két külön Neon adatbázis: `zsanaphoto-dev` (helyi fejlesztés) és
   - Alapértelmezett méretek és darabárak: `10x15 cm` (600 Ft / db), `13x18 cm` (750 Ft / db),
     `15x21 cm` (1 200 Ft / db), `A4 21x30 cm` (1 900 Ft / db), `Digitális kép` (2 000 Ft / db).
   - **Digitális képek rendelése:** Képenként külön kérhető digitális átadás (2 000 Ft / db), melyről az információs doboz részletes tájékoztatást ad (digitálisan átadott, megszerkesztett képek online galériában, szabad sokszorosítási joggal).
+  - **Számlázási adatok bekérése:** Rendelés leadásakor a rendszer bekéri a számlázási nevet, irányítószámot, települést és címet. Az irányítószám beírásakor az app automatikusan kitölti a hozzá tartozó magyar települést (Budapest esetén `1xxx` kódoknál Budapestet, vidéki településeknél a megfelelő várost/falut). A számlázási adatok bekerülnek a visszaigazoló e-mailekbe, a rendelési részletekbe és a CSV exporthoz is.
+  - **Képek vízjelezése és privát galéria:**
+    - A fotórendelés felületén (`/fotorendeles`) a képek Cloudinary által vízjelezett formátumban jelennek meg a kiválasztáshoz és rendeléshez.
+    - A privát teljes képgalériában (`/fotogaleria`) a rendszer az eredeti, vízjelmentes fotókat jeleníti meg és teszi letölthetővé (egyedi és kötegelt ZIP formátumban).
   - **Globális alapárak módosítása:** Az `/admin/settings` oldalon a rendszer globális alapértelmezett darabárai
     is közvetlenül szerkeszthetők és adatbázisban tárolódnak.
   - **Adminisztrátori fiókok kezelése:** Az `/admin/settings` oldalon közvetlenül hozzáadhatók új admin felhasználók (név, e-mail, min. 8 karakteres jelszó), illetve törölhetők a meglévő adminok (a saját fiók és az utolsó admin törlése védett).

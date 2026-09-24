@@ -13,6 +13,10 @@ export const photoOrderItemSchema = z.object({
 
 export const savePhotoOrderSchema = z.object({
   accessToken: z.string().uuid("Érvénytelen hozzáférés."),
+  billingName: z.string().trim().min(2, "A számlázási név megadása kötelező.").max(150),
+  billingPostalCode: z.string().trim().min(2, "Az irányítószám megadása kötelező.").max(20),
+  billingCity: z.string().trim().min(2, "A település megadása kötelező.").max(100),
+  billingAddress: z.string().trim().min(3, "A számlázási cím megadása kötelező.").max(250),
   notes: z.string().trim().max(1000, "A megjegyzés legfeljebb 1000 karakter lehet.").optional(),
   includesDigital: z.boolean().optional().default(false),
   items: z.array(photoOrderItemSchema).max(100).default([]),

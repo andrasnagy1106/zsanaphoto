@@ -15,7 +15,7 @@ interface PrivateCustomerGalleryProps {
 
 function getPhotoFileExtension(photo: EventPhoto): string {
   if (photo.format) return photo.format;
-  const match = photo.watermarkedUrl.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
+  const match = (photo.secureUrl || photo.watermarkedUrl).match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
   return match ? match[1] : "jpg";
 }
 
@@ -74,7 +74,8 @@ export function PrivateCustomerGallery({
     setDownloadErrorMessage(null);
     setDownloadingPhotoId(photo.id);
     try {
-      const response = await fetch(photo.watermarkedUrl);
+      const downloadUrl = photo.secureUrl || photo.watermarkedUrl;
+      const response = await fetch(downloadUrl);
       if (!response.ok) throw new Error("Letöltési hiba");
       const blob = await response.blob();
       await triggerBlobDownload(blob, getPhotoFileName(photo));
@@ -95,7 +96,8 @@ export function PrivateCustomerGallery({
       const usedFileNames = new Set<string>();
 
       for (const [index, photo] of photos.entries()) {
-        const response = await fetch(photo.watermarkedUrl);
+        const downloadUrl = photo.secureUrl || photo.watermarkedUrl;
+        const response = await fetch(downloadUrl);
         if (!response.ok) throw new Error("Letöltési hiba");
         const blob = await response.blob();
 
@@ -199,7 +201,7 @@ export function PrivateCustomerGallery({
               >
                 <div className="relative w-full overflow-hidden bg-muted">
                   <Image
-                    src={photo.watermarkedUrl}
+                    src={photo.secureUrl || photo.watermarkedUrl}
                     alt={photo.title}
                     width={photo.width ?? 800}
                     height={photo.height ?? 600}
@@ -288,7 +290,7 @@ export function PrivateCustomerGallery({
               )}
               <div className="relative h-[65vh] w-[85vw] max-w-4xl">
                 <Image
-                  src={lightboxPhoto.watermarkedUrl}
+                  src={lightboxPhoto.secureUrl || lightboxPhoto.watermarkedUrl}
                   alt={lightboxPhoto.title}
                   fill
                   className="object-contain"

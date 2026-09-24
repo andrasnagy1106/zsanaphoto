@@ -5,7 +5,10 @@ import type { PhotoOrder, PhotoOrderItem } from "@/db/schema";
 import { formatPrice } from "@/lib/photo-order-catalog";
 
 interface PhotoOrderDetailsDialogProps {
-  order: Pick<PhotoOrder, "orderNumber" | "notes" | "totalAmount"> & { includesDigital?: boolean | null };
+  order: Pick<
+    PhotoOrder,
+    "orderNumber" | "notes" | "totalAmount" | "billingName" | "billingPostalCode" | "billingCity" | "billingAddress"
+  > & { includesDigital?: boolean | null };
   customerName: string;
   bookingNumber: string;
   items: Array<Pick<PhotoOrderItem, "id" | "photoId" | "photoTitle" | "size" | "quantity" | "unitPrice" | "totalPrice">>;
@@ -126,6 +129,26 @@ export function PhotoOrderDetailsDialog({
               <span className="text-base font-bold text-accent">{formatPrice(totalAmount)}</span>
             </div>
           </div>
+
+          {(order.billingName || order.billingAddress) && (
+            <div className="mt-5 rounded-lg border border-border bg-white p-4">
+              <p className="text-xs font-semibold uppercase text-foreground/50">Számlázási adatok</p>
+              <div className="mt-2 text-sm text-foreground/80 space-y-1">
+                {order.billingName && (
+                  <p>
+                    <span className="text-foreground/50">Név:</span> <strong>{order.billingName}</strong>
+                  </p>
+                )}
+                {(order.billingPostalCode || order.billingCity || order.billingAddress) && (
+                  <p>
+                    <span className="text-foreground/50">Cím:</span>{" "}
+                    {[order.billingPostalCode, order.billingCity].filter(Boolean).join(" ")}
+                    {order.billingAddress ? `, ${order.billingAddress}` : ""}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="mt-5 rounded-lg border border-border bg-white p-4">
             <p className="text-xs font-semibold uppercase text-foreground/50">Megjegyzés</p>

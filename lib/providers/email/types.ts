@@ -24,6 +24,10 @@ export interface PhotoOrderEmailInput {
   customerEmail: string;
   serviceName: string;
   adminNotificationEmail: string;
+  billingName?: string | null;
+  billingPostalCode?: string | null;
+  billingCity?: string | null;
+  billingAddress?: string | null;
   notes?: string | null;
   isUpdate: boolean;
   totalAmount: number;
