@@ -3,14 +3,17 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState, useTransition } from "react";
-import { uploadHomeServiceCardPhotoAction } from "@/app/actions/admin-settings-actions";
+import { updateSitePhotoFocusAction, uploadHomeServiceCardPhotoAction } from "@/app/actions/admin-settings-actions";
+import { PhotoAlignButton } from "@/components/admin/PhotoAlignButton";
 import { HOME_SERVICE_CARDS } from "@/lib/home-service-cards";
+import type { SitePhotoView } from "@/lib/services/site-photo-service";
+import { toObjectPosition } from "@/lib/utils/photo-layout";
 
 interface HomeServiceCardPhotosManagerProps {
-  photoUrlsByKey: Record<string, string | null>;
+  photosByKey: Record<string, SitePhotoView | null>;
 }
 
-function CardPhotoRow({ cardKey, title, currentUrl }: { cardKey: string; title: string; currentUrl: string | null }) {
+function CardPhotoRow({ cardKey, title, currentPhoto }: { cardKey: string; title: string; currentPhoto: SitePhotoView | null }) {
   const router = useRouter();
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,8 +49,15 @@ function CardPhotoRow({ cardKey, title, currentUrl }: { cardKey: string; title: 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border p-4 sm:flex-row sm:items-center">
       <div className="relative aspect-[4/3] w-32 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
-        {currentUrl ? (
-          <Image src={currentUrl} alt={title} fill sizes="128px" className="object-cover" />
+        {currentPhoto ? (
+          <Image
+            src={currentPhoto.url}
+            alt={title}
+            fill
+            sizes="128px"
+            className="object-cover"
+            style={{ objectPosition: toObjectPosition(currentPhoto.focusX, currentPhoto.focusY) }}
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-foreground/40">Nincs kép</div>
         )}
@@ -64,6 +74,14 @@ function CardPhotoRow({ cardKey, title, currentUrl }: { cardKey: string; title: 
         />
         {errorMessage ? <p className="mt-1 text-xs text-red-600">{errorMessage}</p> : null}
       </div>
+      {currentPhoto ? (
+        <PhotoAlignButton
+          imageUrl={currentPhoto.url}
+          initialFocus={{ focusX: currentPhoto.focusX, focusY: currentPhoto.focusY }}
+          previewAspectClasses={["aspect-[4/3]"]}
+          saveFocus={(focus) => updateSitePhotoFocusAction(cardKey, focus)}
+        />
+      ) : null}
       <button
         type="button"
         onClick={handleUpload}
@@ -76,17 +94,17 @@ function CardPhotoRow({ cardKey, title, currentUrl }: { cardKey: string; title: 
   );
 }
 
-export function HomeServiceCardPhotosManager({ photoUrlsByKey }: HomeServiceCardPhotosManagerProps) {
+export function HomeServiceCardPhotosManager({ photosByKey }: HomeServiceCardPhotosManagerProps) {
   return (
     <div className="rounded-xl border border-border bg-white p-6">
       <h2 className="text-base font-semibold text-foreground">Főoldali &quot;Miben segíthetek?&quot; kártyák fotói</h2>
       <p className="mt-1 text-xs text-foreground/60">
-        Ezek a fotók jelennek meg a főoldali szolgáltatás-kártyákon.
+        Ezek a fotók jelennek meg a főoldali és a Szolgáltatások oldal szolgáltatás-kártyáin.
       </p>
 
       <div className="mt-4 space-y-3">
         {HOME_SERVICE_CARDS.map((card) => (
-          <CardPhotoRow key={card.key} cardKey={card.key} title={card.title} currentUrl={photoUrlsByKey[card.key] ?? null} />
+          <CardPhotoRow key={card.key} cardKey={card.key} title={card.title} currentPhoto={photosByKey[card.key] ?? null} />
         ))}
       </div>
     </div>

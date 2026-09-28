@@ -17,8 +17,9 @@ export function PhotoGrid({ photos }: PhotoGridProps) {
           key={photo.id ?? `${photo.category}-${index}`}
           caption={photo.caption}
           src={photo.src}
-          index={GALLERY_CATEGORIES.indexOf(photo.category)}
+          index={(GALLERY_CATEGORIES as readonly string[]).indexOf(photo.category)}
           aspect={index % 3 === 0 ? "landscape" : "portrait"}
+          objectPosition={photo.objectPosition}
         />
       ))}
     </div>

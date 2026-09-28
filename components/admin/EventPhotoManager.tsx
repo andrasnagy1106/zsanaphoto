@@ -7,14 +7,19 @@ import { useId, useMemo, useRef, useState, useTransition } from "react";
 import {
   deleteEventPhotoAction,
   deleteMultipleEventPhotosAction,
+  moveEventPhotoAction,
   updateCustomerPhotoViewModeAction,
+  updateEventPhotoAction,
+  updateShowPhotoTitlesAction,
   uploadEventPhotosAction,
 } from "@/app/actions/admin-photo-actions";
 import type { Booking, EventPhoto, PhotoOrder, PhotoOrderItem, Service } from "@/db/schema";
 import type { EventWithPinOption } from "@/lib/services/photo-storage-service";
 import { formatPrice } from "@/lib/photo-order-catalog";
+import { toObjectPosition } from "@/lib/utils/photo-layout";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
 import { CreateEventUserModal } from "@/components/admin/CreateEventUserModal";
+import { PhotoEditDialog, type PhotoEditValues } from "@/components/admin/PhotoEditDialog";
 import { PhotoOrderStatusControl } from "@/components/admin/PhotoOrderStatusControl";
 
 interface EventPhotoManagerProps {
@@ -58,9 +63,11 @@ export function EventPhotoManager({
   const [isUploading, startUploadTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
   const [isUpdatingMode, startModeTransition] = useTransition();
+  const [isMoving, startMoveTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [previewModalUrl, setPreviewModalUrl] = useState<{ url: string; title: string } | null>(null);
+  const [editingPhoto, setEditingPhoto] = useState<EventPhoto | null>(null);
 
   // Filter events by selected service
   const filteredEvents = useMemo(() => {
@@ -88,6 +95,53 @@ export function EventPhotoManager({
         setErrorMessage(result.error ?? "A nézet módosítása nem sikerült.");
       }
     });
+  }
+
+  function handleShowPhotoTitlesChange(showPhotoTitles: boolean) {
+    if (!selectedEvent) return;
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    startModeTransition(async () => {
+      const result = await updateShowPhotoTitlesAction(selectedEvent.bookingId, showPhotoTitles);
+      if (result.success) {
+        setSuccessMessage(
+          showPhotoTitles
+            ? "A képek neve (száma) mostantól látszik az ügyfél felületén."
+            : "A képek neve (száma) mostantól rejtve van az ügyfél felületén.",
+        );
+        router.refresh();
+      } else {
+        setErrorMessage(result.error ?? "A beállítás mentése nem sikerült.");
+      }
+    });
+  }
+
+  function handleMovePhoto(photo: EventPhoto, direction: "up" | "down") {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    startMoveTransition(async () => {
+      const result = await moveEventPhotoAction(photo.id, direction);
+      if (result.success) {
+        router.refresh();
+      } else {
+        setErrorMessage(result.error ?? "A sorrend módosítása nem sikerült.");
+      }
+    });
+  }
+
+  async function handleSavePhotoEdit(photo: EventPhoto, values: PhotoEditValues) {
+    const result = await updateEventPhotoAction(photo.id, {
+      title: values.text,
+      focusX: values.focusX,
+      focusY: values.focusY,
+    });
+    if (result.success) {
+      setSuccessMessage("A kép adatai elmentve.");
+      router.refresh();
+    }
+    return result;
   }
 
   function handleServiceFilterChange(serviceId: string) {
@@ -345,6 +399,34 @@ export function EventPhotoManager({
                 Teljes képgaléria
               </button>
             </div>
+
+            <div className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-lg border border-border/60">
+              <span className="font-semibold text-foreground/70 text-[11px] px-1">Képnevek az ügyfélnél:</span>
+              <button
+                type="button"
+                disabled={isUpdatingMode}
+                onClick={() => handleShowPhotoTitlesChange(true)}
+                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                  selectedEvent.showPhotoTitles
+                    ? "bg-accent text-white shadow-sm"
+                    : "bg-white text-foreground/70 hover:text-foreground border border-border/60"
+                }`}
+              >
+                Látszik
+              </button>
+              <button
+                type="button"
+                disabled={isUpdatingMode}
+                onClick={() => handleShowPhotoTitlesChange(false)}
+                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+                  !selectedEvent.showPhotoTitles
+                    ? "bg-accent text-white shadow-sm"
+                    : "bg-white text-foreground/70 hover:text-foreground border border-border/60"
+                }`}
+              >
+                Rejtve
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -534,7 +616,7 @@ export function EventPhotoManager({
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {initialPhotos.map((photo) => {
+                  {initialPhotos.map((photo, photoIndex) => {
                     const isSelected = selectedPhotoIds.has(photo.id);
                     return (
                       <article
@@ -552,6 +634,7 @@ export function EventPhotoManager({
                               fill
                               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                               className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              style={{ objectPosition: toObjectPosition(photo.focusX, photo.focusY) }}
                             />
 
                             {/* Top action overlay */}
@@ -607,13 +690,42 @@ export function EventPhotoManager({
 
                         {/* Bottom Actions */}
                         <div className="border-t border-border/60 p-2.5 bg-muted/20 flex items-center justify-between gap-2">
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleMovePhoto(photo, "up")}
+                              disabled={isMoving || photoIndex === 0}
+                              className="flex size-7 items-center justify-center rounded border border-border bg-white text-xs hover:border-accent hover:text-accent disabled:opacity-30"
+                              aria-label="Előrébb helyezés"
+                              title="Előrébb"
+                            >
+                              ←
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMovePhoto(photo, "down")}
+                              disabled={isMoving || photoIndex === initialPhotos.length - 1}
+                              className="flex size-7 items-center justify-center rounded border border-border bg-white text-xs hover:border-accent hover:text-accent disabled:opacity-30"
+                              aria-label="Hátrébb helyezés"
+                              title="Hátrébb"
+                            >
+                              →
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditingPhoto(photo)}
+                            className="text-[11px] font-semibold text-accent hover:underline"
+                          >
+                            Szerkesztés
+                          </button>
                           <a
                             href={photo.secureUrl}
                             target="_blank"
                             rel="noreferrer"
                             className="text-[11px] font-semibold text-accent hover:underline inline-flex items-center gap-1"
                           >
-                            Eredeti kép ↗
+                            Eredeti ↗
                           </a>
                           <button
                             type="button"
@@ -803,6 +915,23 @@ export function EventPhotoManager({
             </div>
           </div>
         </dialog>
+      )}
+
+      {editingPhoto && (
+        <PhotoEditDialog
+          heading="Kép szerkesztése"
+          imageUrl={editingPhoto.watermarkedUrl}
+          previewAspectClasses={["aspect-[4/3]"]}
+          initialValues={{
+            text: editingPhoto.title,
+            showText: true,
+            focusX: editingPhoto.focusX,
+            focusY: editingPhoto.focusY,
+          }}
+          textField={{ label: "Kép neve" }}
+          onSave={(values) => handleSavePhotoEdit(editingPhoto, values)}
+          onClose={() => setEditingPhoto(null)}
+        />
       )}
     </div>
   );

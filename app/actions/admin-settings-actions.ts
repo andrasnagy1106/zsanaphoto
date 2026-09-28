@@ -7,10 +7,11 @@ import {
   deleteAdminUser,
   type SafeAdminUser,
 } from "@/lib/services/admin-user-service";
-import { updateAboutPhoto, updateSettings } from "@/lib/services/settings-service";
-import { uploadSitePhoto } from "@/lib/services/site-photo-service";
+import { updateAboutPhoto, updateAboutPhotoFocus, updateSettings } from "@/lib/services/settings-service";
+import { updateSitePhotoFocus, uploadSitePhoto } from "@/lib/services/site-photo-service";
 import { isHomeServiceCardKey } from "@/lib/home-service-cards";
 import { createAdminUserSchema } from "@/lib/validation/admin-user";
+import { photoFocusSchema } from "@/lib/validation/photo-edit";
 import { settingsSchema } from "@/lib/validation/settings";
 import type { AdminActionResult } from "./admin-booking-actions";
 
@@ -127,6 +128,47 @@ export async function uploadHomeServiceCardPhotoAction(formData: FormData): Prom
       success: false,
       error: error instanceof Error ? error.message : "A kép feltöltése sikertelen volt.",
     };
+  }
+}
+
+/** Saves the crop alignment of the hero or a homepage service card photo. */
+export async function updateSitePhotoFocusAction(key: string, focus: unknown): Promise<AdminActionResult> {
+  await requireAdmin();
+
+  if (key !== "hero" && !isHomeServiceCardKey(key)) {
+    return { success: false, error: "Érvénytelen kép azonosító." };
+  }
+  const parsed = photoFocusSchema.safeParse(focus);
+  if (!parsed.success) return { success: false, error: "Érvénytelen igazítás." };
+
+  try {
+    const updated = await updateSitePhotoFocus(key, parsed.data);
+    if (!updated) return { success: false, error: "Előbb tölts fel egy képet." };
+
+    revalidatePath("/", "layout");
+    return { success: true };
+  } catch (error) {
+    console.error("[updateSitePhotoFocusAction] Failed:", error);
+    return { success: false, error: "Az igazítás mentése nem sikerült." };
+  }
+}
+
+export async function updateAboutPhotoFocusAction(focus: unknown): Promise<AdminActionResult> {
+  await requireAdmin();
+
+  const parsed = photoFocusSchema.safeParse(focus);
+  if (!parsed.success) return { success: false, error: "Érvénytelen igazítás." };
+
+  try {
+    const updated = await updateAboutPhotoFocus(parsed.data);
+    if (!updated) return { success: false, error: "Előbb tölts fel egy képet." };
+
+    revalidatePath("/admin/settings");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("[updateAboutPhotoFocusAction] Failed:", error);
+    return { success: false, error: "Az igazítás mentése nem sikerült." };
   }
 }
 

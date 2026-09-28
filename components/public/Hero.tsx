@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getSitePhotoUrls } from "@/lib/services/site-photo-service";
+import { getSitePhotos } from "@/lib/services/site-photo-service";
+import { toObjectPosition } from "@/lib/utils/photo-layout";
 import { getPlaceholderImageUrl } from "@/lib/utils/placeholder-image";
 
 export async function Hero() {
-  const sitePhotos = await getSitePhotoUrls(["hero"]);
-  const heroPhotoUrl = sitePhotos["hero"] || getPlaceholderImageUrl("zsana-hero-banner", 1920, 1080);
+  const { hero: heroPhoto } = await getSitePhotos(["hero"]);
+  const heroPhotoUrl = heroPhoto?.url || getPlaceholderImageUrl("zsana-hero-banner", 1920, 1080);
 
   return (
     <section className="relative overflow-hidden min-h-[560px] sm:min-h-[640px] lg:min-h-[720px] flex items-center bg-[#2a040b]">
@@ -18,6 +19,7 @@ export async function Hero() {
           priority
           sizes="100vw"
           className="object-cover object-right sm:object-center"
+          style={heroPhoto ? { objectPosition: toObjectPosition(heroPhoto.focusX, heroPhoto.focusY) } : undefined}
         />
         {/* Dark Burgundy & Black Gradient Overlay for readability on the left */}
         <div

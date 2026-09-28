@@ -11,6 +11,7 @@ import {
   uploadSitePhotoToCloudinary,
 } from "@/lib/providers/cloudinary/client";
 import { BUSINESS_TIMEZONE } from "@/lib/utils/time";
+import type { PhotoFocusInput } from "@/lib/validation/photo-edit";
 
 const SETTINGS_ID = "default";
 
@@ -29,6 +30,8 @@ export async function getSettings(): Promise<SiteSettings> {
     defaultPhotoPrices: null,
     aboutPhotoPublicId: null,
     aboutPhotoUrl: null,
+    aboutPhotoFocusX: 50,
+    aboutPhotoFocusY: 50,
     createdAt: now,
     updatedAt: now,
   };
@@ -76,6 +79,8 @@ export async function updateAboutPhoto(file: Buffer, filename?: string): Promise
         .set({
           aboutPhotoPublicId: uploadResult.publicId,
           aboutPhotoUrl: uploadResult.secureUrl,
+          aboutPhotoFocusX: 50,
+          aboutPhotoFocusY: 50,
           updatedAt: new Date(),
         })
         .where(eq(siteSettings.id, existing.id))
@@ -96,4 +101,15 @@ export async function updateAboutPhoto(file: Buffer, filename?: string): Promise
   }
 
   return updated;
+}
+
+export async function updateAboutPhotoFocus(focus: PhotoFocusInput): Promise<boolean> {
+  const [existing] = await db.select({ id: siteSettings.id }).from(siteSettings).limit(1);
+  if (!existing) return false;
+
+  await db
+    .update(siteSettings)
+    .set({ aboutPhotoFocusX: focus.focusX, aboutPhotoFocusY: focus.focusY, updatedAt: new Date() })
+    .where(eq(siteSettings.id, existing.id));
+  return true;
 }

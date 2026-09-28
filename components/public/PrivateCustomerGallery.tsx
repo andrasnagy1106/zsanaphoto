@@ -11,6 +11,8 @@ interface PrivateCustomerGalleryProps {
   pin: string;
   serviceName: string;
   photos: EventPhoto[];
+  /** When false, photo names (usually camera file numbers) are hidden. */
+  showPhotoTitles: boolean;
 }
 
 function getPhotoFileExtension(photo: EventPhoto): string {
@@ -41,6 +43,7 @@ export function PrivateCustomerGallery({
   pin,
   serviceName,
   photos,
+  showPhotoTitles,
 }: PrivateCustomerGalleryProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [downloadingPhotoId, setDownloadingPhotoId] = useState<string | null>(null);
@@ -213,8 +216,8 @@ export function PrivateCustomerGallery({
               </button>
 
               <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                <p className="pointer-events-none truncate text-xs font-medium text-white drop-shadow" title={photo.title}>
-                  {photo.title}
+                <p className="pointer-events-none truncate text-xs font-medium text-white drop-shadow" title={showPhotoTitles ? photo.title : undefined}>
+                  {showPhotoTitles ? photo.title : null}
                 </p>
                 <button
                   type="button"
@@ -252,7 +255,9 @@ export function PrivateCustomerGallery({
           >
             <div className="mb-3 flex w-full items-center justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="truncate text-base font-semibold text-foreground">{lightboxPhoto.title}</h3>
+                {showPhotoTitles ? (
+                  <h3 className="truncate text-base font-semibold text-foreground">{lightboxPhoto.title}</h3>
+                ) : null}
                 <p className="text-xs text-foreground/50">
                   {lightboxIndex! + 1} / {photos.length} · Feltöltve: {formatZonedHungarianDate(lightboxPhoto.createdAt)}
                 </p>

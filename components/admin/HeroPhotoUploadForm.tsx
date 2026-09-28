@@ -3,13 +3,16 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState, useTransition } from "react";
-import { uploadHeroPhotoAction } from "@/app/actions/admin-settings-actions";
+import { updateSitePhotoFocusAction, uploadHeroPhotoAction } from "@/app/actions/admin-settings-actions";
+import { PhotoAlignButton } from "@/components/admin/PhotoAlignButton";
+import type { SitePhotoView } from "@/lib/services/site-photo-service";
+import { toObjectPosition } from "@/lib/utils/photo-layout";
 
 interface HeroPhotoUploadFormProps {
-  currentPhotoUrl: string | null;
+  currentPhoto: SitePhotoView | null;
 }
 
-export function HeroPhotoUploadForm({ currentPhotoUrl }: HeroPhotoUploadFormProps) {
+export function HeroPhotoUploadForm({ currentPhoto }: HeroPhotoUploadFormProps) {
   const router = useRouter();
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,9 +54,24 @@ export function HeroPhotoUploadForm({ currentPhotoUrl }: HeroPhotoUploadFormProp
         Ez a nagy háttérkép jelenik meg a főoldal fejléc alatti &quot;Emlékek...&quot; fő szekciójában.
       </p>
 
-      {currentPhotoUrl ? (
-        <div className="relative mt-4 aspect-[16/9] w-full max-w-sm overflow-hidden rounded-lg border border-border">
-          <Image src={currentPhotoUrl} alt="Jelenlegi Hero borítókép" fill sizes="384px" className="object-cover" />
+      {currentPhoto ? (
+        <div className="mt-4 flex flex-wrap items-end gap-3">
+          <div className="relative aspect-[16/9] w-full max-w-sm overflow-hidden rounded-lg border border-border">
+            <Image
+              src={currentPhoto.url}
+              alt="Jelenlegi Hero borítókép"
+              fill
+              sizes="384px"
+              className="object-cover"
+              style={{ objectPosition: toObjectPosition(currentPhoto.focusX, currentPhoto.focusY) }}
+            />
+          </div>
+          <PhotoAlignButton
+            imageUrl={currentPhoto.url}
+            initialFocus={{ focusX: currentPhoto.focusX, focusY: currentPhoto.focusY }}
+            previewAspectClasses={["aspect-[16/9]", "aspect-[3/4]"]}
+            saveFocus={(focus) => updateSitePhotoFocusAction("hero", focus)}
+          />
         </div>
       ) : (
         <p className="mt-4 text-xs text-foreground/50">Még nincs feltöltve egyedi kép, jelenleg helyőrző kép látszik.</p>

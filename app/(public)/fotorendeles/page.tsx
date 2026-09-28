@@ -9,6 +9,7 @@ import {
   getPhotoOrderAccessByToken,
 } from "@/lib/services/photo-order-service";
 import { listPhotosByBookingId } from "@/lib/services/photo-storage-service";
+import { toObjectPosition } from "@/lib/utils/photo-layout";
 
 export const metadata: Metadata = {
   title: "Fotók megtekintése és rendelés",
@@ -63,6 +64,7 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
           title: p.title,
           src: p.watermarkedUrl,
           alt: p.title,
+          objectPosition: toObjectPosition(p.focusX, p.focusY),
         }))
       : STOCK_PHOTOS.map((p) => ({
           id: p.id,
@@ -80,6 +82,7 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
         pin={access.booking.pin ?? undefined}
         photos={photos}
         isRealEventPhotos={uploadedPhotos.length > 0}
+        showPhotoTitles={access.booking.showPhotoTitles}
         prices={prices}
         initialOrder={activeOrder ? {
           orderNumber: activeOrder.order.orderNumber,

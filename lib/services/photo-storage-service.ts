@@ -1,4 +1,4 @@
-import { asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { asc, desc, eq, inArray, isNotNull, max, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   bookings,
@@ -17,6 +17,8 @@ import {
   type WatermarkOptions,
 } from "@/lib/providers/cloudinary/client";
 import { NotFoundError } from "@/lib/utils/errors";
+import { reorderIdsByMove } from "@/lib/utils/photo-layout";
+import type { EventPhotoEditInput, PhotoMoveDirection } from "@/lib/validation/photo-edit";
 
 export interface UploadPhotoInput {
   pin: string;
@@ -88,6 +90,7 @@ export interface EventWithPinOption {
   startAt: Date;
   status: Booking["status"];
   customerPhotoViewMode: Booking["customerPhotoViewMode"];
+  showPhotoTitles: boolean;
   photoCount: number;
 }
 
@@ -122,6 +125,7 @@ export async function listEventsWithPin(): Promise<EventWithPinOption[]> {
     startAt: row.booking.startAt,
     status: row.booking.status,
     customerPhotoViewMode: row.booking.customerPhotoViewMode,
+    showPhotoTitles: row.booking.showPhotoTitles,
     photoCount: row.photoCount,
   }));
 }
@@ -196,6 +200,12 @@ export async function uploadMultiplePhotosForPin(
 
   const uploadedRecords: NewEventPhoto[] = [];
 
+  const [{ maxSortOrder }] = await db
+    .select({ maxSortOrder: max(eventPhotos.sortOrder) })
+    .from(eventPhotos)
+    .where(eq(eventPhotos.bookingId, booking.id));
+  const firstSortOrder = (maxSortOrder ?? -1) + 1;
+
   for (let i = 0; i < input.items.length; i += 1) {
     const item = input.items[i];
     const uploadResult = await uploadPhotoToCloudinary({
@@ -222,13 +232,40 @@ export async function uploadMultiplePhotosForPin(
       height: uploadResult.height ?? null,
       bytes: uploadResult.bytes ?? null,
       format: uploadResult.format ?? null,
-      sortOrder: item.sortOrder ?? i,
+      sortOrder: firstSortOrder + (item.sortOrder ?? i),
     });
   }
 
   if (uploadedRecords.length === 0) return [];
 
   return db.insert(eventPhotos).values(uploadedRecords).returning();
+}
+
+export async function updateEventPhotoDetails(photoId: string, input: EventPhotoEditInput): Promise<boolean> {
+  const updated = await db
+    .update(eventPhotos)
+    .set({ title: input.title, focusX: input.focusX, focusY: input.focusY, updatedAt: new Date() })
+    .where(eq(eventPhotos.id, photoId))
+    .returning({ id: eventPhotos.id });
+
+  return updated.length > 0;
+}
+
+/** Moves a photo one position within its booking's photo list and renumbers the sort order. */
+export async function moveEventPhoto(photoId: string, direction: PhotoMoveDirection): Promise<boolean> {
+  const photo = await getPhotoById(photoId);
+  if (!photo) return false;
+
+  const siblings = await listPhotosByBookingId(photo.bookingId);
+  const reorderedIds = reorderIdsByMove(siblings.map((sibling) => sibling.id), photoId, direction);
+  if (!reorderedIds) return false;
+
+  await db.transaction(async (tx) => {
+    for (const [index, id] of reorderedIds.entries()) {
+      await tx.update(eventPhotos).set({ sortOrder: index }).where(eq(eventPhotos.id, id));
+    }
+  });
+  return true;
 }
 
 /**

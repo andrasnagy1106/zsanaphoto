@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/admin/bookings", label: "Foglalások" },
   { href: "/admin/event-photos", label: "Esemény fotók" },
   { href: "/admin/gallery", label: "Galéria" },
+  { href: "/admin/service-page-photos", label: "Szolgáltatás oldalak képei" },
   { href: "/admin/photo-orders", label: "Fotórendelések" },
   { href: "/admin/inquiries", label: "Érdeklődések" },
   { href: "/admin/services", label: "Szolgáltatások" },

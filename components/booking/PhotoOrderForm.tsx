@@ -17,6 +17,7 @@ export interface PhotoOrderItemDisplay {
   title: string;
   src: string;
   alt?: string;
+  objectPosition?: string;
 }
 
 interface PhotoOrderFormProps {
@@ -26,6 +27,8 @@ interface PhotoOrderFormProps {
   pin?: string;
   photos?: PhotoOrderItemDisplay[];
   isRealEventPhotos?: boolean;
+  /** When false, photo names (usually camera file numbers) are hidden from the customer. */
+  showPhotoTitles?: boolean;
   prices?: Record<PhotoPrintSize, number>;
   initialOrder?: {
     orderNumber: string;
@@ -55,6 +58,7 @@ export function PhotoOrderForm({
   pin,
   photos = STOCK_PHOTOS as unknown as PhotoOrderItemDisplay[],
   isRealEventPhotos = false,
+  showPhotoTitles = true,
   prices = DEFAULT_PHOTO_PRICES,
   initialOrder,
 }: PhotoOrderFormProps) {
@@ -266,14 +270,17 @@ export function PhotoOrderForm({
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    style={photo.objectPosition ? { objectPosition: photo.objectPosition } : undefined}
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold">
                     Kattints a nagyításhoz 🔍
                   </div>
                 </div>
                 <div className="p-4">
-                  <h2 className="font-display text-xl truncate" title={photo.title}>{photo.title}</h2>
-                  <div className="mt-4 space-y-2.5">
+                  {showPhotoTitles ? (
+                    <h2 className="font-display text-xl truncate" title={photo.title}>{photo.title}</h2>
+                  ) : null}
+                  <div className={showPhotoTitles ? "mt-4 space-y-2.5" : "space-y-2.5"}>
                     {PHOTO_PRINT_SIZES.map((size) => {
                       const qty = quantities[getQuantityKey(photo.id, size)] ?? 0;
                       const unitPrice = prices[size] ?? 0;
@@ -488,7 +495,9 @@ export function PhotoOrderForm({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between w-full mb-3">
-              <h3 className="text-sm font-semibold text-foreground truncate">{previewPhoto.title}</h3>
+              <h3 className="text-sm font-semibold text-foreground truncate">
+                {showPhotoTitles ? previewPhoto.title : "Előnézet"}
+              </h3>
               <button
                 type="button"
                 onClick={() => setPreviewPhoto(null)}

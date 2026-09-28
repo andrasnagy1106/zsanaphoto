@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getSettings } from "@/lib/services/settings-service";
+import { toObjectPosition } from "@/lib/utils/photo-layout";
 import { getPlaceholderImageUrl } from "@/lib/utils/placeholder-image";
 
 /** Homepage-only "about" teaser, shown right above the gallery section. */
@@ -12,7 +13,14 @@ export async function HomeAboutSection() {
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <div className="grid gap-10 lg:grid-cols-[minmax(0,380px)_1fr_minmax(0,240px)] lg:items-center lg:gap-12">
         <div className="relative aspect-[4/5] w-full max-w-sm justify-self-center overflow-hidden rounded-2xl lg:justify-self-start">
-          <Image src={photoUrl} alt="ZsaNa Photo" fill sizes="(max-width: 1024px) 80vw, 380px" className="object-cover" />
+          <Image
+            src={photoUrl}
+            alt="ZsaNa Photo"
+            fill
+            sizes="(max-width: 1024px) 80vw, 380px"
+            className="object-cover"
+            style={{ objectPosition: toObjectPosition(settings.aboutPhotoFocusX, settings.aboutPhotoFocusY) }}
+          />
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/3 bg-gradient-to-r from-transparent to-background lg:block"

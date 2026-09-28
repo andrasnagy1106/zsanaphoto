@@ -131,6 +131,7 @@ export const bookings = pgTable("bookings", {
   photoPublicationConsent: boolean("photo_publication_consent"),
   customPhotoPrices: jsonb("custom_photo_prices").$type<Partial<Record<PhotoPrintSize, number>> | null>(),
   customerPhotoViewMode: customerPhotoViewModeEnum("customer_photo_view_mode").notNull().default("ORDER_ONLY"),
+  showPhotoTitles: boolean("show_photo_titles").notNull().default(true),
   startAt: timestamp("start_at", { withTimezone: true }).notNull(),
   endAt: timestamp("end_at", { withTimezone: true }).notNull(),
   status: bookingStatusEnum("status").notNull().default("PENDING"),
@@ -206,6 +207,8 @@ export const eventPhotos = pgTable("event_photos", {
   bytes: integer("bytes"),
   format: text("format"),
   sortOrder: integer("sort_order").notNull().default(0),
+  focusX: integer("focus_x").notNull().default(50),
+  focusY: integer("focus_y").notNull().default(50),
   ...timestamps,
 }, (table) => [
   uniqueIndex("event_photos_public_id_idx").on(table.publicId),
@@ -236,6 +239,8 @@ export const siteSettings = pgTable("site_settings", {
   defaultPhotoPrices: jsonb("default_photo_prices").$type<Partial<Record<PhotoPrintSize, number>> | null>(),
   aboutPhotoPublicId: text("about_photo_public_id"),
   aboutPhotoUrl: text("about_photo_url"),
+  aboutPhotoFocusX: integer("about_photo_focus_x").notNull().default(50),
+  aboutPhotoFocusY: integer("about_photo_focus_y").notNull().default(50),
   ...timestamps,
 });
 
@@ -273,9 +278,12 @@ export const galleryPhotos = pgTable("gallery_photos", {
   publicId: text("public_id").notNull(),
   secureUrl: text("secure_url").notNull(),
   caption: text("caption").notNull(),
+  showCaption: boolean("show_caption").notNull().default(true),
   width: integer("width"),
   height: integer("height"),
   sortOrder: integer("sort_order").notNull().default(0),
+  focusX: integer("focus_x").notNull().default(50),
+  focusY: integer("focus_y").notNull().default(50),
   ...timestamps,
 }, (table) => [
   uniqueIndex("gallery_photos_public_id_idx").on(table.publicId),
@@ -287,6 +295,8 @@ export const sitePhotos = pgTable("site_photos", {
   key: text("key").primaryKey(),
   publicId: text("public_id").notNull(),
   secureUrl: text("secure_url").notNull(),
+  focusX: integer("focus_x").notNull().default(50),
+  focusY: integer("focus_y").notNull().default(50),
   ...timestamps,
 });
 

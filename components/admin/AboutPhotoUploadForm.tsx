@@ -3,13 +3,17 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState, useTransition } from "react";
-import { uploadAboutPhotoAction } from "@/app/actions/admin-settings-actions";
+import { updateAboutPhotoFocusAction, uploadAboutPhotoAction } from "@/app/actions/admin-settings-actions";
+import { PhotoAlignButton } from "@/components/admin/PhotoAlignButton";
+import { toObjectPosition } from "@/lib/utils/photo-layout";
 
 interface AboutPhotoUploadFormProps {
   currentPhotoUrl: string | null;
+  focusX: number;
+  focusY: number;
 }
 
-export function AboutPhotoUploadForm({ currentPhotoUrl }: AboutPhotoUploadFormProps) {
+export function AboutPhotoUploadForm({ currentPhotoUrl, focusX, focusY }: AboutPhotoUploadFormProps) {
   const router = useRouter();
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,8 +56,23 @@ export function AboutPhotoUploadForm({ currentPhotoUrl }: AboutPhotoUploadFormPr
       </p>
 
       {currentPhotoUrl ? (
-        <div className="relative mt-4 aspect-[4/5] w-40 overflow-hidden rounded-lg border border-border">
-          <Image src={currentPhotoUrl} alt="Jelenlegi Rólam fotó" fill sizes="160px" className="object-cover" />
+        <div className="mt-4 flex flex-wrap items-end gap-3">
+          <div className="relative aspect-[4/5] w-40 overflow-hidden rounded-lg border border-border">
+            <Image
+              src={currentPhotoUrl}
+              alt="Jelenlegi Rólam fotó"
+              fill
+              sizes="160px"
+              className="object-cover"
+              style={{ objectPosition: toObjectPosition(focusX, focusY) }}
+            />
+          </div>
+          <PhotoAlignButton
+            imageUrl={currentPhotoUrl}
+            initialFocus={{ focusX, focusY }}
+            previewAspectClasses={["aspect-[4/5]"]}
+            saveFocus={updateAboutPhotoFocusAction}
+          />
         </div>
       ) : (
         <p className="mt-4 text-xs text-foreground/50">Még nincs feltöltve fotó, jelenleg helyőrző kép látszik.</p>

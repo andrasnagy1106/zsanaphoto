@@ -1,5 +1,5 @@
 import { getSettings } from "@/lib/services/settings-service";
-import { getSitePhotoUrls } from "@/lib/services/site-photo-service";
+import { getSitePhotos } from "@/lib/services/site-photo-service";
 import { listAdminUsers } from "@/lib/services/admin-user-service";
 import { requireAdmin } from "@/lib/auth/guard";
 import { SettingsForm } from "@/components/admin/SettingsForm";
@@ -14,7 +14,7 @@ export default async function AdminSettingsPage() {
     getSettings(),
     listAdminUsers(),
     requireAdmin(),
-    getSitePhotoUrls(["hero", ...HOME_SERVICE_CARDS.map((card) => card.key)]),
+    getSitePhotos(["hero", ...HOME_SERVICE_CARDS.map((card) => card.key)]),
   ]);
 
   return (
@@ -43,12 +43,16 @@ export default async function AdminSettingsPage() {
           currentAdminId={currentAdmin.id}
         />
 
-        <HeroPhotoUploadForm currentPhotoUrl={sitePhotos["hero"] ?? null} />
+        <HeroPhotoUploadForm currentPhoto={sitePhotos["hero"] ?? null} />
 
-        <AboutPhotoUploadForm currentPhotoUrl={settings.aboutPhotoUrl} />
+        <AboutPhotoUploadForm
+          currentPhotoUrl={settings.aboutPhotoUrl}
+          focusX={settings.aboutPhotoFocusX}
+          focusY={settings.aboutPhotoFocusY}
+        />
 
         <div className="lg:col-span-2">
-          <HomeServiceCardPhotosManager photoUrlsByKey={sitePhotos} />
+          <HomeServiceCardPhotosManager photosByKey={sitePhotos} />
         </div>
       </div>
     </div>

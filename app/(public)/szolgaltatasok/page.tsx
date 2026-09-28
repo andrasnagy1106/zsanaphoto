@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ServiceCard } from "@/components/public/ServiceCard";
 import { HOME_SERVICE_CARDS } from "@/lib/home-service-cards";
-import { getSitePhotoUrls } from "@/lib/services/site-photo-service";
+import { getSitePhotos } from "@/lib/services/site-photo-service";
 
 export const metadata: Metadata = {
   title: "Szolgáltatások",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ServicesOverviewPage() {
-  const photoUrlsByKey = await getSitePhotoUrls(HOME_SERVICE_CARDS.map((card) => card.key));
+  const photosByKey = await getSitePhotos(HOME_SERVICE_CARDS.map((card) => card.key));
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
@@ -30,7 +30,7 @@ export default async function ServicesOverviewPage() {
             description={card.description}
             href={card.href}
             ctaLabel="Tovább"
-            imageUrl={photoUrlsByKey[card.key]}
+            photo={photosByKey[card.key]}
           />
         ))}
       </div>

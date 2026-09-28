@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PhotoGrid } from "@/components/public/PhotoGrid";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { getFeaturedGalleryPhotos } from "@/lib/services/gallery-service";
+import { getServicePagePhotos } from "@/lib/services/gallery-service";
 
 export const metadata: Metadata = {
   title: "Bölcsődei & óvodai fotózás",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function NurserySchoolPhotographyPage() {
-  const featuredPhotos = await getFeaturedGalleryPhotos([
+  const featuredPhotos = await getServicePagePhotos("oldal:bolcsodei-es-ovodai-fotozas", [
     "Bölcsi-óvoda-iskola",
     "Karácsonyi",
     "Anyáknapi",

@@ -1,10 +1,10 @@
 import { ServiceCard } from "./ServiceCard";
 import { HOME_SERVICE_CARDS } from "@/lib/home-service-cards";
-import { getSitePhotoUrls } from "@/lib/services/site-photo-service";
+import { getSitePhotos } from "@/lib/services/site-photo-service";
 
 /** Homepage-only "Miben segíthetek?" services teaser with 4 admin-editable cards. */
 export async function HomeServicesSection() {
-  const photoUrlsByKey = await getSitePhotoUrls(HOME_SERVICE_CARDS.map((card) => card.key));
+  const photosByKey = await getSitePhotos(HOME_SERVICE_CARDS.map((card) => card.key));
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
@@ -31,7 +31,7 @@ export async function HomeServicesSection() {
             description={card.description}
             href={card.href}
             ctaLabel="Tovább"
-            imageUrl={photoUrlsByKey[card.key]}
+            photo={photosByKey[card.key]}
           />
         ))}
       </div>

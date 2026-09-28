@@ -39,6 +39,8 @@ function makeSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
     defaultPhotoPrices: null,
     aboutPhotoPublicId: null,
     aboutPhotoUrl: null,
+    aboutPhotoFocusX: 50,
+    aboutPhotoFocusY: 50,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

@@ -2,12 +2,24 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guard";
-import { deleteGalleryPhotoById, uploadGalleryPhoto } from "@/lib/services/gallery-service";
+import {
+  deleteGalleryPhotoById,
+  moveGalleryPhoto,
+  updateGalleryPhotoDetails,
+  uploadGalleryPhoto,
+} from "@/lib/services/gallery-service";
 import { isGalleryCategory } from "@/lib/gallery-categories";
+import { isServicePagePhotoKey } from "@/lib/service-page-photos";
+import { galleryPhotoEditSchema, photoMoveDirectionSchema } from "@/lib/validation/photo-edit";
 
 export interface AdminGalleryActionResult {
   success: boolean;
   error?: string;
+}
+
+/** Gallery photos appear on the homepage, /galeria and the service pages, so refresh the whole public site. */
+function revalidateGalleryPaths() {
+  revalidatePath("/", "layout");
 }
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -25,7 +37,11 @@ export async function uploadGalleryPhotoAction(formData: FormData): Promise<Admi
 
   try {
     const category = formData.get("category");
-    if (!category || typeof category !== "string" || !isGalleryCategory(category)) {
+    if (
+      !category ||
+      typeof category !== "string" ||
+      !(isGalleryCategory(category) || isServicePagePhotoKey(category))
+    ) {
       return { success: false, error: "Válassz érvényes galéria kategóriát." };
     }
 
@@ -55,9 +71,7 @@ export async function uploadGalleryPhotoAction(formData: FormData): Promise<Admi
       caption: typeof caption === "string" ? caption : undefined,
     });
 
-    revalidatePath("/admin/gallery");
-    revalidatePath("/galeria");
-    revalidatePath("/");
+    revalidateGalleryPaths();
     return { success: true };
   } catch (error) {
     console.error("[uploadGalleryPhotoAction] Failed:", error);
@@ -77,9 +91,7 @@ export async function deleteGalleryPhotoAction(photoId: string): Promise<AdminGa
       return { success: false, error: "A fotó nem található vagy már törölve lett." };
     }
 
-    revalidatePath("/admin/gallery");
-    revalidatePath("/galeria");
-    revalidatePath("/");
+    revalidateGalleryPaths();
     return { success: true };
   } catch (error) {
     console.error("[deleteGalleryPhotoAction] Failed:", error);
@@ -87,5 +99,49 @@ export async function deleteGalleryPhotoAction(photoId: string): Promise<AdminGa
       success: false,
       error: error instanceof Error ? error.message : "A fotó törlése nem sikerült.",
     };
+  }
+}
+
+export async function updateGalleryPhotoAction(
+  photoId: string,
+  input: unknown,
+): Promise<AdminGalleryActionResult> {
+  await requireAdmin();
+
+  const parsed = galleryPhotoEditSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok." };
+  }
+
+  try {
+    const updated = await updateGalleryPhotoDetails(photoId, parsed.data);
+    if (!updated) return { success: false, error: "A fotó nem található." };
+
+    revalidateGalleryPaths();
+    return { success: true };
+  } catch (error) {
+    console.error("[updateGalleryPhotoAction] Failed:", error);
+    return { success: false, error: "A fotó mentése nem sikerült." };
+  }
+}
+
+export async function moveGalleryPhotoAction(
+  photoId: string,
+  direction: unknown,
+): Promise<AdminGalleryActionResult> {
+  await requireAdmin();
+
+  const parsedDirection = photoMoveDirectionSchema.safeParse(direction);
+  if (!parsedDirection.success) return { success: false, error: "Érvénytelen irány." };
+
+  try {
+    const moved = await moveGalleryPhoto(photoId, parsedDirection.data);
+    if (!moved) return { success: false, error: "A fotó nem mozgatható ebbe az irányba." };
+
+    revalidateGalleryPaths();
+    return { success: true };
+  } catch (error) {
+    console.error("[moveGalleryPhotoAction] Failed:", error);
+    return { success: false, error: "A sorrend módosítása nem sikerült." };
   }
 }

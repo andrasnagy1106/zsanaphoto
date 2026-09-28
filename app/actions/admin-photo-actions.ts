@@ -2,12 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guard";
-import { updateBookingCustomerPhotoViewMode } from "@/lib/services/booking-service";
+import {
+  updateBookingCustomerPhotoViewMode,
+  updateBookingShowPhotoTitles,
+} from "@/lib/services/booking-service";
 import {
   deleteMultiplePhotosByIds,
   deletePhotoById,
+  moveEventPhoto,
+  updateEventPhotoDetails,
   uploadMultiplePhotosForPin,
 } from "@/lib/services/photo-storage-service";
+import { eventPhotoEditSchema, photoMoveDirectionSchema } from "@/lib/validation/photo-edit";
 import type { Booking } from "@/db/schema";
 
 export interface AdminPhotoActionResult {
@@ -168,5 +174,66 @@ export async function updateCustomerPhotoViewModeAction(
       success: false,
       error: error instanceof Error ? error.message : "A nézet módosítása nem sikerült.",
     };
+  }
+}
+
+export async function updateShowPhotoTitlesAction(
+  bookingId: string,
+  showPhotoTitles: boolean,
+): Promise<AdminPhotoActionResult> {
+  await requireAdmin();
+
+  if (!bookingId || typeof showPhotoTitles !== "boolean") {
+    return { success: false, error: "Érvénytelen adatok." };
+  }
+
+  try {
+    await updateBookingShowPhotoTitles(bookingId, showPhotoTitles);
+    revalidatePath("/admin/event-photos");
+    return { success: true };
+  } catch (error) {
+    console.error("[updateShowPhotoTitlesAction] Failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "A beállítás mentése nem sikerült.",
+    };
+  }
+}
+
+export async function updateEventPhotoAction(photoId: string, input: unknown): Promise<AdminPhotoActionResult> {
+  await requireAdmin();
+
+  const parsed = eventPhotoEditSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok." };
+  }
+
+  try {
+    const updated = await updateEventPhotoDetails(photoId, parsed.data);
+    if (!updated) return { success: false, error: "A fotó nem található." };
+
+    revalidatePath("/admin/event-photos");
+    return { success: true };
+  } catch (error) {
+    console.error("[updateEventPhotoAction] Failed:", error);
+    return { success: false, error: "A fotó mentése nem sikerült." };
+  }
+}
+
+export async function moveEventPhotoAction(photoId: string, direction: unknown): Promise<AdminPhotoActionResult> {
+  await requireAdmin();
+
+  const parsedDirection = photoMoveDirectionSchema.safeParse(direction);
+  if (!parsedDirection.success) return { success: false, error: "Érvénytelen irány." };
+
+  try {
+    const moved = await moveEventPhoto(photoId, parsedDirection.data);
+    if (!moved) return { success: false, error: "A fotó nem mozgatható ebbe az irányba." };
+
+    revalidatePath("/admin/event-photos");
+    return { success: true };
+  } catch (error) {
+    console.error("[moveEventPhotoAction] Failed:", error);
+    return { success: false, error: "A sorrend módosítása nem sikerült." };
   }
 }

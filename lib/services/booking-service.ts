@@ -478,6 +478,17 @@ export async function updateBookingCustomerPhotoViewMode(
   return updated;
 }
 
+export async function updateBookingShowPhotoTitles(bookingId: string, showPhotoTitles: boolean): Promise<Booking> {
+  const [updated] = await db
+    .update(bookings)
+    .set({ showPhotoTitles, updatedAt: new Date() })
+    .where(eq(bookings.id, bookingId))
+    .returning();
+
+  if (!updated) throw new NotFoundError("A foglalás nem található.");
+  return updated;
+}
+
 export async function getBookingByManageToken(
   token: string,
 ): Promise<(Booking & { service: Service }) | null> {

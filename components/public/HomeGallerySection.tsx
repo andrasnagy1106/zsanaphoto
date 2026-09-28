@@ -53,8 +53,9 @@ export async function HomeGallerySection() {
               key={photo.id ?? photo.category}
               caption={photo.caption}
               src={photo.src}
-              index={GALLERY_CATEGORIES.indexOf(photo.category)}
+              index={(GALLERY_CATEGORIES as readonly string[]).indexOf(photo.category)}
               aspect="square"
+              objectPosition={photo.objectPosition}
             />
           ))}
         </div>

@@ -155,6 +155,13 @@
       "when": 1790259613324,
       "tag": "0021_lethal_banshee",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790582100463,
+      "tag": "0022_zippy_maddog",
+      "breakpoints": true
     }
   ]
 }

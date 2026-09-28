@@ -1,26 +1,29 @@
 import Image from "next/image";
 import Link from "next/link";
+import { toObjectPosition } from "@/lib/utils/photo-layout";
 import { getPlaceholderImageUrl } from "@/lib/utils/placeholder-image";
+import type { SitePhotoView } from "@/lib/services/site-photo-service";
 
 interface ServiceCardProps {
   title: string;
   description: string;
   href: string;
   ctaLabel: string;
-  imageUrl?: string | null;
+  photo?: SitePhotoView | null;
   index?: number;
 }
 
-export function ServiceCard({ title, description, href, ctaLabel, imageUrl, index = 0 }: ServiceCardProps) {
+export function ServiceCard({ title, description, href, ctaLabel, photo, index = 0 }: ServiceCardProps) {
   return (
     <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-white/60">
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <Image
-          src={imageUrl || getPlaceholderImageUrl(`zsana-service-${index}`, 800, 600)}
+          src={photo?.url || getPlaceholderImageUrl(`zsana-service-${index}`, 800, 600)}
           alt=""
           fill
           sizes="(max-width: 640px) 100vw, 50vw"
           className="object-cover"
+          style={photo ? { objectPosition: toObjectPosition(photo.focusX, photo.focusY) } : undefined}
         />
       </div>
       <div className="flex flex-1 flex-col p-6 sm:p-8">

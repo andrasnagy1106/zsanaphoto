@@ -50,6 +50,7 @@ export default async function PhotoGalleryPage({ searchParams }: PhotoGalleryPag
         pin={access.booking.pin!}
         serviceName={access.service.name}
         photos={photos}
+        showPhotoTitles={access.booking.showPhotoTitles}
       />
     </div>
   );
