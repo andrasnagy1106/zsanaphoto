@@ -18,15 +18,15 @@ export default function ContactPage() {
           <dl className="mt-4 space-y-2 text-sm text-foreground/70">
             <div>
               <dt className="font-medium text-foreground">E-mail</dt>
-              <dd><a className="hover:text-accent" href="mailto:hello@zsanaphoto.hu">hello@zsanaphoto.hu</a></dd>
+              <dd><a className="hover:text-accent" href="mailto:zsanaphoto@gmail.com">zsanaphoto@gmail.com</a></dd>
             </div>
             <div>
               <dt className="font-medium text-foreground">Telefon</dt>
-              <dd><a className="hover:text-accent" href="tel:+36301234567">+36 30 123 4567</a></dd>
+              <dd><a className="hover:text-accent" href="tel:+36302133039">+36 30 213 3039</a></dd>
             </div>
             <div>
               <dt className="font-medium text-foreground">Helyszín</dt>
-              <dd>Budapest és környéke</dd>
+              <dd>Sárbogárd és környéke</dd>
             </div>
           </dl>
         </div>
