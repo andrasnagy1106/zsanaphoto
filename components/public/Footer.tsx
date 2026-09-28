@@ -37,7 +37,7 @@ export function Footer() {
             <div className="flex flex-col items-center gap-3 sm:items-end">
               <div className="flex items-center gap-3">
                 <a
-                  href="https://www.facebook.com/p/ZsaNa-Photo-100076261230439/"
+                  href="https://www.facebook.com/zsanafoto"
                   target="_blank"
                   rel="noreferrer"
                   aria-label="Facebook"
@@ -48,7 +48,7 @@ export function Footer() {
                   </svg>
                 </a>
                 <a
-                  href="https://www.instagram.com/zsana.photo/"
+                  href="https://www.instagram.com/zsan.aphoto/"
                   target="_blank"
                   rel="noreferrer"
                   aria-label="Instagram"
