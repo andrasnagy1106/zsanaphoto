@@ -169,6 +169,13 @@
       "when": 1790584785610,
       "tag": "0023_absurd_molten_man",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790586318191,
+      "tag": "0024_nappy_lake",
+      "breakpoints": true
     }
   ]
 }

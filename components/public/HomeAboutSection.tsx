@@ -1,12 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getHomeTexts } from "@/lib/services/home-text-service";
 import { getSettings } from "@/lib/services/settings-service";
 import { toObjectPosition } from "@/lib/utils/photo-layout";
 import { getPlaceholderImageUrl } from "@/lib/utils/placeholder-image";
 
 /** Homepage-only "about" teaser, shown right above the gallery section. */
 export async function HomeAboutSection() {
-  const settings = await getSettings();
+  const [settings, texts] = await Promise.all([getSettings(), getHomeTexts()]);
   const photoUrl = settings.aboutPhotoUrl || getPlaceholderImageUrl("zsana-portre", 800, 1000);
 
   return (
@@ -28,9 +29,9 @@ export async function HomeAboutSection() {
         </div>
 
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">ZsaNa Photo</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">{texts["about.eyebrow"]}</p>
           <h2 className="mt-3 font-display text-3xl text-accent-dark sm:text-4xl">
-            A fotós, aki a pillanatot keresi
+            {texts["about.title"]}
           </h2>
           <div className="mt-4 flex items-center justify-center gap-3 lg:justify-start">
             <span className="h-px w-10 bg-accent/30" aria-hidden="true" />
@@ -39,22 +40,18 @@ export async function HomeAboutSection() {
             </svg>
             <span className="h-px w-10 bg-accent/30" aria-hidden="true" />
           </div>
-          <p className="mt-4 text-foreground/70 leading-relaxed">
-            Zsani vagyok, a ZsaNa Photo megálmodója. Számomra a fotózás nem csak munka, hanem szenvedély.
-            Szeretem a természetes pillanatokat, az őszinte mosolyokat és azokat a kis részleteket, amik
-            igazán különlegessé teszik az emlékeket.
-          </p>
+          <p className="mt-4 whitespace-pre-line text-foreground/70 leading-relaxed">{texts["about.body"]}</p>
           <Link
             href="/rolam"
             className="mt-6 inline-flex min-h-11 items-center gap-1 rounded-full bg-accent px-6 py-2.5 text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-accent-dark"
           >
-            Több rólam »
+            {texts["about.button"]}
           </Link>
         </div>
 
         <div className="text-center lg:text-right">
-          <p className="font-script text-3xl leading-snug text-accent sm:text-4xl">
-            „A legszebb képek a szívvel készülnek.”
+          <p className="whitespace-pre-line font-script text-3xl leading-snug text-accent sm:text-4xl">
+            {texts["about.quote"]}
           </p>
           <svg
             width="22"
@@ -66,7 +63,7 @@ export async function HomeAboutSection() {
           >
             <path d="M12 20.5s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 3.1c0 5.4-7.5 10-7.5 10Z" />
           </svg>
-          <p className="mt-2 font-script text-3xl text-accent-dark">Zsani</p>
+          <p className="mt-2 font-script text-3xl text-accent-dark">{texts["about.signature"]}</p>
         </div>
       </div>
     </section>

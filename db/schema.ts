@@ -300,6 +300,13 @@ export const sitePhotos = pgTable("site_photos", {
   ...timestamps,
 });
 
+/** Admin-edited overrides of site texts; keys missing here fall back to the defaults in code. */
+export const siteTexts = pgTable("site_texts", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  ...timestamps,
+});
+
 export type Service = typeof services.$inferSelect;
 export type NewService = typeof services.$inferInsert;
 export type AvailabilityRule = typeof availabilityRules.$inferSelect;
@@ -326,3 +333,4 @@ export type GalleryPhoto = typeof galleryPhotos.$inferSelect;
 export type NewGalleryPhoto = typeof galleryPhotos.$inferInsert;
 export type SitePhoto = typeof sitePhotos.$inferSelect;
 export type NewSitePhoto = typeof sitePhotos.$inferInsert;
+export type SiteText = typeof siteTexts.$inferSelect;

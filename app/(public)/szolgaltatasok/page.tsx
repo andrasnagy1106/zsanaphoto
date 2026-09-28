@@ -3,6 +3,8 @@ import Link from "next/link";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ServiceCard } from "@/components/public/ServiceCard";
 import { HOME_SERVICE_CARDS } from "@/lib/home-service-cards";
+import { getServiceCardTexts } from "@/lib/home-texts";
+import { getHomeTexts } from "@/lib/services/home-text-service";
 import { getSitePhotos } from "@/lib/services/site-photo-service";
 
 export const metadata: Metadata = {
@@ -11,7 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ServicesOverviewPage() {
-  const photosByKey = await getSitePhotos(HOME_SERVICE_CARDS.map((card) => card.key));
+  const [photosByKey, texts] = await Promise.all([
+    getSitePhotos(HOME_SERVICE_CARDS.map((card) => card.key)),
+    getHomeTexts(),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
@@ -26,10 +31,9 @@ export default async function ServicesOverviewPage() {
           <ServiceCard
             key={card.key}
             index={index}
-            title={card.title}
-            description={card.description}
+            {...getServiceCardTexts(texts, card)}
             href={card.href}
-            ctaLabel="Tovább"
+            ctaLabel={texts["services.cta"]}
             photo={photosByKey[card.key]}
           />
         ))}

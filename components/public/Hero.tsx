@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getHomeTexts } from "@/lib/services/home-text-service";
 import { getSitePhotos } from "@/lib/services/site-photo-service";
 import { toObjectPosition } from "@/lib/utils/photo-layout";
 import { getPlaceholderImageUrl } from "@/lib/utils/placeholder-image";
 
 export async function Hero() {
-  const { hero: heroPhoto } = await getSitePhotos(["hero"]);
+  const [{ hero: heroPhoto }, texts] = await Promise.all([getSitePhotos(["hero"]), getHomeTexts()]);
   const heroPhotoUrl = heroPhoto?.url || getPlaceholderImageUrl("zsana-hero-banner", 1920, 1080);
 
   return (
@@ -34,9 +35,9 @@ export async function Hero() {
         className="pointer-events-none select-none absolute top-6 right-6 lg:top-10 lg:right-14 xl:right-20 hidden md:flex flex-col items-center justify-center text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
       >
         <p className="font-script text-2xl sm:text-3xl lg:text-4xl leading-tight text-center">
-          Több<br />
-          <span className="text-xl sm:text-2xl lg:text-3xl font-light">mint fotózás...</span><br />
-          <span className="text-3xl sm:text-4xl lg:text-5xl">Érzés.</span>
+          {texts["hero.noteLine1"]}<br />
+          <span className="text-xl sm:text-2xl lg:text-3xl font-light">{texts["hero.noteLine2"]}</span><br />
+          <span className="text-3xl sm:text-4xl lg:text-5xl">{texts["hero.noteLine3"]}</span>
         </p>
         <svg
           className="mt-1.5 w-6 h-6 text-white/95 drop-shadow"
@@ -54,10 +55,10 @@ export async function Hero() {
         <div className="max-w-xl lg:max-w-2xl text-left">
           {/* Script Titles */}
           <h1 className="font-script text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-white leading-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
-            Emlékek,
+            {texts["hero.title"]}
           </h1>
           <p className="font-script text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white/95 mt-1 sm:mt-2 leading-tight drop-shadow-[0_4px_14px_rgba(0,0,0,0.6)]">
-            amiket jó újra és újra megnézni.
+            {texts["hero.subtitle"]}
           </p>
 
           {/* Ornamental Divider with Heart */}
@@ -90,8 +91,8 @@ export async function Hero() {
           </div>
 
           {/* Subtitle */}
-          <p className="text-sm sm:text-base lg:text-lg text-white/95 font-light leading-relaxed max-w-lg drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
-            Családi és intézményi fotózás természetes, időtálló képekkel.
+          <p className="whitespace-pre-line text-sm sm:text-base lg:text-lg text-white/95 font-light leading-relaxed max-w-lg drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+            {texts["hero.description"]}
           </p>
 
           {/* Action Buttons */}
@@ -100,14 +101,14 @@ export async function Hero() {
               href="/csaladi-fotozas"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#670c18] border border-white/25 px-6 sm:px-8 py-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-xl transition-all duration-200 hover:bg-[#520913] hover:scale-105 active:scale-95"
             >
-              <span>Családi fotózás</span>
+              <span>{texts["hero.primaryButton"]}</span>
               <span aria-hidden="true" className="text-xs font-bold">›</span>
             </Link>
             <Link
               href="/intezmenyi-fotozas"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#fbfaf8] border border-transparent px-6 sm:px-8 py-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-[#670c18] shadow-xl transition-all duration-200 hover:bg-white hover:scale-105 active:scale-95"
             >
-              <span>Intézményi fotózás</span>
+              <span>{texts["hero.secondaryButton"]}</span>
               <span aria-hidden="true" className="text-xs font-bold">›</span>
             </Link>
           </div>
