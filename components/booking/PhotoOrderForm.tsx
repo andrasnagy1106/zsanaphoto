@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useId, useState, useTransition } from "react";
 import { savePhotoOrderAction } from "@/app/actions/photo-order-actions";
+import { WatermarkOverlay } from "@/components/booking/WatermarkOverlay";
 import {
   DEFAULT_PHOTO_PRICES,
   PHOTO_PRINT_SIZES,
@@ -262,17 +263,20 @@ export function PhotoOrderForm({
               <div>
                 <div
                   onClick={() => setPreviewPhoto(photo)}
-                  className="group relative aspect-[4/3] overflow-hidden bg-muted cursor-pointer"
+                  onContextMenu={(e) => e.preventDefault()}
+                  className="group relative aspect-[4/3] overflow-hidden bg-muted cursor-pointer select-none"
                 >
                   <Image
                     src={photo.src}
                     alt={photo.alt ?? photo.title}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300 pointer-events-none"
                     style={photo.objectPosition ? { objectPosition: photo.objectPosition } : undefined}
+                    draggable={false}
                   />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold">
+                  <WatermarkOverlay />
+                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold backdrop-blur-[1px]">
                     Kattints a nagyításhoz 🔍
                   </div>
                 </div>
@@ -506,13 +510,18 @@ export function PhotoOrderForm({
                 ×
               </button>
             </div>
-            <div className="relative w-[80vw] max-w-3xl h-[65vh]">
+            <div
+              className="relative w-[80vw] max-w-3xl h-[65vh] select-none"
+              onContextMenu={(e) => e.preventDefault()}
+            >
               <Image
                 src={previewPhoto.src}
                 alt={previewPhoto.title}
                 fill
-                className="object-contain"
+                className="object-contain pointer-events-none"
+                draggable={false}
               />
+              <WatermarkOverlay />
             </div>
           </div>
         </dialog>

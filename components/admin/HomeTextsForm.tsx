@@ -51,8 +51,11 @@ export function HomeTextsForm({ initialTexts }: HomeTextsFormProps) {
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             {section.fields.map((field) => {
               const inputId = `home-text-${field.key}`;
-              const value = texts[field.key];
+              const value = texts[field.key] ?? "";
               const isMultiline = "multiline" in field && field.multiline;
+              const isInfoContent = field.key === "infoBanner.content";
+              const helpText = "helpText" in field ? (field.helpText as string) : null;
+              const allowEmpty = "allowEmpty" in field && field.allowEmpty;
 
               return (
                 <div key={field.key} className={isMultiline ? "md:col-span-2" : undefined}>
@@ -60,7 +63,7 @@ export function HomeTextsForm({ initialTexts }: HomeTextsFormProps) {
                     <label htmlFor={inputId} className="text-xs font-semibold text-foreground">
                       {field.label}
                     </label>
-                    {value !== field.defaultValue ? (
+                    {!allowEmpty && value !== field.defaultValue ? (
                       <button
                         type="button"
                         onClick={() => updateText(field.key, field.defaultValue)}
@@ -69,12 +72,76 @@ export function HomeTextsForm({ initialTexts }: HomeTextsFormProps) {
                         Eredeti szöveg visszaállítása
                       </button>
                     ) : null}
+                    {allowEmpty && value.trim().length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => updateText(field.key, "")}
+                        className="text-[11px] font-semibold text-foreground/60 hover:text-red-600 hover:underline"
+                      >
+                        Mező törlése (üres)
+                      </button>
+                    ) : null}
                   </div>
+
+                  {isInfoContent ? (
+                    <div className="mt-1.5 mb-1.5 flex flex-wrap gap-1.5 text-xs text-foreground/70">
+                      <span className="font-medium text-[11px] text-foreground/50 self-center mr-1">Gyors formázó gombok:</span>
+                      <button
+                        type="button"
+                        onClick={() => updateText(field.key, `${value}**félkövér szöveg**`)}
+                        className="rounded border border-border bg-muted/60 px-2 py-0.5 font-bold hover:bg-muted"
+                        title="Félkövér szöveg beszúrása"
+                      >
+                        B
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateText(field.key, `${value}*dőlt szöveg*`)}
+                        className="rounded border border-border bg-muted/60 px-2 py-0.5 italic hover:bg-muted"
+                        title="Dőlt szöveg beszúrása"
+                      >
+                        I
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateText(field.key, `${value}{red}kiemelt piros szöveg{/red}`)}
+                        className="rounded border border-border bg-accent/10 px-2 py-0.5 font-semibold text-accent hover:bg-accent/20"
+                        title="Piros kiemelés beszúrása"
+                      >
+                        {`{red}...{/red}`}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateText(field.key, `${value}{gold}kiemelt arany szöveg{/gold}`)}
+                        className="rounded border border-border bg-amber-50 px-2 py-0.5 font-semibold text-amber-700 hover:bg-amber-100"
+                        title="Arany kiemelés beszúrása"
+                      >
+                        {`{gold}...{/gold}`}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateText(field.key, `${value}{badge}FONTOS{/badge}`)}
+                        className="rounded border border-border bg-accent/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent hover:bg-accent/20"
+                        title="Címke / Pill beszúrása"
+                      >
+                        [Badge]
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateText(field.key, `${value}[Link szövege](/idopontfoglalas)`)}
+                        className="rounded border border-border bg-muted/60 px-2 py-0.5 font-medium underline hover:bg-muted"
+                        title="Hivatkozás beszúrása"
+                      >
+                        [Link](url)
+                      </button>
+                    </div>
+                  ) : null}
+
                   {isMultiline ? (
                     <textarea
                       id={inputId}
                       value={value}
-                      rows={3}
+                      rows={isInfoContent ? 4 : 3}
                       maxLength={HOME_TEXT_MAX_LENGTH}
                       onChange={(event) => updateText(field.key, event.target.value)}
                       className={INPUT_CLASS}
@@ -89,6 +156,10 @@ export function HomeTextsForm({ initialTexts }: HomeTextsFormProps) {
                       className={`${INPUT_CLASS} min-h-11`}
                     />
                   )}
+
+                  {helpText ? (
+                    <p className="mt-1 text-[11px] text-foreground/50 leading-relaxed">{helpText}</p>
+                  ) : null}
                 </div>
               );
             })}

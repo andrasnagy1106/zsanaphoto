@@ -3,6 +3,8 @@ export interface HomeTextField {
   label: string;
   defaultValue: string;
   multiline?: boolean;
+  helpText?: string;
+  allowEmpty?: boolean;
 }
 
 export interface HomeTextSection {
@@ -28,6 +30,48 @@ export const HOME_TEXT_SECTIONS = [
       { key: "hero.noteLine1", label: "Jobb felső írott szöveg – 1. sor", defaultValue: "Több" },
       { key: "hero.noteLine2", label: "Jobb felső írott szöveg – 2. sor", defaultValue: "mint fotózás..." },
       { key: "hero.noteLine3", label: "Jobb felső írott szöveg – 3. sor", defaultValue: "Érzés." },
+    ],
+  },
+  {
+    title: "Információs sáv / fül (Hero kép alatt)",
+    fields: [
+      {
+        key: "infoBanner.badge",
+        label: "Címke / Kategória (opcionális kis kiemelő címke)",
+        defaultValue: "",
+        helpText: "Pl.: FONTOS INFORMÁCIÓ, KARÁCSONYI FOTÓZÁS, vagy hagyd üresen.",
+        allowEmpty: true,
+      },
+      {
+        key: "infoBanner.title",
+        label: "Főcím (opcionális)",
+        defaultValue: "",
+        helpText: "Kiemelt vastag címsor az információs sávban.",
+        allowEmpty: true,
+      },
+      {
+        key: "infoBanner.content",
+        label: "Információs szöveg (ha üres, a sáv nem jelenik meg)",
+        defaultValue: "",
+        multiline: true,
+        helpText:
+          "Formázási lehetőségek: **félkövér**, *dőlt*, {red}kiemelt piros szöveg{/red}, {gold}arany kiemelés{/gold}, {badge}CÍMKE{/badge}, [Gomb vagy link szövege](/idopontfoglalas). Új sorokat is használhatsz.",
+        allowEmpty: true,
+      },
+      {
+        key: "infoBanner.buttonText",
+        label: "Gomb felirata (opcionális)",
+        defaultValue: "",
+        helpText: "Pl.: Időpontfoglalás vagy Részletek megtekintése",
+        allowEmpty: true,
+      },
+      {
+        key: "infoBanner.buttonUrl",
+        label: "Gomb hivatkozása (URL vagy belső oldal)",
+        defaultValue: "",
+        helpText: "Pl.: /idopontfoglalas vagy /szezonalis-fotozas vagy https://...",
+        allowEmpty: true,
+      },
     ],
   },
   {

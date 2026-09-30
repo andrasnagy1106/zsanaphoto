@@ -1,6 +1,7 @@
 import { Hero } from "@/components/public/Hero";
 import { HomeAboutSection } from "@/components/public/HomeAboutSection";
 import { HomeGallerySection } from "@/components/public/HomeGallerySection";
+import { HomeInfoBanner } from "@/components/public/HomeInfoBanner";
 import { HomeServicesSection } from "@/components/public/HomeServicesSection";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { getHomeTexts } from "@/lib/services/home-text-service";
@@ -13,6 +14,14 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
+
+      <HomeInfoBanner
+        badge={texts["infoBanner.badge"]}
+        title={texts["infoBanner.title"]}
+        content={texts["infoBanner.content"]}
+        buttonText={texts["infoBanner.buttonText"]}
+        buttonUrl={texts["infoBanner.buttonUrl"]}
+      />
 
       <HomeServicesSection />
 
