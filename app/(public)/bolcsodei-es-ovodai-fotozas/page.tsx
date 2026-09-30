@@ -5,9 +5,10 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { getServicePagePhotos } from "@/lib/services/gallery-service";
 
 export const metadata: Metadata = {
-  title: "Bölcsődei & óvodai fotózás",
+  title: "Bölcsődei és óvodai fotózás Sárbogárdon",
   description:
-    "Gyermekfotózás szeretettel, türelemmel és természetesen bölcsődékben és óvodákban. Foglalj online időpontot.",
+    "Bölcsődei és óvodai gyermekfotózás Sárbogárdon és környékén. Egyéni és csoportképek, nyugodt légkörben, az intézménnyel egyeztetve.",
+  alternates: { canonical: "/bolcsodei-es-ovodai-fotozas" },
 };
 
 export default async function NurserySchoolPhotographyPage() {
@@ -21,9 +22,10 @@ export default async function NurserySchoolPhotographyPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <SectionHeading
+        level="h1"
         eyebrow="Szolgáltatás"
         title="Bölcsődei & óvodai fotózás"
-        description="Gyermekfotózás szeretettel, türelemmel és természetesen — a gyerekek tempójához igazodva."
+        description="Bölcsődei és óvodai gyermekfotózás Sárbogárdon és környékén, szeretettel és türelemmel, a gyerekek tempójához igazodva."
       />
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:items-start">

@@ -3,14 +3,15 @@ import Link from "next/link";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
 export const metadata: Metadata = {
-  title: "Kapcsolat",
-  description: "Elérhetőségeink és kapcsolatfelvételi lehetőségek.",
+  title: "Kapcsolat - fotózás Sárbogárdon",
+  description: "Lépj kapcsolatba a ZsaNa Photo-val családi vagy intézményi fotózás ügyében Sárbogárdon és környékén. Telefon, e-mail és online foglalás.",
+  alternates: { canonical: "/kapcsolat" },
 };
 
 export default function ContactPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-      <SectionHeading eyebrow="Kapcsolat" title="Vegyük fel a kapcsolatot" />
+      <SectionHeading level="h1" eyebrow="Kapcsolat" title="Vegyük fel a kapcsolatot" />
 
       <div className="mt-10 grid gap-8 sm:grid-cols-2">
         <div className="rounded-xl border border-border bg-white/60 p-6">

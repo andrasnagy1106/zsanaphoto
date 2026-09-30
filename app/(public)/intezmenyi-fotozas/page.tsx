@@ -6,9 +6,10 @@ import { GALLERY_CATEGORIES } from "@/lib/gallery-categories";
 import { getServicePagePhotos } from "@/lib/services/gallery-service";
 
 export const metadata: Metadata = {
-  title: "Intézményi fotózás",
+  title: "Intézményi fotózás Sárbogárdon",
   description:
-    "Óvodai, iskolai és céges csoportos fotózás. Foglalj online időpontot pár kattintással.",
+    "Intézményi fotózás Sárbogárdon és környékén: óvodai, iskolai és céges csoportképek, személyes egyeztetéssel.",
+  alternates: { canonical: "/intezmenyi-fotozas" },
 };
 
 export default async function InstitutionPhotographyPage() {
@@ -17,9 +18,10 @@ export default async function InstitutionPhotographyPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <SectionHeading
+        level="h1"
         eyebrow="Szolgáltatás"
         title="Intézményi fotózás"
-        description="Óvodák, iskolák és cégek csoportos fotózása, az intézmény igényeihez igazítva."
+        description="Intézményi fotózás Sárbogárdon és környékén: óvodák, iskolák és cégek csoportos fotózása, az intézmény igényeihez igazítva."
       />
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:items-start">

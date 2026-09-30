@@ -29,19 +29,17 @@ const allura = Allura({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   title: {
-    default: "ZsaNa Photo - Családi és intézményi fotózás",
+    default: "Családi és intézményi fotózás Sárbogárdon | ZsaNa Photo",
     template: "%s | ZsaNa Photo",
   },
   description:
-    "Családi és intézményi fotózás természetes, időtálló képekkel. Foglalj időpontot online.",
+    "Családi, óvodai és iskolai fotózás Sárbogárdon és környékén. Természetes, időtálló képek; online időpontfoglalás a ZsaNa Photo-nál.",
   openGraph: {
     type: "website",
     locale: "hu_HU",
     siteName: "ZsaNa Photo",
-    title: "ZsaNa Photo - Családi és intézményi fotózás",
-    description:
-      "Családi és intézményi fotózás természetes, időtálló képekkel. Foglalj időpontot online.",
   },
+  twitter: { card: "summary" },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

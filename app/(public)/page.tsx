@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Hero } from "@/components/public/Hero";
 import { HomeAboutSection } from "@/components/public/HomeAboutSection";
 import { HomeGallerySection } from "@/components/public/HomeGallerySection";
@@ -6,6 +7,10 @@ import { HomeServicesSection } from "@/components/public/HomeServicesSection";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { getHomeTexts } from "@/lib/services/home-text-service";
 
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
 const STEP_NUMBERS = [1, 2, 3, 4] as const;
 
 export default async function HomePage() {
@@ -13,6 +18,23 @@ export default async function HomePage() {
 
   return (
     <>
+      {process.env.NEXT_PUBLIC_SITE_URL && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ProfessionalService",
+              name: "ZsaNa Photo",
+              url: process.env.NEXT_PUBLIC_SITE_URL,
+              description: "Családi és intézményi fotózás Sárbogárdon és környékén.",
+              telephone: "+36302133039",
+              email: "zsanaphoto@gmail.com",
+              areaServed: { "@type": "Place", name: "Sárbogárd és környéke" },
+            }).replace(/</g, "\\u003c"),
+          }}
+        />
+      )}
       <Hero />
 
       <HomeInfoBanner

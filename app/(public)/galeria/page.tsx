@@ -9,8 +9,9 @@ import {
 } from "@/lib/services/gallery-service";
 
 export const metadata: Metadata = {
-  title: "Galéria",
-  description: "Válogatás családi, páros, esküvői, rendezvény- és intézményi fotózásokból.",
+  title: "Fotógaléria - családi és intézményi képek",
+  description: "Tekintsd meg a ZsaNa Photo családi, páros, ünnepi és intézményi fotógalériáját. Fotózás Sárbogárdon és környékén.",
+  alternates: { canonical: "/galeria" },
 };
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export default async function GalleryPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-      <SectionHeading eyebrow="Portfólió" title="Galéria" description="Válogatás korábbi fotózásokból." />
+      <SectionHeading level="h1" eyebrow="Portfólió" title="Galéria" description="Válogatás korábbi fotózásokból." />
       <div className="mt-10">
         <GalleryBrowser photosByCategory={photosByCategory} />
       </div>

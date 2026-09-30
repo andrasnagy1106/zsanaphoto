@@ -5,8 +5,9 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { getServicePagePhotos } from "@/lib/services/gallery-service";
 
 export const metadata: Metadata = {
-  title: "Szezonális fotózás",
-  description: "Karácsonyi, anyák napi és egyéb szezonális, ünnepi fotózások. Foglalj online időpontot.",
+  title: "Karácsonyi és szezonális fotózás Sárbogárdon",
+  description: "Karácsonyi, anyák napi és más ünnepi mini fotózások Sárbogárdon és környékén. Nézd meg az elérhető időpontokat.",
+  alternates: { canonical: "/szezonalis-fotozas" },
 };
 
 export default async function SeasonalPhotographyPage() {
@@ -20,9 +21,10 @@ export default async function SeasonalPhotographyPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <SectionHeading
+        level="h1"
         eyebrow="Szolgáltatás"
         title="Szezonális fotózás"
-        description="Karácsony, Anyák napja és különleges alkalmak — limitált idényjellegű időpontokkal."
+        description="Karácsonyi és anyák napi fotózás Sárbogárdon és környékén, limitált idényjellegű időpontokkal."
       />
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:items-start">

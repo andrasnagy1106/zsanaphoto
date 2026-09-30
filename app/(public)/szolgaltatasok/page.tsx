@@ -8,8 +8,9 @@ import { getHomeTexts } from "@/lib/services/home-text-service";
 import { getSitePhotos } from "@/lib/services/site-photo-service";
 
 export const metadata: Metadata = {
-  title: "Szolgáltatások",
-  description: "Családi és intézményi fotózás természetes, időtálló képekkel.",
+  title: "Fotózási szolgáltatások Sárbogárdon",
+  description: "Családi, bölcsődei, óvodai, iskolai és szezonális fotózás Sárbogárdon és környékén. Ismerd meg a ZsaNa Photo szolgáltatásait.",
+  alternates: { canonical: "/szolgaltatasok" },
 };
 
 export default async function ServicesOverviewPage() {
@@ -21,6 +22,7 @@ export default async function ServicesOverviewPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <SectionHeading
+        level="h1"
         eyebrow="Szolgáltatások"
         title="Miben segíthetek?"
         description="Válassz a szolgáltatásaim közül, majd foglalj magadnak vagy csoportodnak egy időpontot."

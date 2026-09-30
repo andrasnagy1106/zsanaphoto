@@ -54,9 +54,12 @@ export async function Hero() {
       <div className="relative mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
         <div className="max-w-xl lg:max-w-2xl text-left">
           {/* Script Titles */}
-          <h1 className="font-script text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-white leading-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
-            {texts["hero.title"]}
+          <h1 className="mb-5 text-sm font-semibold uppercase tracking-wider text-white sm:text-base">
+            Családi és intézményi fotózás Sárbogárdon
           </h1>
+          <p className="font-script text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-white leading-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
+            {texts["hero.title"]}
+          </p>
           <p className="font-script text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white/95 mt-1 sm:mt-2 leading-tight drop-shadow-[0_4px_14px_rgba(0,0,0,0.6)]">
             {texts["hero.subtitle"]}
           </p>

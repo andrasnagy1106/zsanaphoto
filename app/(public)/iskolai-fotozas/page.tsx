@@ -5,8 +5,9 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { getServicePagePhotos } from "@/lib/services/gallery-service";
 
 export const metadata: Metadata = {
-  title: "Iskolai fotózás",
-  description: "Igényes portrék és közösségi képek iskoláknak. Foglalj online időpontot.",
+  title: "Iskolai fotózás Sárbogárdon",
+  description: "Iskolai fotózás Sárbogárdon és környékén: egyéni portrék és osztályképek, az iskola időbeosztásához igazodva.",
+  alternates: { canonical: "/iskolai-fotozas" },
 };
 
 export default async function SchoolPhotographyPage() {
@@ -20,9 +21,10 @@ export default async function SchoolPhotographyPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <SectionHeading
+        level="h1"
         eyebrow="Szolgáltatás"
         title="Iskolai fotózás"
-        description="Igényes portrék és közösségi képek, osztályonként vagy az egész iskolának."
+        description="Iskolai fotózás Sárbogárdon és környékén: igényes portrék és osztályképek, osztályonként vagy az egész iskolának."
       />
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:items-start">

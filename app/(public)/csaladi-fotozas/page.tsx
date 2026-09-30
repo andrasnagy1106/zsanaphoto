@@ -6,9 +6,10 @@ import { GALLERY_CATEGORIES } from "@/lib/gallery-categories";
 import { getServicePagePhotos } from "@/lib/services/gallery-service";
 
 export const metadata: Metadata = {
-  title: "Családi fotózás",
+  title: "Családi fotózás Sárbogárdon",
   description:
-    "Természetes, oldott hangulatú családi fotózás. Foglalj online időpontot pár kattintással.",
+    "Természetes, oldott hangulatú családi fotózás Sárbogárdon és környékén, stúdióban vagy szabadtéren. Foglalj időpontot online.",
+  alternates: { canonical: "/csaladi-fotozas" },
 };
 
 export default async function FamilyPhotographyPage() {
@@ -17,9 +18,10 @@ export default async function FamilyPhotographyPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <SectionHeading
+        level="h1"
         eyebrow="Szolgáltatás"
         title="Családi fotózás"
-        description="Oldott, természetes pillanatok rólad és a családodról, akár stúdióban, akár a szabadban."
+        description="Családi fotózás Sárbogárdon és környékén: oldott, természetes pillanatok rólad és a családodról, akár stúdióban, akár a szabadban."
       />
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:items-start">

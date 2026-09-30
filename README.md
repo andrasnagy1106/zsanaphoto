@@ -134,6 +134,16 @@ Ajánlott két külön Neon adatbázis: `zsanaphoto-dev` (helyi fejlesztés) és
 
 ## Vercel deployment
 
+SEO: állítsd a `NEXT_PUBLIC_SITE_URL` változót a végleges, nyilvános domainre
+(pl. `https://zsanaphoto.com`, nem preview URL vagy `localhost`), mert ez határozza meg
+a kanonikus linkeket és a sitemap/robots URL-eket. Élesítés után regisztráld a domaint
+a Google Search Console-ban, küldd be a `/sitemap.xml` címet, és ellenőrizd az
+indexelést. A Google Business Profile-ban ugyanazokat az elérhetőségeket és a valós
+szolgáltatási területet add meg. A célzott keresések: családi fotózás Sárbogárdon,
+óvodai/bölcsődei fotózás Sárbogárdon, iskolai fotózás Sárbogárdon, karácsonyi
+fotózás Sárbogárdon. Az organikus helyezés és indexelés nem garantálható; a tényleges
+keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riportja mutatja.
+
 1. Importáld a repository-t Vercelbe (Next.js automatikusan felismerésre kerül, nincs custom build lépés).
 2. Állítsd be a Production Environment Variables-t: `DATABASE_URL` (production Neon), `RESEND_API_KEY`,
    `EMAIL_FROM`, `ADMIN_NOTIFICATION_EMAIL`, `ADMIN_AUTH_SECRET`, `NEXT_PUBLIC_SITE_URL`
