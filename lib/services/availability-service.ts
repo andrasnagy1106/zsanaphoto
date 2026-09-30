@@ -1,6 +1,7 @@
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
+  availabilityDateOverrides,
   availabilityRules,
   blockedPeriods,
   bookings,
@@ -27,6 +28,7 @@ export interface AvailabilityContext {
   service: Service;
   settings: SiteSettings;
   rules: { dayOfWeek: number; startTime: string; endTime: string }[];
+  dateOverridesByDate: Map<string, { startTime: string; endTime: string }[]>;
   blockedPeriods: { startAt: Date; endAt: Date }[];
   activeBookings: { startAt: Date; endAt: Date }[];
   now: Date;
@@ -74,6 +76,30 @@ async function loadAvailabilityContext(
       .where(eq(availabilityRules.active, true));
   }
 
+  const rangeStartDateIso = getZonedDateIso(rangeStart, settings.timezone);
+  const rangeEndDateIso = getZonedDateIso(rangeEnd, settings.timezone);
+  const dateOverrides = await db
+    .select({
+      date: availabilityDateOverrides.date,
+      startTime: availabilityDateOverrides.startTime,
+      endTime: availabilityDateOverrides.endTime,
+    })
+    .from(availabilityDateOverrides)
+    .where(
+      and(
+        eq(availabilityDateOverrides.active, true),
+        gte(availabilityDateOverrides.date, rangeStartDateIso),
+        lte(availabilityDateOverrides.date, rangeEndDateIso),
+      ),
+    );
+
+  const dateOverridesByDate = new Map<string, { startTime: string; endTime: string }[]>();
+  for (const override of dateOverrides) {
+    const listForDate = dateOverridesByDate.get(override.date) ?? [];
+    listForDate.push({ startTime: override.startTime, endTime: override.endTime });
+    dateOverridesByDate.set(override.date, listForDate);
+  }
+
   const blocked = await db
     .select()
     .from(blockedPeriods)
@@ -99,6 +125,7 @@ async function loadAvailabilityContext(
     service,
     settings,
     rules,
+    dateOverridesByDate,
     blockedPeriods: blocked,
     activeBookings,
     now: new Date(),
@@ -110,7 +137,7 @@ export function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): bo
 }
 
 export function computeSlotsForDate(dateIso: string, ctx: AvailabilityContext): TimeSlot[] {
-  const { service, settings, rules, blockedPeriods, activeBookings, now } = ctx;
+  const { service, settings, rules, dateOverridesByDate, blockedPeriods, activeBookings, now } = ctx;
 
   // If service has date range constraints, ensure dateIso falls within [dateRangeStart, dateRangeEnd]
   if (service.dateRangeStart && dateIso < service.dateRangeStart) {
@@ -125,7 +152,11 @@ export function computeSlotsForDate(dateIso: string, ctx: AvailabilityContext): 
     settings.timezone,
   );
 
-  const dayRules = rules.filter((rule) => rule.dayOfWeek === dayOfWeek);
+  const overrideRules = dateOverridesByDate.get(dateIso) ?? [];
+  const dayRules =
+    overrideRules.length > 0
+      ? overrideRules
+      : rules.filter((rule) => rule.dayOfWeek === dayOfWeek);
   if (dayRules.length === 0) return [];
 
   const stepMinutes = service.durationMinutes + service.bufferMinutes;

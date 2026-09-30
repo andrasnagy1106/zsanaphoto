@@ -10,6 +10,7 @@ import {
   uploadGalleryPhotoAction,
 } from "@/app/actions/admin-gallery-actions";
 import type { GalleryPhoto } from "@/db/schema";
+import { prepareImageUpload } from "@/lib/utils/client-image-upload";
 import { toObjectPosition } from "@/lib/utils/photo-layout";
 import { PhotoEditDialog, type PhotoEditValues } from "@/components/admin/PhotoEditDialog";
 
@@ -34,6 +35,7 @@ export function GalleryPhotoManager({ collections, photosByCollection, previewAs
   const [selectedCollectionKey, setSelectedCollectionKey] = useState<string>(collections[0]?.key ?? "");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [caption, setCaption] = useState("");
+  const [isPreparingFile, setIsPreparingFile] = useState(false);
   const [isUploading, startUploadTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
   const [isMoving, startMoveTransition] = useTransition();
@@ -168,7 +170,29 @@ export function GalleryPhotoManager({ collections, photosByCollection, previewAs
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp,image/avif"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+              onChange={async (e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (!file) {
+                  setSelectedFile(null);
+                  return;
+                }
+
+                setErrorMessage(null);
+                setIsPreparingFile(true);
+                try {
+                  const prepared = await prepareImageUpload(file);
+                  setSelectedFile(prepared.file);
+                  if (prepared.resized) {
+                    setSuccessMessage("A kép automatikusan méretezve lett feltöltés előtt.");
+                  }
+                } catch (error) {
+                  console.error("[GalleryPhotoManager] Failed to prepare upload file:", error);
+                  setSelectedFile(null);
+                  setErrorMessage("A kép előkészítése sikertelen volt.");
+                } finally {
+                  setIsPreparingFile(false);
+                }
+              }}
               className="w-full text-sm file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-md file:border-0 file:bg-accent file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white"
             />
           </div>
@@ -180,10 +204,10 @@ export function GalleryPhotoManager({ collections, photosByCollection, previewAs
         <button
           type="button"
           onClick={handleUpload}
-          disabled={isUploading || !selectedFile}
+          disabled={isUploading || isPreparingFile || !selectedFile}
           className="mt-4 inline-flex min-h-11 items-center rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-60"
         >
-          {isUploading ? "Feltöltés..." : "Kép feltöltése"}
+          {isPreparingFile ? "Előkészítés..." : isUploading ? "Feltöltés..." : "Kép feltöltése"}
         </button>
       </div>
 
@@ -225,7 +249,7 @@ export function GalleryPhotoManager({ collections, photosByCollection, previewAs
                       alt={photo.caption}
                       fill
                       sizes="25vw"
-                      className="object-cover"
+                      className="object-contain"
                       style={{ objectPosition: toObjectPosition(photo.focusX, photo.focusY) }}
                     />
                     <span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-foreground shadow">

@@ -55,6 +55,7 @@ function makeContext(overrides: Partial<AvailabilityContext> = {}): Availability
     service: makeService(),
     settings: makeSettings(),
     rules: [{ dayOfWeek: 1, startTime: "09:00", endTime: "17:00" }],
+    dateOverridesByDate: new Map(),
     blockedPeriods: [],
     activeBookings: [],
     now: new Date("2026-10-01T00:00:00Z"),
@@ -179,5 +180,17 @@ describe("computeSlotsForDate - dateRange constraints", () => {
       service: makeService({ dateRangeStart: "2026-10-01", dateRangeEnd: "2026-10-31" }),
     });
     expect(computeSlotsForDate("2026-10-12", ctx).length).toBeGreaterThan(0);
+  });
+});
+
+describe("computeSlotsForDate - date overrides", () => {
+  it("uses date-specific override hours when present", () => {
+    const ctx = makeContext({
+      dateOverridesByDate: new Map([[MONDAY, [{ startTime: "18:00", endTime: "20:00" }]]]),
+    });
+
+    const slots = computeSlotsForDate(MONDAY, ctx);
+    expect(slots.length).toBeGreaterThan(0);
+    expect(slots[0].start.toISOString()).toBe("2026-10-12T16:00:00.000Z");
   });
 });

@@ -1,10 +1,15 @@
 import { listAvailabilityRules } from "@/lib/services/availability-rule-service";
 import { AvailabilityRuleForm } from "@/components/admin/AvailabilityRuleForm";
+import { AvailabilityDateOverridesManager } from "@/components/admin/AvailabilityDateOverridesManager";
+import { listAvailabilityDateOverrides } from "@/lib/services/availability-date-override-service";
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 export default async function AdminAvailabilityPage() {
-  const rules = await listAvailabilityRules();
+  const [rules, overrides] = await Promise.all([
+    listAvailabilityRules(),
+    listAvailabilityDateOverrides(),
+  ]);
   const ruleByDay = new Map(rules.map((rule) => [rule.dayOfWeek, rule]));
 
   return (
@@ -25,6 +30,13 @@ export default async function AdminAvailabilityPage() {
             />
           );
         })}
+      </div>
+
+      <div className="mt-8">
+        <AvailabilityDateOverridesManager overrides={overrides} />
+        <p className="mt-2 text-xs text-foreground/60">
+          Teljes nap vagy időszak letiltásához használd a Blokkolt időszakok oldalt.
+        </p>
       </div>
     </div>
   );

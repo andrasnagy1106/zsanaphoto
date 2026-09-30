@@ -209,7 +209,7 @@ export function PrivateCustomerGallery({
                     width={photo.width ?? 800}
                     height={photo.height ?? 600}
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-auto object-contain transition-transform duration-300"
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
                 </div>

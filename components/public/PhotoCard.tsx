@@ -25,13 +25,13 @@ export function PhotoCard({ caption, src, index = 0, aspect = "portrait", object
   const imageSrc = src || getPlaceholderImageUrl(`zsana-gallery-${index}`, 600, 800);
 
   return (
-    <figure className={`group relative overflow-hidden rounded-lg border border-border ${ASPECT_CLASSES[aspect]}`}>
+    <figure className={`group relative overflow-hidden rounded-lg border border-border bg-muted/30 ${ASPECT_CLASSES[aspect]}`}>
       <Image
         src={imageSrc}
         alt={caption}
         fill
         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-        className="object-cover"
+        className="object-contain"
         style={objectPosition ? { objectPosition } : undefined}
       />
       {caption ? (

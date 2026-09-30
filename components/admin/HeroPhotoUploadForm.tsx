@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useId, useRef, useState, useTransition } from "react";
 import { updateSitePhotoFocusAction, uploadHeroPhotoAction } from "@/app/actions/admin-settings-actions";
 import { PhotoAlignButton } from "@/components/admin/PhotoAlignButton";
+import { prepareImageUpload } from "@/lib/utils/client-image-upload";
 import type { SitePhotoView } from "@/lib/services/site-photo-service";
 import { toObjectPosition } from "@/lib/utils/photo-layout";
 
@@ -18,6 +19,7 @@ export function HeroPhotoUploadForm({ currentPhoto }: HeroPhotoUploadFormProps) 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isPreparingFile, setIsPreparingFile] = useState(false);
   const [isUploading, startUploadTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -85,7 +87,29 @@ export function HeroPhotoUploadForm({ currentPhoto }: HeroPhotoUploadFormProps) 
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp,image/avif"
-        onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+        onChange={async (e) => {
+          const file = e.target.files?.[0] ?? null;
+          if (!file) {
+            setSelectedFile(null);
+            return;
+          }
+
+          setErrorMessage(null);
+          setIsPreparingFile(true);
+          try {
+            const prepared = await prepareImageUpload(file);
+            setSelectedFile(prepared.file);
+            if (prepared.resized) {
+              setSuccessMessage("A kép automatikusan méretezve lett feltöltés előtt.");
+            }
+          } catch (error) {
+            console.error("[HeroPhotoUploadForm] Failed to prepare upload file:", error);
+            setSelectedFile(null);
+            setErrorMessage("A kép előkészítése sikertelen volt.");
+          } finally {
+            setIsPreparingFile(false);
+          }
+        }}
         className="mt-1.5 w-full text-sm file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-md file:border-0 file:bg-accent file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white"
       />
 
@@ -95,10 +119,10 @@ export function HeroPhotoUploadForm({ currentPhoto }: HeroPhotoUploadFormProps) 
       <button
         type="button"
         onClick={handleUpload}
-        disabled={isUploading || !selectedFile}
+        disabled={isUploading || isPreparingFile || !selectedFile}
         className="mt-4 inline-flex min-h-11 items-center rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-60"
       >
-        {isUploading ? "Feltöltés..." : "Borítókép cseréje"}
+        {isPreparingFile ? "Előkészítés..." : isUploading ? "Feltöltés..." : "Borítókép cseréje"}
       </button>
     </div>
   );

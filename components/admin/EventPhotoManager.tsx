@@ -16,6 +16,7 @@ import {
 import type { Booking, EventPhoto, PhotoOrder, PhotoOrderItem, Service } from "@/db/schema";
 import type { EventWithPinOption } from "@/lib/services/photo-storage-service";
 import { formatPrice } from "@/lib/photo-order-catalog";
+import { prepareImageUpload } from "@/lib/utils/client-image-upload";
 import { toObjectPosition } from "@/lib/utils/photo-layout";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
 import { CreateEventUserModal } from "@/components/admin/CreateEventUserModal";
@@ -59,6 +60,7 @@ export function EventPhotoManager({
   const [viewMode, setViewMode] = useState<ViewMode>("gallery");
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isPreparingFiles, setIsPreparingFiles] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [isUploading, startUploadTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -172,10 +174,26 @@ export function EventPhotoManager({
     router.push(`/admin/event-photos?pin=${encodeURIComponent(newPin)}`);
   }
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.files && e.target.files.length > 0) {
-      const filesArray = Array.from(e.target.files);
-      setSelectedFiles((prev) => [...prev, ...filesArray]);
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const filesArray = e.target.files ? Array.from(e.target.files) : [];
+    if (filesArray.length === 0) return;
+
+    setIsPreparingFiles(true);
+    setErrorMessage(null);
+
+    try {
+      const prepared = await Promise.all(filesArray.map((file) => prepareImageUpload(file)));
+      const resizedCount = prepared.filter((item) => item.resized).length;
+
+      setSelectedFiles((prev) => [...prev, ...prepared.map((item) => item.file)]);
+      if (resizedCount > 0) {
+        setSuccessMessage(`${resizedCount} kép automatikusan méretezve lett feltöltés előtt.`);
+      }
+    } catch (error) {
+      console.error("[EventPhotoManager] Failed to prepare upload files:", error);
+      setErrorMessage("A képek előkészítése sikertelen volt. Próbáld újra más fájlokkal.");
+    } finally {
+      setIsPreparingFiles(false);
     }
   }
 
@@ -196,21 +214,31 @@ export function EventPhotoManager({
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const formData = new FormData();
-    formData.append("pin", currentPin);
-    selectedFiles.forEach((file) => {
-      formData.append("files", file);
-    });
-
     startUploadTransition(async () => {
-      const result = await uploadEventPhotosAction(formData);
-      if (result.success) {
+      let uploadedCount = 0;
+
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append("pin", currentPin);
+        formData.append("files", file);
+
+        const result = await uploadEventPhotosAction(formData);
+        if (!result.success) {
+          setErrorMessage(
+            uploadedCount > 0
+              ? `${uploadedCount} kép feltöltve, majd hiba történt: ${result.error ?? "A feltöltés nem sikerült."}`
+              : result.error ?? "A feltöltés nem sikerült.",
+          );
+          return;
+        }
+        uploadedCount += result.count ?? 1;
+      }
+
+      if (uploadedCount > 0) {
         setSelectedFiles([]);
         if (fileInputRef.current) fileInputRef.current.value = "";
-        setSuccessMessage(`${result.count ?? 1} kép sikeresen feltöltve a Cloudinary tárhelyre!`);
+        setSuccessMessage(`${uploadedCount} kép sikeresen feltöltve a Cloudinary tárhelyre!`);
         router.refresh();
-      } else {
-        setErrorMessage(result.error ?? "A feltöltés nem sikerült.");
       }
     });
   }
@@ -484,17 +512,22 @@ export function EventPhotoManager({
                 <div>
                   <h2 className="text-base font-semibold text-foreground">Képek feltöltése a mappába ({selectedEvent.pin})</h2>
                   <p className="text-xs text-foreground/60">
-                    A feltöltött képek automatikusan vízjelezve lesznek a megjelenítéshez. Támogatott: JPG, PNG, WEBP (max 25MB/kép).
+                    A képek feltöltés előtt automatikusan méretezve lesznek (vágás nélkül), majd vízjelezve jelennek meg. Támogatott: JPG, PNG, WEBP (max 25MB/kép).
                   </p>
                 </div>
                 {selectedFiles.length > 0 && (
                   <button
                     type="button"
                     onClick={handleUpload}
-                    disabled={isUploading}
+                    disabled={isUploading || isPreparingFiles}
                     className="min-h-10 rounded-full bg-accent px-5 py-2 text-xs font-semibold text-white hover:bg-accent-dark disabled:opacity-50 shadow-sm flex items-center gap-2"
                   >
-                    {isUploading ? (
+                    {isPreparingFiles ? (
+                      <>
+                        <span className="inline-block size-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Képek előkészítése...
+                      </>
+                    ) : isUploading ? (
                       <>
                         <span className="inline-block size-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         Feltöltés folyamatban ({selectedFiles.length} kép)...
@@ -507,7 +540,7 @@ export function EventPhotoManager({
               </div>
 
               <div
-                onClick={() => fileInputRef.current?.click()}
+                  onClick={() => fileInputRef.current?.click()}
                 className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-accent bg-muted/20 hover:bg-muted/40 p-6 text-center cursor-pointer transition-colors"
               >
                 <svg
@@ -530,7 +563,9 @@ export function EventPhotoManager({
                   type="file"
                   multiple
                   accept="image/jpeg,image/png,image/webp,image/avif"
-                  onChange={handleFileSelect}
+                  onChange={(e) => {
+                    void handleFileSelect(e);
+                  }}
                   className="hidden"
                 />
               </div>
@@ -633,7 +668,7 @@ export function EventPhotoManager({
                               alt={photo.title}
                               fill
                               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              className="object-contain transition-transform duration-300"
                               style={{ objectPosition: toObjectPosition(photo.focusX, photo.focusY) }}
                             />
 

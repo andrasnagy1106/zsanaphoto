@@ -103,6 +103,19 @@ export const serviceAvailabilityRules = pgTable("service_availability_rules", {
   index("service_availability_rules_active_idx").on(table.active),
 ]);
 
+export const availabilityDateOverrides = pgTable("availability_date_overrides", {
+  id: id(),
+  date: text("date").notNull(), // "YYYY-MM-DD"
+  startTime: text("start_time").notNull(), // "HH:mm"
+  endTime: text("end_time").notNull(), // "HH:mm"
+  note: text("note").notNull().default(""),
+  active: boolean("active").notNull().default(true),
+  ...timestamps,
+}, (table) => [
+  index("availability_date_overrides_date_idx").on(table.date),
+  index("availability_date_overrides_active_idx").on(table.active),
+]);
+
 export const blockedPeriods = pgTable("blocked_periods", {
   id: id(),
   startAt: timestamp("start_at", { withTimezone: true }).notNull(),
@@ -313,6 +326,8 @@ export type AvailabilityRule = typeof availabilityRules.$inferSelect;
 export type NewAvailabilityRule = typeof availabilityRules.$inferInsert;
 export type ServiceAvailabilityRule = typeof serviceAvailabilityRules.$inferSelect;
 export type NewServiceAvailabilityRule = typeof serviceAvailabilityRules.$inferInsert;
+export type AvailabilityDateOverride = typeof availabilityDateOverrides.$inferSelect;
+export type NewAvailabilityDateOverride = typeof availabilityDateOverrides.$inferInsert;
 export type BlockedPeriod = typeof blockedPeriods.$inferSelect;
 export type NewBlockedPeriod = typeof blockedPeriods.$inferInsert;
 export type Booking = typeof bookings.$inferSelect;

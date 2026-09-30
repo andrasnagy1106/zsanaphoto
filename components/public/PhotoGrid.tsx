@@ -12,16 +12,21 @@ interface PhotoGridProps {
 export function PhotoGrid({ photos }: PhotoGridProps) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-      {photos.map((photo, index) => (
-        <PhotoCard
-          key={photo.id ?? `${photo.category}-${index}`}
-          caption={photo.caption}
-          src={photo.src}
-          index={(GALLERY_CATEGORIES as readonly string[]).indexOf(photo.category)}
-          aspect={index % 3 === 0 ? "landscape" : "portrait"}
-          objectPosition={photo.objectPosition}
-        />
-      ))}
+      {photos.map((photo, index) => {
+        const isLandscape = typeof photo.width === "number" && typeof photo.height === "number" && photo.width > photo.height;
+        const isSquare = typeof photo.width === "number" && typeof photo.height === "number" && Math.abs(photo.width - photo.height) <= 24;
+
+        return (
+          <PhotoCard
+            key={photo.id ?? `${photo.category}-${index}`}
+            caption={photo.caption}
+            src={photo.src}
+            index={(GALLERY_CATEGORIES as readonly string[]).indexOf(photo.category)}
+            aspect={isSquare ? "square" : isLandscape ? "landscape" : "portrait"}
+            objectPosition={photo.objectPosition}
+          />
+        );
+      })}
     </div>
   );
 }

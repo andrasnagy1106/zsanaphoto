@@ -7,6 +7,7 @@ import { updateSitePhotoFocusAction, uploadHomeServiceCardPhotoAction } from "@/
 import { PhotoAlignButton } from "@/components/admin/PhotoAlignButton";
 import { HOME_SERVICE_CARDS } from "@/lib/home-service-cards";
 import type { SitePhotoView } from "@/lib/services/site-photo-service";
+import { prepareImageUpload } from "@/lib/utils/client-image-upload";
 import { toObjectPosition } from "@/lib/utils/photo-layout";
 
 interface HomeServiceCardPhotosManagerProps {
@@ -19,6 +20,7 @@ function CardPhotoRow({ cardKey, title, currentPhoto }: { cardKey: string; title
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isPreparingFile, setIsPreparingFile] = useState(false);
   const [isUploading, startUploadTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -69,7 +71,26 @@ function CardPhotoRow({ cardKey, title, currentPhoto }: { cardKey: string; title
           ref={fileInputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp,image/avif"
-          onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+          onChange={async (e) => {
+            const file = e.target.files?.[0] ?? null;
+            if (!file) {
+              setSelectedFile(null);
+              return;
+            }
+
+            setErrorMessage(null);
+            setIsPreparingFile(true);
+            try {
+              const prepared = await prepareImageUpload(file);
+              setSelectedFile(prepared.file);
+            } catch (error) {
+              console.error("[HomeServiceCardPhotosManager] Failed to prepare upload file:", error);
+              setSelectedFile(null);
+              setErrorMessage("A kép előkészítése sikertelen volt.");
+            } finally {
+              setIsPreparingFile(false);
+            }
+          }}
           className="mt-2 w-full text-xs file:mr-3 file:min-h-9 file:cursor-pointer file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white"
         />
         {errorMessage ? <p className="mt-1 text-xs text-red-600">{errorMessage}</p> : null}
@@ -85,10 +106,10 @@ function CardPhotoRow({ cardKey, title, currentPhoto }: { cardKey: string; title
       <button
         type="button"
         onClick={handleUpload}
-        disabled={isUploading || !selectedFile}
+        disabled={isUploading || isPreparingFile || !selectedFile}
         className="min-h-9 shrink-0 rounded-full bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-dark disabled:opacity-60"
       >
-        {isUploading ? "Feltöltés..." : "Csere"}
+        {isPreparingFile ? "Előkészítés..." : isUploading ? "Feltöltés..." : "Csere"}
       </button>
     </div>
   );
