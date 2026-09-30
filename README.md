@@ -32,8 +32,8 @@ db/
   schema.ts, client.ts, migrate.ts, seed.ts, migrations/
 lib/
   services/        booking-service, photo-order-service, availability-service, inquiry-service,
-                    service-service,
-                    availability-rule-service, blocked-period-service, settings-service
+                    service-service, availability-rule-service,
+                    availability-date-override-service, blocked-period-service, settings-service
   providers/email/  EmailProvider absztrakció (Resend / Console)
   auth/             session.ts (HMAC token), password.ts (bcrypt), guard.ts (requireAdmin)
   validation/       Zod séma minden formhoz
@@ -165,8 +165,12 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
 ## Foglalási üzleti szabályok (összefoglaló)
 
 - A szabad időpontokat a rendszer **mindig** az adatbázisban tárolt `availabilityRules`,
-  `blockedPeriods` és aktív (`PENDING`/`CONFIRMED`) `bookings` rekordok alapján számolja ki -
-  nincsenek frontendbe égetett időpontok.
+  `availabilityDateOverrides`, `blockedPeriods` és aktív (`PENDING`/`CONFIRMED`) `bookings`
+  rekordok alapján számolja ki - nincsenek frontendbe égetett időpontok.
+- Az `/admin/availability` oldalon a hét minden napjához beállítható az alapértelmezett
+  elérhetőség. Konkrét dátumhoz egy vagy több egyedi idősáv is felvehető; ezek az adott napon
+  felülírják a heti alapértelmezést. Teljes nap vagy tetszőleges időszak az
+  `/admin/blocked-periods` oldalon tiltható le.
 - Dupla foglalás elleni védelem két rétegben: (1) a `createBooking` tranzakción belül újra
   ellenőrzi az ütközést; (2) az adatbázis egy `EXCLUDE USING gist` constraint-tel (lásd
   `db/migrations/0001_booking_overlap_protection.sql`) ténylegesen kizárja az átfedő, aktív
@@ -192,6 +196,10 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
   - **Képek vízjelezése és privát galéria:**
     - A fotórendelés felületén (`/fotorendeles`) a képek Cloudinary által vízjelezett formátumban jelennek meg a kiválasztáshoz és rendeléshez.
     - A privát teljes képgalériában (`/fotogaleria`) a rendszer az eredeti, vízjelmentes fotókat jeleníti meg és teszi letölthetővé (egyedi és kötegelt ZIP formátumban).
+  - **Képfeltöltés és tájolás:** Az admin feltöltők JPG, PNG, WEBP és AVIF képeket fogadnak
+    legfeljebb 25 MB-os fájlméretig. A böngésző a nagy képeket feltöltés előtt automatikusan
+    leméretezi, az eseményfotókat pedig egyenként küldi fel. Az álló és fekvő fotók eredeti
+    képaránya megmarad, a galéria- és rendelési nézetek nem vágnak le a képből.
   - **Főoldali fotók kezelése az adminban:** Az `/admin/settings` oldalon közvetlenül feltölthető és cserélhető a főoldali Hero borítókép, a "Rólam" portré, valamint a "Miben segíthetek?" szolgáltatáskártyák egyedi képei.
   - **Globális alapárak módosítása:** Az `/admin/settings` oldalon a rendszer globális alapértelmezett darabárai
     is közvetlenül szerkeszthetők és adatbázisban tárolódnak.
@@ -215,6 +223,6 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
 
 - Az időzóna mindenhol `Europe/Budapest` (lásd `lib/utils/time.ts`), az adatbázisban minden időpont
   UTC-ben van tárolva.
-- A publikus galéria helykitöltő (gradiens) képekkel működik (`components/public/PhotoCard.tsx`) -
-  cseréld valódi fotókra a `next/image` komponenssel a launch előtt.
+- A publikus galéria adminból feltöltött Cloudinary-képeket használ; üres kategóriánál semleges
+  Picsum helykitöltő jelenik meg.
 - Az admin route-ok (`/admin/*`) nem indexelhetők (`robots: noindex`) és szerveroldali guard védi őket.

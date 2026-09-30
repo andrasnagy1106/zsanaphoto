@@ -165,6 +165,7 @@ export function GalleryPhotoManager({ collections, photosByCollection, previewAs
             <label htmlFor={fileInputId} className="block text-xs font-semibold text-foreground mb-1.5">
               Képfájl
             </label>
+            <p className="mb-1.5 text-[11px] text-foreground/50">JPG, PNG, WEBP vagy AVIF, max. 25 MB; automatikus méretezéssel.</p>
             <input
               id={fileInputId}
               ref={fileInputRef}

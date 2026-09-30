@@ -66,6 +66,7 @@ function CardPhotoRow({ cardKey, title, currentPhoto }: { cardKey: string; title
       </div>
       <div className="flex-1">
         <p className="text-sm font-semibold text-foreground">{title}</p>
+        <p className="mt-0.5 text-[11px] text-foreground/50">JPG, PNG, WEBP vagy AVIF, max. 25 MB; automatikus méretezéssel.</p>
         <input
           id={fileInputId}
           ref={fileInputRef}

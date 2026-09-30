@@ -83,6 +83,7 @@ export function AboutPhotoUploadForm({ currentPhotoUrl, focusX, focusY }: AboutP
       <label htmlFor={fileInputId} className="mt-4 block text-xs font-semibold text-foreground">
         Új fotó kiválasztása
       </label>
+      <p className="mt-1 text-xs text-foreground/50">JPG, PNG, WEBP vagy AVIF, legfeljebb 25 MB. A nagy képet automatikusan leméretezzük.</p>
       <input
         id={fileInputId}
         ref={fileInputRef}
