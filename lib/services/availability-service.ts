@@ -176,11 +176,13 @@ export function computeSlotsForDate(dateIso: string, ctx: AvailabilityContext): 
     now,
   } = ctx;
 
-  // If service has date range constraints, ensure dateIso falls within [dateRangeStart, dateRangeEnd]
-  if (service.dateRangeStart && dateIso < service.dateRangeStart) {
+  const hasAvailabilityCalendar = Boolean(service.availabilityCalendarId);
+
+  // A selected calendar is the authoritative list of dates for this service.
+  if (!hasAvailabilityCalendar && service.dateRangeStart && dateIso < service.dateRangeStart) {
     return [];
   }
-  if (service.dateRangeEnd && dateIso > service.dateRangeEnd) {
+  if (!hasAvailabilityCalendar && service.dateRangeEnd && dateIso > service.dateRangeEnd) {
     return [];
   }
 
@@ -197,7 +199,7 @@ export function computeSlotsForDate(dateIso: string, ctx: AvailabilityContext): 
       const slotStart = zonedDateTimeToUtc(dateIso, rule.startTime, settings.timezone);
       const slotEnd = zonedDateTimeToUtc(dateIso, rule.endTime, settings.timezone);
       if (slotEnd <= slotStart) continue;
-      if (slotStart < leadTimeCutoff || slotStart > horizonCutoff) continue;
+      if (slotStart < leadTimeCutoff) continue;
       if (blockedPeriods.some((period) => overlaps(slotStart, slotEnd, period.startAt, period.endAt))) continue;
       if (activeBookings.some((booking) => overlaps(slotStart, slotEnd, booking.startAt, booking.endAt))) continue;
       slots.push({ start: slotStart, end: slotEnd });

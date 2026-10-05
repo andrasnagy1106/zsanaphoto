@@ -229,4 +229,34 @@ describe("computeSlotsForDate - explicit availability calendar", () => {
 
     expect(computeSlotsForDate(MONDAY, ctx)).toHaveLength(0);
   });
+
+  it("keeps manually scheduled dates outside the general advance window available", () => {
+    const dateIso = "2026-11-17";
+    const ctx = makeContext({
+      service: makeService({ availabilityCalendarId: "calendar-1" }),
+      settings: makeSettings({ maxAdvanceDays: 30 }),
+      calendarSlotsByDate: new Map([
+        [dateIso, [{ startTime: "14:00", endTime: "14:30" }]],
+      ]),
+      now: new Date("2026-10-05T00:00:00.000Z"),
+    });
+
+    expect(computeSlotsForDate(dateIso, ctx)).toHaveLength(1);
+  });
+
+  it("uses calendar dates instead of legacy service date-range limits", () => {
+    const dateIso = "2026-11-17";
+    const ctx = makeContext({
+      service: makeService({
+        availabilityCalendarId: "calendar-1",
+        dateRangeStart: "2026-10-01",
+        dateRangeEnd: "2026-10-31",
+      }),
+      calendarSlotsByDate: new Map([
+        [dateIso, [{ startTime: "14:00", endTime: "14:30" }]],
+      ]),
+    });
+
+    expect(computeSlotsForDate(dateIso, ctx)).toHaveLength(1);
+  });
 });
