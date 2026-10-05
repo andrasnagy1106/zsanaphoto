@@ -6,6 +6,7 @@ export const settingsSchema = z.object({
   siteContactEmail: z.string().trim().email("Adj meg érvényes e-mail címet."),
   minimumLeadTimeHours: z.coerce.number().int().min(0).max(168),
   maxAdvanceDays: z.coerce.number().int().min(1).max(365),
+  defaultServicePrice: z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000),
   defaultPhotoPrices: z
     .object({
       "10x15 cm": z.coerce.number().int().min(0, "Az ár nem lehet negatív.").max(100000).optional(),

@@ -27,6 +27,7 @@ export async function getSettings(): Promise<SiteSettings> {
     siteContactEmail: "",
     minimumLeadTimeHours: DEFAULT_MINIMUM_LEAD_TIME_HOURS,
     maxAdvanceDays: DEFAULT_MAX_ADVANCE_DAYS,
+    defaultServicePrice: 0,
     defaultPhotoPrices: null,
     aboutPhotoPublicId: null,
     aboutPhotoUrl: null,
@@ -43,6 +44,7 @@ export interface UpdateSettingsInput {
   siteContactEmail: string;
   minimumLeadTimeHours: number;
   maxAdvanceDays: number;
+  defaultServicePrice: number;
   defaultPhotoPrices?: Partial<Record<PhotoPrintSize, number>> | null;
 }
 

@@ -52,6 +52,10 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
               <dd className="text-foreground">{service?.name ?? "-"}</dd>
             </div>
             <div className="flex justify-between gap-4">
+              <dt className="text-foreground/60">Szolgáltatás ára a foglaláskor</dt>
+              <dd className="font-semibold text-foreground">{formatPrice(booking.servicePrice)}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
               <dt className="text-foreground/60">PIN</dt>
               <dd className="font-mono font-semibold text-foreground flex items-center gap-2">
                 <span>{booking.pin ?? "-"}</span>

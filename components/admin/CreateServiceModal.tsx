@@ -33,6 +33,7 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
+  const [servicePrice, setServicePrice] = useState("");
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [bufferMinutes, setBufferMinutes] = useState(15);
   const [approvalMode, setApprovalMode] = useState<"AUTO" | "MANUAL">("AUTO");
@@ -71,6 +72,7 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
         name,
         slug: slug.trim() || undefined,
         description,
+        servicePrice: servicePrice === "" ? null : Number(servicePrice),
         durationMinutes,
         bufferMinutes,
         approvalMode,
@@ -93,6 +95,7 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
       setName("");
       setSlug("");
       setDescription("");
+      setServicePrice("");
       setDateRangeStart("");
       setDateRangeEnd("");
       router.refresh();
@@ -199,6 +202,23 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
                   <option key={calendar.id} value={calendar.id}>{calendar.name}</option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label htmlFor="new-service-price" className="block text-xs font-semibold text-foreground">
+                Egyedi szolgáltatásár (Ft)
+              </label>
+              <input
+                id="new-service-price"
+                type="number"
+                min={0}
+                max={100000}
+                step={1}
+                placeholder="Alapértelmezett ár használata"
+                value={servicePrice}
+                onChange={(e) => setServicePrice(e.target.value)}
+                className="mt-1.5 w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

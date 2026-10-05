@@ -35,6 +35,7 @@ export function ServiceEditForm({ service, customRules = [], calendars = [] }: S
       id: service.id,
       name: service.name,
       description: service.description,
+      servicePrice: service.servicePrice ?? "",
       durationMinutes: service.durationMinutes,
       bufferMinutes: service.bufferMinutes,
       approvalMode: service.approvalMode,
@@ -89,6 +90,23 @@ export function ServiceEditForm({ service, customRules = [], calendars = [] }: S
               {...register("name")}
             />
             {errors.name ? <p className="mt-1 text-sm text-red-600">{errors.name.message}</p> : null}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground" htmlFor={`${service.id}-price`}>
+              Egyedi szolgáltatásár (Ft)
+            </label>
+            <input
+              id={`${service.id}-price`}
+              type="number"
+              min={0}
+              max={100000}
+              step={1}
+              placeholder="Alapértelmezett ár használata"
+              className="mt-1.5 block w-full min-h-11 rounded-md border border-border px-3 py-2 text-sm"
+              {...register("servicePrice")}
+            />
+            {errors.servicePrice ? <p className="mt-1 text-sm text-red-600">{errors.servicePrice.message}</p> : null}
           </div>
 
           <div>

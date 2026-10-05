@@ -13,22 +13,23 @@ import { BookingSummary } from "./BookingSummary";
 import { BookingSuccess } from "./BookingSuccess";
 
 type Step = "service" | "date" | "slot" | "details" | "summary" | "success";
+type PricedService = Service & { effectivePrice: number };
 
 interface BookingWizardProps {
-  services: Service[];
+  services: PricedService[];
 }
 
 export function BookingWizard({ services }: BookingWizardProps) {
   const [step, setStep] = useState<Step>("service");
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedService, setSelectedService] = useState<PricedService | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [customer, setCustomer] = useState<CustomerFormData | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ bookingNumber: string; status: "PENDING" | "CONFIRMED"; startAt: string } | null>(null);
+  const [result, setResult] = useState<{ bookingNumber: string; status: "PENDING" | "CONFIRMED"; startAt: string; servicePrice: number } | null>(null);
 
-  function handleServiceSelect(service: Service) {
+  function handleServiceSelect(service: PricedService) {
     setSelectedService(service);
     setStep("date");
   }
@@ -48,6 +49,7 @@ export function BookingWizard({ services }: BookingWizardProps) {
       notes: customer.notes,
       photoPublicationConsent: customer.photoPublicationConsent,
       company: customer.company,
+      expectedServicePrice: selectedService.effectivePrice,
     });
 
     setSubmitting(false);
@@ -57,6 +59,7 @@ export function BookingWizard({ services }: BookingWizardProps) {
         bookingNumber: response.booking.bookingNumber,
         status: response.booking.status,
         startAt: response.booking.startAt,
+        servicePrice: response.booking.servicePrice,
       });
       setStep("success");
     } else {
@@ -160,6 +163,7 @@ export function BookingWizard({ services }: BookingWizardProps) {
       {step === "summary" && selectedService && selectedSlot && customer ? (
         <BookingSummary
           serviceName={selectedService.name}
+          servicePrice={selectedService.effectivePrice}
           slot={selectedSlot}
           customer={customer}
           showPhotoPublicationConsent={selectedService.slug === INSTITUTION_SERVICE_SLUG}

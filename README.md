@@ -214,6 +214,10 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
   - **Főoldali fotók kezelése az adminban:** Az `/admin/settings` oldalon közvetlenül feltölthető és cserélhető a főoldali Hero borítókép, a "Rólam" portré, valamint a "Miben segíthetek?" szolgáltatáskártyák egyedi képei.
   - **Globális alapárak módosítása:** Az `/admin/settings` oldalon a rendszer globális alapértelmezett darabárai
     is közvetlenül szerkeszthetők és adatbázisban tárolódnak.
+  - **Szolgáltatások árazása:** Az `/admin/settings` oldalon megadható az alapértelmezett szolgáltatásár
+    (kezdetben 0 Ft). Az `/admin/services` oldalon szolgáltatásonként külön ár állítható be; ha az ár
+    üres, a globális alapár érvényes. A foglalási folyamat megjeleníti az árat, és az új foglalás
+    rögzíti az akkori összeget, így a későbbi árváltozás nem módosítja a korábbi foglalásokat.
   - **Adminisztrátori fiókok kezelése:** Az `/admin/settings` oldalon közvetlenül hozzáadhatók új admin felhasználók (név, e-mail, min. 8 karakteres jelszó), illetve törölhetők a meglévő adminok (a saját fiók és az utolsó admin törlése védett).
   - **Egyedi esemény-árazás:** Az admin felületen az adott foglalás/esemény adatlapján (`/admin/bookings/[id]`)
     lehetőség van esemény-specifikus darabárak megadására, vagy az alapértelmezett árak visszaállítására.

@@ -49,6 +49,7 @@ export type CreateServiceInput = {
   name: string;
   slug?: string;
   description?: string;
+  servicePrice?: number | null;
   durationMinutes?: number;
   bufferMinutes?: number;
   approvalMode?: "AUTO" | "MANUAL";
@@ -88,6 +89,7 @@ export async function createService(input: CreateServiceInput): Promise<Service>
       name: input.name.trim(),
       slug,
       description: input.description?.trim() ?? "",
+      servicePrice: input.servicePrice ?? null,
       durationMinutes: input.durationMinutes ?? 60,
       bufferMinutes: input.bufferMinutes ?? 0,
       approvalMode: input.approvalMode ?? "AUTO",
@@ -111,6 +113,7 @@ export type UpdateServiceInput = Partial<
     NewService,
     | "name"
     | "description"
+    | "servicePrice"
     | "durationMinutes"
     | "bufferMinutes"
     | "approvalMode"

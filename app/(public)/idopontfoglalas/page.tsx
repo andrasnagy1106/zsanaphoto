@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { listActiveBookableServices } from "@/lib/services/service-service";
+import { getSettings } from "@/lib/services/settings-service";
 import { BookingWizard } from "@/components/booking/BookingWizard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
@@ -13,14 +14,21 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function BookingPage() {
-  const services = await listActiveBookableServices();
+  const [services, settings] = await Promise.all([
+    listActiveBookableServices(),
+    getSettings(),
+  ]);
+  const pricedServices = services.map((service) => ({
+    ...service,
+    effectivePrice: service.servicePrice ?? settings.defaultServicePrice,
+  }));
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-20">
       <SectionHeading level="h1" eyebrow="Foglalás" title="Időpontfoglalás" />
       <div className="mt-10">
-        {services.length > 0 ? (
-          <BookingWizard services={services} />
+        {pricedServices.length > 0 ? (
+          <BookingWizard services={pricedServices} />
         ) : (
           <p className="rounded-md border border-border bg-white p-5 text-center text-foreground/75">
             Időpont-egyeztetéshez hívj telefonon: <a className="font-semibold text-accent" href="tel:+36302133039">+36 30 213 3039</a>

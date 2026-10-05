@@ -34,6 +34,7 @@ export default async function AdminSettingsPage() {
             siteContactEmail: settings.siteContactEmail,
             minimumLeadTimeHours: settings.minimumLeadTimeHours,
             maxAdvanceDays: settings.maxAdvanceDays,
+            defaultServicePrice: settings.defaultServicePrice,
             defaultPhotoPrices: settings.defaultPhotoPrices,
           }}
         />

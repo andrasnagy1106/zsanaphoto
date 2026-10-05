@@ -66,6 +66,8 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
   }
 
   const status = determineInitialBookingStatus(service.approvalMode);
+  const settings = await getSiteSettings();
+  const servicePrice = service.servicePrice ?? settings.defaultServicePrice;
   const year = getZonedYear(input.start);
 
   let created: Booking;
@@ -100,6 +102,7 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
               bookingNumber,
               pin,
               serviceId: input.serviceId,
+              servicePrice,
               customerName: input.customerName,
               childName: input.childName ?? null,
               customerEmail: input.customerEmail,
@@ -199,6 +202,8 @@ export async function createAdminEventUser(input: CreateAdminEventUserInput): Pr
 
   const start = input.startAt ?? new Date();
   const end = addMinutes(start, service.durationMinutes || 60);
+  const settings = await getSiteSettings();
+  const servicePrice = service.servicePrice ?? settings.defaultServicePrice;
   const year = getZonedYear(start);
   const status = input.status ?? "COMPLETED";
 
@@ -227,6 +232,7 @@ export async function createAdminEventUser(input: CreateAdminEventUserInput): Pr
             bookingNumber,
             pin: assignedPin,
             serviceId: input.serviceId,
+            servicePrice,
             customerName: input.customerName.trim(),
             customerEmail: input.customerEmail.trim(),
             customerPhone: input.customerPhone?.trim() || "-",
