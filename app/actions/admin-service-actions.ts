@@ -26,7 +26,6 @@ export async function createServiceAction(formData: unknown): Promise<AdminActio
     name: parsed.data.name,
     slug: parsed.data.slug || undefined,
     description: parsed.data.description,
-    servicePrice: parsed.data.servicePrice,
     durationMinutes: parsed.data.durationMinutes,
     bufferMinutes: parsed.data.bufferMinutes,
     approvalMode: parsed.data.approvalMode,
@@ -63,7 +62,6 @@ export async function updateServiceAction(formData: unknown): Promise<AdminActio
   const input: UpdateServiceInput = {
     name: parsed.data.name,
     description: parsed.data.description,
-    servicePrice: parsed.data.servicePrice,
     durationMinutes: parsed.data.durationMinutes,
     bufferMinutes: parsed.data.bufferMinutes,
     approvalMode: parsed.data.approvalMode,

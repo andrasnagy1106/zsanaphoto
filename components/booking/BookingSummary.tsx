@@ -1,11 +1,9 @@
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
-import { formatPrice } from "@/lib/photo-order-catalog";
 import type { CustomerFormData } from "./CustomerForm";
 import type { Slot } from "./SlotPicker";
 
 interface BookingSummaryProps {
   serviceName: string;
-  servicePrice: number;
   slot: Slot;
   customer: CustomerFormData;
   showPhotoPublicationConsent?: boolean;
@@ -18,7 +16,6 @@ interface BookingSummaryProps {
 
 export function BookingSummary({
   serviceName,
-  servicePrice,
   slot,
   customer,
   showPhotoPublicationConsent = false,
@@ -39,7 +36,6 @@ export function BookingSummary({
         <p className="text-foreground/70">
           {formatZonedTime(start)} - {formatZonedTime(end)}
         </p>
-        <p className="mt-2 font-semibold text-accent">Ár: {formatPrice(servicePrice)}</p>
 
         <dl className="mt-4 space-y-1 border-t border-border pt-4 text-sm">
           <div className="flex justify-between gap-4">

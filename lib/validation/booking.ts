@@ -3,7 +3,6 @@ import { z } from "zod";
 export const createBookingInputSchema = z.object({
   serviceId: z.string().min(1, "Válassz szolgáltatást."),
   startAt: z.string().min(1, "Válassz időpontot."),
-  expectedServicePrice: z.coerce.number().int().min(0).max(100000).optional(),
   name: z.string().trim().min(2, "A név legalább 2 karakter legyen.").max(100),
   childName: z.string().trim().max(100).optional(),
   email: z.string().trim().email("Adj meg érvényes e-mail címet.").max(200),

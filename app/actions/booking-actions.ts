@@ -13,7 +13,6 @@ import {
   rescheduleBookingByCustomer,
 } from "@/lib/services/booking-service";
 import { getServiceById } from "@/lib/services/service-service";
-import { getSettings } from "@/lib/services/settings-service";
 import { getAvailableSlotsForDate } from "@/lib/services/availability-service";
 import { INSTITUTION_SERVICE_SLUG } from "@/lib/constants";
 import { checkRateLimit } from "@/lib/utils/rate-limit";
@@ -28,7 +27,6 @@ export interface CreateBookingActionResult {
     status: "PENDING" | "CONFIRMED";
     startAt: string;
     endAt: string;
-    servicePrice: number;
   };
 }
 
@@ -66,7 +64,6 @@ export async function createBookingAction(formData: unknown): Promise<CreateBook
         status: "CONFIRMED",
         startAt: parsed.data.startAt,
         endAt: parsed.data.startAt,
-        servicePrice: parsed.data.expectedServicePrice ?? 0,
       },
     };
   }
@@ -80,11 +77,6 @@ export async function createBookingAction(formData: unknown): Promise<CreateBook
     const service = await getServiceById(parsed.data.serviceId);
     if (!service || !service.active || !service.onlineBookingEnabled) {
       return { success: false, error: "A kiválasztott szolgáltatás nem érhető el." };
-    }
-    const settings = await getSettings();
-    const currentServicePrice = service.servicePrice ?? settings.defaultServicePrice;
-    if (parsed.data.expectedServicePrice !== undefined && currentServicePrice !== parsed.data.expectedServicePrice) {
-      return { success: false, error: "A szolgáltatás ára időközben megváltozott. Frissítsd az oldalt, majd próbáld újra." };
     }
 
     const availableSlots = await getAvailableSlotsForDate(service.id, getZonedDateIso(startAt));
@@ -111,7 +103,6 @@ export async function createBookingAction(formData: unknown): Promise<CreateBook
         status: booking.status as "PENDING" | "CONFIRMED",
         startAt: booking.startAt.toISOString(),
         endAt: booking.endAt.toISOString(),
-        servicePrice: booking.servicePrice,
       },
     };
   } catch (error) {

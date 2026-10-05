@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
-import { formatPrice } from "@/lib/photo-order-catalog";
 
 interface BookingSuccessProps {
   bookingNumber: string;
   status: "PENDING" | "CONFIRMED";
   startAt: string;
-  servicePrice: number;
 }
 
-export function BookingSuccess({ bookingNumber, status, startAt, servicePrice }: BookingSuccessProps) {
+export function BookingSuccess({ bookingNumber, status, startAt }: BookingSuccessProps) {
   const start = new Date(startAt);
 
   return (
@@ -27,11 +25,6 @@ export function BookingSuccess({ bookingNumber, status, startAt, servicePrice }:
         <p className="text-foreground">
           {formatZonedHungarianDate(start)} {formatZonedTime(start)}
         </p>
-      </div>
-
-      <div className="mt-4 space-y-1">
-        <p className="text-sm text-foreground/60">Szolgáltatás ára</p>
-        <p className="font-semibold text-foreground">{formatPrice(servicePrice)}</p>
       </div>
 
       <p className="mt-6 text-sm font-medium text-foreground">

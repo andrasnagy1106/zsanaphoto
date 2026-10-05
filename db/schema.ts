@@ -83,7 +83,6 @@ export const services = pgTable("services", {
   name: text("name").notNull(),
   slug: text("slug").notNull(),
   description: text("description").notNull().default(""),
-  servicePrice: integer("service_price"),
   durationMinutes: integer("duration_minutes").notNull(),
   bufferMinutes: integer("buffer_minutes").notNull().default(0),
   approvalMode: approvalModeEnum("approval_mode").notNull().default("AUTO"),
@@ -165,7 +164,6 @@ export const bookings = pgTable("bookings", {
   serviceId: text("service_id")
     .notNull()
     .references(() => services.id, { onDelete: "restrict" }),
-  servicePrice: integer("service_price").notNull().default(0),
   customerName: text("customer_name").notNull(),
   childName: text("child_name"),
   customerEmail: text("customer_email").notNull(),
@@ -278,7 +276,6 @@ export const siteSettings = pgTable("site_settings", {
     .notNull()
     .default(2),
   maxAdvanceDays: integer("max_advance_days").notNull().default(90),
-  defaultServicePrice: integer("default_service_price").notNull().default(0),
   defaultPhotoPrices: jsonb("default_photo_prices").$type<Partial<Record<PhotoPrintSize, number>> | null>(),
   aboutPhotoPublicId: text("about_photo_public_id"),
   aboutPhotoUrl: text("about_photo_url"),

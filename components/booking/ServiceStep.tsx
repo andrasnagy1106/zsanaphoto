@@ -1,11 +1,8 @@
 import type { Service } from "@/db/schema";
-import { formatPrice } from "@/lib/photo-order-catalog";
-
-type PricedService = Service & { effectivePrice: number };
 
 interface ServiceStepProps {
-  services: PricedService[];
-  onSelect: (service: PricedService) => void;
+  services: Service[];
+  onSelect: (service: Service) => void;
 }
 
 export function ServiceStep({ services, onSelect }: ServiceStepProps) {
@@ -22,7 +19,6 @@ export function ServiceStep({ services, onSelect }: ServiceStepProps) {
           <p className="mt-2 text-sm text-foreground/70">
             {service.description ?? `${service.durationMinutes} perces időpontfoglalás.`}
           </p>
-          <p className="mt-4 font-semibold text-accent">{formatPrice(service.effectivePrice)}</p>
         </button>
       ))}
     </div>

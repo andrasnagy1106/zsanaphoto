@@ -105,34 +105,13 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormDat
           </div>
         </div>
 
-        <div className="border-t border-border pt-4">
-          <label htmlFor="defaultServicePrice" className="block text-sm font-semibold text-foreground">
-            Alapértelmezett szolgáltatásár (Ft)
-          </label>
-          <p className="mt-1 text-xs text-foreground/60">
-            Ezt az árat használja a rendszer, ha egy szolgáltatásnál nincs külön ár megadva.
-          </p>
-          <input
-            id="defaultServicePrice"
-            type="number"
-            min={0}
-            max={100000}
-            step={1}
-            className="mt-2 block w-full min-h-11 rounded-md border border-border px-3 py-2 text-sm"
-            {...register("defaultServicePrice")}
-          />
-          {errors.defaultServicePrice ? (
-            <p className="mt-1 text-sm text-red-600">{errors.defaultServicePrice.message}</p>
-          ) : null}
-        </div>
-
         {/* Global Default Photo Prices */}
         <div className="pt-4 border-t border-border">
           <label className="block text-sm font-semibold text-foreground">
             Alapértelmezett fotórendelési darabárak (Ft / db)
           </label>
           <p className="mt-1 text-xs text-foreground/60">
-            Ezeket az alapárakat használja a rendszer az új foglalásoknál és a fotórendelésnél, ha nincs egyedi esemény-ár megadva.
+            Ezek a fotónyomatok és a digitális képek darabárai. Az új rendelések ezeket használják, ha az adott foglaláshoz nincs egyedi árlista megadva.
           </p>
 
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">

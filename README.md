@@ -212,15 +212,10 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
     a többi admin képfeltöltő szükség esetén automatikusan leméretezi a nagy fájlokat. Az álló és
     fekvő fotók eredeti képaránya megmarad, a galéria- és rendelési nézetek nem vágnak le a képből.
   - **Főoldali fotók kezelése az adminban:** Az `/admin/settings` oldalon közvetlenül feltölthető és cserélhető a főoldali Hero borítókép, a "Rólam" portré, valamint a "Miben segíthetek?" szolgáltatáskártyák egyedi képei.
-  - **Globális alapárak módosítása:** Az `/admin/settings` oldalon a rendszer globális alapértelmezett darabárai
-    is közvetlenül szerkeszthetők és adatbázisban tárolódnak.
-  - **Szolgáltatások árazása:** Az `/admin/settings` oldalon megadható az alapértelmezett szolgáltatásár
-    (kezdetben 0 Ft). Az `/admin/services` oldalon szolgáltatásonként külön ár állítható be; ha az ár
-    üres, a globális alapár érvényes. A foglalási folyamat megjeleníti az árat, és az új foglalás
-    rögzíti az akkori összeget, így a későbbi árváltozás nem módosítja a korábbi foglalásokat.
+  - **Fotó- és digitális képek árai:** Az `/admin/settings` oldalon a nyomatméretek és a digitális képek
+    globális darabárai szerkeszthetők. Az adott foglalás/esemény adatlapján (`/admin/bookings/[id]`)
+    ettől eltérő fotó- és digitális árak adhatók meg, vagy visszaállíthatók a globális alapárak.
   - **Adminisztrátori fiókok kezelése:** Az `/admin/settings` oldalon közvetlenül hozzáadhatók új admin felhasználók (név, e-mail, min. 8 karakteres jelszó), illetve törölhetők a meglévő adminok (a saját fiók és az utolsó admin törlése védett).
-  - **Egyedi esemény-árazás:** Az admin felületen az adott foglalás/esemény adatlapján (`/admin/bookings/[id]`)
-    lehetőség van esemény-specifikus darabárak megadására, vagy az alapértelmezett árak visszaállítására.
   - A rendelés mentésekor tételes áras és végösszeggel ellátott e-mailes visszaigazolást küld a rendszer
     az ügyfélnek és az adminnak.
   - Az `/admin/photo-orders` oldalon követhető az összes rendelés állapota, összbevétele, valamint a tételes
