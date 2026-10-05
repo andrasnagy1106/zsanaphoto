@@ -37,7 +37,6 @@ function makeSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
     id: "default",
     timezone: "Europe/Budapest",
     adminNotificationEmail: "admin@zsanaphoto.dev",
-    siteContactEmail: "admin@zsanaphoto.dev",
     minimumLeadTimeHours: 2,
     maxAdvanceDays: 90,
     defaultPhotoPrices: null,

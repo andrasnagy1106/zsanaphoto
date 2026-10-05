@@ -31,7 +31,6 @@ export default async function AdminSettingsPage() {
           defaultValues={{
             timezone: settings.timezone,
             adminNotificationEmail: settings.adminNotificationEmail,
-            siteContactEmail: settings.siteContactEmail,
             minimumLeadTimeHours: settings.minimumLeadTimeHours,
             maxAdvanceDays: settings.maxAdvanceDays,
             defaultPhotoPrices: settings.defaultPhotoPrices,

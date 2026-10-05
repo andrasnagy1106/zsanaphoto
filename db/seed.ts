@@ -144,7 +144,6 @@ async function main() {
       id: "default",
       timezone: "Europe/Budapest",
       adminNotificationEmail: process.env.ADMIN_NOTIFICATION_EMAIL ?? "admin@zsanaphoto.dev",
-      siteContactEmail: process.env.ADMIN_NOTIFICATION_EMAIL ?? "admin@zsanaphoto.dev",
       minimumLeadTimeHours: 2,
       maxAdvanceDays: 90,
     });

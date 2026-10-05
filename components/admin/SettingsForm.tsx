@@ -63,21 +63,6 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormDat
           ) : null}
         </div>
 
-        <div>
-          <label htmlFor="siteContactEmail" className="block text-sm font-medium text-foreground">
-            Publikus kapcsolattartási e-mail
-          </label>
-          <input
-            id="siteContactEmail"
-            type="email"
-            className="mt-1.5 block w-full min-h-11 rounded-md border border-border px-3 py-2 text-sm"
-            {...register("siteContactEmail")}
-          />
-          {errors.siteContactEmail ? (
-            <p className="mt-1 text-sm text-red-600">{errors.siteContactEmail.message}</p>
-          ) : null}
-        </div>
-
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="minimumLeadTimeHours" className="block text-sm font-medium text-foreground">

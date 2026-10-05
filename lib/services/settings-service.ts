@@ -24,7 +24,6 @@ export async function getSettings(): Promise<SiteSettings> {
     id: SETTINGS_ID,
     timezone: BUSINESS_TIMEZONE,
     adminNotificationEmail: "",
-    siteContactEmail: "",
     minimumLeadTimeHours: DEFAULT_MINIMUM_LEAD_TIME_HOURS,
     maxAdvanceDays: DEFAULT_MAX_ADVANCE_DAYS,
     defaultPhotoPrices: null,
@@ -40,7 +39,6 @@ export async function getSettings(): Promise<SiteSettings> {
 export interface UpdateSettingsInput {
   timezone: string;
   adminNotificationEmail: string;
-  siteContactEmail: string;
   minimumLeadTimeHours: number;
   maxAdvanceDays: number;
   defaultPhotoPrices?: Partial<Record<PhotoPrintSize, number>> | null;
@@ -90,7 +88,6 @@ export async function updateAboutPhoto(file: Buffer, filename?: string): Promise
         .values({
           id: SETTINGS_ID,
           adminNotificationEmail: "",
-          siteContactEmail: "",
           aboutPhotoPublicId: uploadResult.publicId,
           aboutPhotoUrl: uploadResult.secureUrl,
         })

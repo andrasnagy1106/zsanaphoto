@@ -272,7 +272,6 @@ export const siteSettings = pgTable("site_settings", {
   id: text("id").primaryKey().default("default"),
   timezone: text("timezone").notNull().default("Europe/Budapest"),
   adminNotificationEmail: text("admin_notification_email").notNull(),
-  siteContactEmail: text("site_contact_email").notNull(),
   minimumLeadTimeHours: integer("minimum_lead_time_hours")
     .notNull()
     .default(2),
