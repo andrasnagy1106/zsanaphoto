@@ -54,6 +54,30 @@ const timestamps = {
     .defaultNow(),
 };
 
+export const availabilityCalendars = pgTable("availability_calendars", {
+  id: id(),
+  name: text("name").notNull(),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("availability_calendars_name_idx").on(table.name),
+]);
+
+export const availabilityCalendarSlots = pgTable("availability_calendar_slots", {
+  id: id(),
+  calendarId: text("calendar_id")
+    .notNull()
+    .references(() => availabilityCalendars.id, { onDelete: "cascade" }),
+  date: text("date").notNull(), // "YYYY-MM-DD"
+  startTime: text("start_time").notNull(), // "HH:mm"
+  endTime: text("end_time").notNull(), // "HH:mm"
+  active: boolean("active").notNull().default(true),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("availability_calendar_slots_unique_idx")
+    .on(table.calendarId, table.date, table.startTime, table.endTime),
+  index("availability_calendar_slots_calendar_date_idx").on(table.calendarId, table.date),
+]);
+
 export const services = pgTable("services", {
   id: id(),
   name: text("name").notNull(),
@@ -63,6 +87,9 @@ export const services = pgTable("services", {
   bufferMinutes: integer("buffer_minutes").notNull().default(0),
   approvalMode: approvalModeEnum("approval_mode").notNull().default("AUTO"),
   availabilityMode: serviceAvailabilityModeEnum("availability_mode").notNull().default("GLOBAL"),
+  availabilityCalendarId: text("availability_calendar_id")
+    .references(() => availabilityCalendars.id, { onDelete: "set null" }),
+  onlineBookingEnabled: boolean("online_booking_enabled").notNull().default(true),
   dateRangeStart: text("date_range_start"), // "YYYY-MM-DD" or null
   dateRangeEnd: text("date_range_end"), // "YYYY-MM-DD" or null
   requiresChildName: boolean("requires_child_name").notNull().default(false),
@@ -322,6 +349,10 @@ export const siteTexts = pgTable("site_texts", {
 
 export type Service = typeof services.$inferSelect;
 export type NewService = typeof services.$inferInsert;
+export type AvailabilityCalendar = typeof availabilityCalendars.$inferSelect;
+export type NewAvailabilityCalendar = typeof availabilityCalendars.$inferInsert;
+export type AvailabilityCalendarSlot = typeof availabilityCalendarSlots.$inferSelect;
+export type NewAvailabilityCalendarSlot = typeof availabilityCalendarSlots.$inferInsert;
 export type AvailabilityRule = typeof availabilityRules.$inferSelect;
 export type NewAvailabilityRule = typeof availabilityRules.$inferInsert;
 export type ServiceAvailabilityRule = typeof serviceAvailabilityRules.$inferSelect;

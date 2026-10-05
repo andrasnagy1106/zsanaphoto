@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { updateServiceSchema } from "@/lib/validation/service";
 import { updateServiceAction } from "@/app/actions/admin-service-actions";
-import type { Service, ServiceAvailabilityRule } from "@/db/schema";
+import type { AvailabilityCalendar, Service, ServiceAvailabilityRule } from "@/db/schema";
 import { ServiceAvailabilityRuleRow } from "./ServiceAvailabilityRuleRow";
 import { DeleteServiceModal } from "./DeleteServiceModal";
 
@@ -18,9 +18,10 @@ const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 interface ServiceEditFormProps {
   service: Service;
   customRules?: ServiceAvailabilityRule[];
+  calendars?: AvailabilityCalendar[];
 }
 
-export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormProps) {
+export function ServiceEditForm({ service, customRules = [], calendars = [] }: ServiceEditFormProps) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const {
@@ -38,6 +39,8 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
       bufferMinutes: service.bufferMinutes,
       approvalMode: service.approvalMode,
       availabilityMode: service.availabilityMode,
+      availabilityCalendarId: service.availabilityCalendarId ?? "",
+      onlineBookingEnabled: service.onlineBookingEnabled,
       dateRangeStart: service.dateRangeStart ?? "",
       dateRangeEnd: service.dateRangeEnd ?? "",
       requiresChildName: service.requiresChildName,
@@ -47,6 +50,7 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
   });
 
   const availabilityMode = useWatch({ control, name: "availabilityMode" });
+  const availabilityCalendarId = useWatch({ control, name: "availabilityCalendarId" });
   const ruleByDay = new Map(customRules.map((r) => [r.dayOfWeek, r]));
 
   const onSubmit = handleSubmit(async (data) => {
@@ -101,7 +105,7 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
             </select>
           </div>
 
-          <div>
+          <div className={availabilityCalendarId ? "hidden" : ""}>
             <label className="block text-sm font-medium text-foreground" htmlFor={`${service.id}-duration`}>
               Időtartam (perc)
             </label>
@@ -115,7 +119,7 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
             {errors.durationMinutes ? <p className="mt-1 text-sm text-red-600">{errors.durationMinutes.message}</p> : null}
           </div>
 
-          <div>
+          <div className={availabilityCalendarId ? "hidden" : ""}>
             <label className="block text-sm font-medium text-foreground" htmlFor={`${service.id}-buffer`}>
               Puffer (perc)
             </label>
@@ -143,6 +147,25 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
             </select>
             <p className="mt-1 text-xs text-foreground/60">
               Válaszd az egyedi elérhetőséget, ha ez az esemény csak speciális napokon/órákban foglalható.
+            </p>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-foreground" htmlFor={`${service.id}-calendar`}>
+              Eseménynaptár
+            </label>
+            <select
+              id={`${service.id}-calendar`}
+              className="mt-1.5 block w-full min-h-11 rounded-md border border-border px-3 py-2 text-sm"
+              {...register("availabilityCalendarId")}
+            >
+              <option value="">Nincs kiválasztva, a heti szabályok érvényesek</option>
+              {calendars.map((calendar) => (
+                <option key={calendar.id} value={calendar.id}>{calendar.name}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-foreground/60">
+              Naptár választásakor csak annak kézzel rögzített idősávjai foglalhatók, a heti szabályok nem érvényesek.
             </p>
           </div>
 
@@ -193,6 +216,18 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
 
           <div className="flex items-center gap-2 sm:col-span-2">
             <input
+              id={`${service.id}-onlineBookingEnabled`}
+              type="checkbox"
+              className="h-5 w-5"
+              {...register("onlineBookingEnabled")}
+            />
+            <label htmlFor={`${service.id}-onlineBookingEnabled`} className="text-sm font-medium text-foreground">
+              Online időpontfoglalás engedélyezése ehhez a szolgáltatáshoz
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2 sm:col-span-2">
+            <input
               id={`${service.id}-requiresChildName`}
               type="checkbox"
               className="h-5 w-5"
@@ -235,7 +270,7 @@ export function ServiceEditForm({ service, customRules = [] }: ServiceEditFormPr
       </form>
 
       {/* If custom availability mode is selected, show weekday rules table for this service */}
-      {availabilityMode === "CUSTOM" && (
+      {availabilityMode === "CUSTOM" && !availabilityCalendarId && (
         <div className="mt-6 border-t border-border pt-5">
           <h3 className="font-display text-base text-foreground">
             Egyedi heti nyitvatartási szabályok – {service.name}

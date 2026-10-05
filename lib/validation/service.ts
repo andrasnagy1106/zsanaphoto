@@ -10,6 +10,8 @@ export const updateServiceSchema = z.object({
   bufferMinutes: z.coerce.number().int().min(0).max(600),
   approvalMode: z.enum(["AUTO", "MANUAL"]),
   availabilityMode: z.enum(["GLOBAL", "CUSTOM"]).default("GLOBAL"),
+  availabilityCalendarId: z.string().trim().optional().transform((value) => value || null),
+  onlineBookingEnabled: z.coerce.boolean().default(true),
   dateRangeStart: z
     .string()
     .trim()
@@ -43,6 +45,8 @@ export const createServiceSchema = z.object({
   bufferMinutes: z.coerce.number().int().min(0).max(600).default(0),
   approvalMode: z.enum(["AUTO", "MANUAL"]).default("AUTO"),
   availabilityMode: z.enum(["GLOBAL", "CUSTOM"]).default("GLOBAL"),
+  availabilityCalendarId: z.string().trim().optional().transform((value) => value || null),
+  onlineBookingEnabled: z.coerce.boolean().default(true),
   dateRangeStart: z
     .string()
     .trim()

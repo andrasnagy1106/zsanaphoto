@@ -16,6 +16,8 @@ function makeService(overrides: Partial<Service> = {}): Service {
     bufferMinutes: 15,
     approvalMode: "AUTO",
     availabilityMode: "GLOBAL",
+    availabilityCalendarId: null,
+    onlineBookingEnabled: true,
     dateRangeStart: null,
     dateRangeEnd: null,
     requiresChildName: false,
@@ -55,6 +57,7 @@ function makeContext(overrides: Partial<AvailabilityContext> = {}): Availability
     service: makeService(),
     settings: makeSettings(),
     rules: [{ dayOfWeek: 1, startTime: "09:00", endTime: "17:00" }],
+    calendarSlotsByDate: new Map(),
     dateOverridesByDate: new Map(),
     blockedPeriods: [],
     activeBookings: [],
@@ -192,5 +195,38 @@ describe("computeSlotsForDate - date overrides", () => {
     const slots = computeSlotsForDate(MONDAY, ctx);
     expect(slots.length).toBeGreaterThan(0);
     expect(slots[0].start.toISOString()).toBe("2026-10-12T16:00:00.000Z");
+  });
+});
+
+describe("computeSlotsForDate - explicit availability calendar", () => {
+  it("uses only manually entered date/time slots and their exact end times", () => {
+    const ctx = makeContext({
+      service: makeService({
+        availabilityCalendarId: "calendar-1",
+        durationMinutes: 60,
+        bufferMinutes: 45,
+      }),
+      calendarSlotsByDate: new Map([
+        [MONDAY, [
+          { startTime: "14:00", endTime: "14:30" },
+          { startTime: "18:30", endTime: "19:00" },
+        ]],
+      ]),
+    });
+
+    const slots = computeSlotsForDate(MONDAY, ctx);
+    expect(slots).toHaveLength(2);
+    expect(slots.map((slot) => [slot.start.toISOString(), slot.end.toISOString()])).toEqual([
+      ["2026-10-12T12:00:00.000Z", "2026-10-12T12:30:00.000Z"],
+      ["2026-10-12T16:30:00.000Z", "2026-10-12T17:00:00.000Z"],
+    ]);
+  });
+
+  it("does not fall back to weekly rules when the selected calendar has no slots", () => {
+    const ctx = makeContext({
+      service: makeService({ availabilityCalendarId: "calendar-1" }),
+    });
+
+    expect(computeSlotsForDate(MONDAY, ctx)).toHaveLength(0);
   });
 });

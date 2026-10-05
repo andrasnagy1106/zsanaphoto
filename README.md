@@ -32,7 +32,7 @@ db/
   schema.ts, client.ts, migrate.ts, seed.ts, migrations/
 lib/
   services/        booking-service, photo-order-service, availability-service, inquiry-service,
-                    service-service, availability-rule-service,
+                    service-service, availability-rule-service, availability-calendar-service,
                     availability-date-override-service, blocked-period-service, settings-service
   providers/email/  EmailProvider absztrakció (Resend / Console)
   auth/             session.ts (HMAC token), password.ts (bcrypt), guard.ts (requireAdmin)
@@ -167,6 +167,15 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
 - A szabad időpontokat a rendszer **mindig** az adatbázisban tárolt `availabilityRules`,
   `availabilityDateOverrides`, `blockedPeriods` és aktív (`PENDING`/`CONFIRMED`) `bookings`
   rekordok alapján számolja ki - nincsenek frontendbe égetett időpontok.
+- Az `/admin/services` oldalon szolgáltatásonként kapcsolható az online időpontfoglalás. Kikapcsolt
+  szolgáltatás nem jelenik meg a foglalóban, és szerveroldalon sem foglalható. Ha nincs aktív,
+  foglalható szolgáltatás, az `/idopontfoglalas` oldal űrlap helyett a telefonszámot jeleníti meg.
+- Az adminban névvel ellátott eseménynaptárak hozhatók létre, dátumonkénti, kézzel megadott
+  kezdési és befejezési időkkel. Minden bejegyzés egy külön foglalható alkalom; a rendszer nem
+  generál további időpontokat az időtartam vagy a puffer alapján. Ha egy naptár hozzá van rendelve
+  egy szolgáltatáshoz, kizárólag annak idősávjai érvényesek, és felülírják az általános, illetve
+  szolgáltatásspecifikus heti szabályokat. Naptár hozzárendelése nélkül a meglévő heti szabályok
+  működnek változatlanul.
 - Az `/admin/availability` oldalon a hét minden napjához beállítható az alapértelmezett
   elérhetőség. Konkrét dátumhoz egy vagy több egyedi idősáv is felvehető; ezek az adott napon
   felülírják a heti alapértelmezést. Teljes nap vagy tetszőleges időszak az

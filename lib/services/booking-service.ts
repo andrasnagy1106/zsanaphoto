@@ -9,8 +9,8 @@ import type { PhotoPrintSize } from "@/lib/photo-order-catalog";
 import { getEmailProvider } from "@/lib/providers/email";
 import { generateBookingPin } from "@/lib/utils/booking-pin";
 import { BookingConflictError, NotFoundError } from "@/lib/utils/errors";
-import { addMinutes, getZonedYear, zonedDateTimeToUtc } from "@/lib/utils/time";
-import { getSiteSettings, isSlotAvailable } from "./availability-service";
+import { addMinutes, getZonedDateIso, getZonedYear, zonedDateTimeToUtc } from "@/lib/utils/time";
+import { getAvailableSlotsForDate, getSiteSettings, isSlotAvailable } from "./availability-service";
 import { canCancelBooking, canConfirmBooking, determineInitialBookingStatus } from "./booking-rules";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -559,12 +559,10 @@ export async function rescheduleBookingByCustomer(input: RescheduleBookingInput)
   }
 
   const service = bookingWithService.service;
-  const newEnd = addMinutes(input.newStart, service.durationMinutes);
-
-  const available = await isSlotAvailable(service.id, input.newStart, newEnd);
-  if (!available) {
-    throw new BookingConflictError();
-  }
+  const slots = await getAvailableSlotsForDate(service.id, getZonedDateIso(input.newStart));
+  const selectedSlot = slots.find((slot) => slot.start.getTime() === input.newStart.getTime());
+  if (!selectedSlot) throw new BookingConflictError();
+  const newEnd = selectedSlot.end;
 
   let updated: Booking;
   try {

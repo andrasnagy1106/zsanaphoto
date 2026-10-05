@@ -26,6 +26,21 @@ describe("createServiceSchema", () => {
       }).success,
     ).toBe(false);
   });
+
+  it("accepts phone-only services with a selected calendar", () => {
+    const parsed = createServiceSchema.parse({
+      name: "Telefonos egyeztetés",
+      durationMinutes: 60,
+      bufferMinutes: 15,
+      approvalMode: "AUTO",
+      availabilityMode: "GLOBAL",
+      availabilityCalendarId: "calendar-1",
+      onlineBookingEnabled: false,
+    });
+
+    expect(parsed.availabilityCalendarId).toBe("calendar-1");
+    expect(parsed.onlineBookingEnabled).toBe(false);
+  });
 });
 
 describe("updateServiceSchema", () => {

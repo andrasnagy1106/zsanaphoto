@@ -1,4 +1,4 @@
-import { asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   bookings,
@@ -27,6 +27,14 @@ export async function listActiveServices(): Promise<Service[]> {
     .orderBy(asc(services.sortOrder));
 }
 
+export async function listActiveBookableServices(): Promise<Service[]> {
+  return db
+    .select()
+    .from(services)
+    .where(and(eq(services.active, true), eq(services.onlineBookingEnabled, true)))
+    .orderBy(asc(services.sortOrder));
+}
+
 export async function getServiceBySlug(slug: string): Promise<Service | null> {
   const [service] = await db.select().from(services).where(eq(services.slug, slug)).limit(1);
   return service ?? null;
@@ -45,6 +53,8 @@ export type CreateServiceInput = {
   bufferMinutes?: number;
   approvalMode?: "AUTO" | "MANUAL";
   availabilityMode?: "GLOBAL" | "CUSTOM";
+  availabilityCalendarId?: string | null;
+  onlineBookingEnabled?: boolean;
   dateRangeStart?: string | null;
   dateRangeEnd?: string | null;
   requiresChildName?: boolean;
@@ -82,6 +92,8 @@ export async function createService(input: CreateServiceInput): Promise<Service>
       bufferMinutes: input.bufferMinutes ?? 0,
       approvalMode: input.approvalMode ?? "AUTO",
       availabilityMode: input.availabilityMode ?? "GLOBAL",
+      availabilityCalendarId: input.availabilityCalendarId || null,
+      onlineBookingEnabled: input.onlineBookingEnabled ?? true,
       dateRangeStart: input.dateRangeStart || null,
       dateRangeEnd: input.dateRangeEnd || null,
       requiresChildName: input.requiresChildName ?? false,
@@ -103,6 +115,8 @@ export type UpdateServiceInput = Partial<
     | "bufferMinutes"
     | "approvalMode"
     | "availabilityMode"
+    | "availabilityCalendarId"
+    | "onlineBookingEnabled"
     | "dateRangeStart"
     | "dateRangeEnd"
     | "requiresChildName"

@@ -13,10 +13,11 @@ import {
   rescheduleBookingByCustomer,
 } from "@/lib/services/booking-service";
 import { getServiceById } from "@/lib/services/service-service";
+import { getAvailableSlotsForDate } from "@/lib/services/availability-service";
 import { INSTITUTION_SERVICE_SLUG } from "@/lib/constants";
 import { checkRateLimit } from "@/lib/utils/rate-limit";
 import { BookingConflictError, NotFoundError } from "@/lib/utils/errors";
-import { addMinutes } from "@/lib/utils/time";
+import { getZonedDateIso } from "@/lib/utils/time";
 
 export interface CreateBookingActionResult {
   success: boolean;
@@ -74,16 +75,18 @@ export async function createBookingAction(formData: unknown): Promise<CreateBook
 
   try {
     const service = await getServiceById(parsed.data.serviceId);
-    if (!service || !service.active) {
+    if (!service || !service.active || !service.onlineBookingEnabled) {
       return { success: false, error: "A kiválasztott szolgáltatás nem érhető el." };
     }
 
-    const endAt = addMinutes(startAt, service.durationMinutes);
+    const availableSlots = await getAvailableSlotsForDate(service.id, getZonedDateIso(startAt));
+    const selectedSlot = availableSlots.find((slot) => slot.start.getTime() === startAt.getTime());
+    if (!selectedSlot) return { success: false, error: "A kiválasztott időpont már nem érhető el." };
 
     const booking = await createBooking({
       serviceId: parsed.data.serviceId,
       start: startAt,
-      end: endAt,
+      end: selectedSlot.end,
       customerName: parsed.data.name,
       childName: service.requiresChildName ? parsed.data.childName : null,
       customerEmail: parsed.data.email,

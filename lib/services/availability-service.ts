@@ -1,6 +1,7 @@
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
+  availabilityCalendarSlots,
   availabilityDateOverrides,
   availabilityRules,
   blockedPeriods,
@@ -28,6 +29,7 @@ export interface AvailabilityContext {
   service: Service;
   settings: SiteSettings;
   rules: { dayOfWeek: number; startTime: string; endTime: string }[];
+  calendarSlotsByDate: Map<string, { startTime: string; endTime: string }[]>;
   dateOverridesByDate: Map<string, { startTime: string; endTime: string }[]>;
   blockedPeriods: { startAt: Date; endAt: Date }[];
   activeBookings: { startAt: Date; endAt: Date }[];
@@ -45,9 +47,34 @@ async function loadAvailabilityContext(
     .where(eq(services.id, serviceId))
     .limit(1);
 
-  if (!service || !service.active) return null;
+  if (!service || !service.active || !service.onlineBookingEnabled) return null;
 
   const settings = await getSettings();
+
+  const calendarSlotsByDate = new Map<string, { startTime: string; endTime: string }[]>();
+  if (service.availabilityCalendarId) {
+    const calendarSlots = await db
+      .select({
+        date: availabilityCalendarSlots.date,
+        startTime: availabilityCalendarSlots.startTime,
+        endTime: availabilityCalendarSlots.endTime,
+      })
+      .from(availabilityCalendarSlots)
+      .where(
+        and(
+          eq(availabilityCalendarSlots.calendarId, service.availabilityCalendarId),
+          eq(availabilityCalendarSlots.active, true),
+          gte(availabilityCalendarSlots.date, getZonedDateIso(rangeStart, settings.timezone)),
+          lte(availabilityCalendarSlots.date, getZonedDateIso(rangeEnd, settings.timezone)),
+        ),
+      );
+
+    for (const slot of calendarSlots) {
+      const slotsForDate = calendarSlotsByDate.get(slot.date) ?? [];
+      slotsForDate.push({ startTime: slot.startTime, endTime: slot.endTime });
+      calendarSlotsByDate.set(slot.date, slotsForDate);
+    }
+  }
 
   let rules: { dayOfWeek: number; startTime: string; endTime: string }[];
 
@@ -125,6 +152,7 @@ async function loadAvailabilityContext(
     service,
     settings,
     rules,
+    calendarSlotsByDate,
     dateOverridesByDate,
     blockedPeriods: blocked,
     activeBookings,
@@ -137,7 +165,16 @@ export function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): bo
 }
 
 export function computeSlotsForDate(dateIso: string, ctx: AvailabilityContext): TimeSlot[] {
-  const { service, settings, rules, dateOverridesByDate, blockedPeriods, activeBookings, now } = ctx;
+  const {
+    service,
+    settings,
+    rules,
+    calendarSlotsByDate,
+    dateOverridesByDate,
+    blockedPeriods,
+    activeBookings,
+    now,
+  } = ctx;
 
   // If service has date range constraints, ensure dateIso falls within [dateRangeStart, dateRangeEnd]
   if (service.dateRangeStart && dateIso < service.dateRangeStart) {
@@ -147,24 +184,38 @@ export function computeSlotsForDate(dateIso: string, ctx: AvailabilityContext): 
     return [];
   }
 
+  const leadTimeCutoff = addMinutes(now, settings.minimumLeadTimeHours * 60);
+  const horizonCutoff = addMinutes(now, settings.maxAdvanceDays * 24 * 60);
+  const slots: TimeSlot[] = [];
+
+  const calendarRules = service.availabilityCalendarId
+    ? calendarSlotsByDate.get(dateIso) ?? []
+    : null;
+
+  if (calendarRules) {
+    for (const rule of calendarRules) {
+      const slotStart = zonedDateTimeToUtc(dateIso, rule.startTime, settings.timezone);
+      const slotEnd = zonedDateTimeToUtc(dateIso, rule.endTime, settings.timezone);
+      if (slotEnd <= slotStart) continue;
+      if (slotStart < leadTimeCutoff || slotStart > horizonCutoff) continue;
+      if (blockedPeriods.some((period) => overlaps(slotStart, slotEnd, period.startAt, period.endAt))) continue;
+      if (activeBookings.some((booking) => overlaps(slotStart, slotEnd, booking.startAt, booking.endAt))) continue;
+      slots.push({ start: slotStart, end: slotEnd });
+    }
+    return slots.sort((a, b) => a.start.getTime() - b.start.getTime());
+  }
+
   const dayOfWeek = getZonedDayOfWeek(
     zonedDateTimeToUtc(dateIso, "12:00", settings.timezone),
     settings.timezone,
   );
-
   const overrideRules = dateOverridesByDate.get(dateIso) ?? [];
-  const dayRules =
-    overrideRules.length > 0
-      ? overrideRules
-      : rules.filter((rule) => rule.dayOfWeek === dayOfWeek);
+  const dayRules = overrideRules.length > 0
+    ? overrideRules
+    : rules.filter((rule) => rule.dayOfWeek === dayOfWeek);
   if (dayRules.length === 0) return [];
 
   const stepMinutes = service.durationMinutes + service.bufferMinutes;
-  const leadTimeCutoff = addMinutes(now, settings.minimumLeadTimeHours * 60);
-  const horizonCutoff = addMinutes(now, settings.maxAdvanceDays * 24 * 60);
-
-  const slots: TimeSlot[] = [];
-
   for (const rule of dayRules) {
     let cursor = zonedDateTimeToUtc(dateIso, rule.startTime, settings.timezone);
     const ruleEnd = zonedDateTimeToUtc(dateIso, rule.endTime, settings.timezone);
@@ -176,19 +227,9 @@ export function computeSlotsForDate(dateIso: string, ctx: AvailabilityContext): 
       const slotStart = cursor;
       cursor = addMinutes(cursor, stepMinutes);
 
-      if (slotStart < leadTimeCutoff) continue;
-      if (slotStart > horizonCutoff) continue;
-
-      const blockedByPeriod = blockedPeriods.some((period) =>
-        overlaps(slotStart, slotEnd, period.startAt, period.endAt),
-      );
-      if (blockedByPeriod) continue;
-
-      const blockedByBooking = activeBookings.some((booking) =>
-        overlaps(slotStart, slotEnd, booking.startAt, booking.endAt),
-      );
-      if (blockedByBooking) continue;
-
+      if (slotStart < leadTimeCutoff || slotStart > horizonCutoff) continue;
+      if (blockedPeriods.some((period) => overlaps(slotStart, slotEnd, period.startAt, period.endAt))) continue;
+      if (activeBookings.some((booking) => overlaps(slotStart, slotEnd, booking.startAt, booking.endAt))) continue;
       slots.push({ start: slotStart, end: slotEnd });
     }
   }

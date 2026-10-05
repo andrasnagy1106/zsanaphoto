@@ -3,9 +3,14 @@
 import { useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceAction } from "@/app/actions/admin-service-actions";
+import type { AvailabilityCalendar } from "@/db/schema";
 import { slugify } from "@/lib/utils/slug";
 
-export function CreateServiceModal() {
+interface CreateServiceModalProps {
+  calendars?: AvailabilityCalendar[];
+}
+
+export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isPending, startTransition] = useTransition();
@@ -17,9 +22,11 @@ export function CreateServiceModal() {
   const bufferInputId = useId();
   const approvalSelectId = useId();
   const availSelectId = useId();
+  const calendarSelectId = useId();
   const startInputId = useId();
   const endInputId = useId();
   const activeInputId = useId();
+  const onlineBookingInputId = useId();
   const requiresChildNameInputId = useId();
   const generatesPinInputId = useId();
 
@@ -30,6 +37,8 @@ export function CreateServiceModal() {
   const [bufferMinutes, setBufferMinutes] = useState(15);
   const [approvalMode, setApprovalMode] = useState<"AUTO" | "MANUAL">("AUTO");
   const [availabilityMode, setAvailabilityMode] = useState<"GLOBAL" | "CUSTOM">("GLOBAL");
+  const [availabilityCalendarId, setAvailabilityCalendarId] = useState("");
+  const [onlineBookingEnabled, setOnlineBookingEnabled] = useState(true);
   const [dateRangeStart, setDateRangeStart] = useState("");
   const [dateRangeEnd, setDateRangeEnd] = useState("");
   const [requiresChildName, setRequiresChildName] = useState(false);
@@ -66,6 +75,8 @@ export function CreateServiceModal() {
         bufferMinutes,
         approvalMode,
         availabilityMode,
+        availabilityCalendarId: availabilityCalendarId || null,
+        onlineBookingEnabled,
         dateRangeStart: dateRangeStart || null,
         dateRangeEnd: dateRangeEnd || null,
         requiresChildName,
@@ -173,6 +184,23 @@ export function CreateServiceModal() {
               </div>
             </div>
 
+            <div>
+              <label htmlFor={calendarSelectId} className="block text-xs font-semibold text-foreground">
+                Eseménynaptár
+              </label>
+              <select
+                id={calendarSelectId}
+                value={availabilityCalendarId}
+                onChange={(e) => setAvailabilityCalendarId(e.target.value)}
+                className="mt-1.5 w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+              >
+                <option value="">Nincs kiválasztva, heti szabályok</option>
+                {calendars.map((calendar) => (
+                  <option key={calendar.id} value={calendar.id}>{calendar.name}</option>
+                ))}
+              </select>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor={approvalSelectId} className="block text-xs font-semibold text-foreground">
@@ -205,7 +233,20 @@ export function CreateServiceModal() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex items-center gap-2">
+              <input
+                id={onlineBookingInputId}
+                type="checkbox"
+                checked={onlineBookingEnabled}
+                onChange={(e) => setOnlineBookingEnabled(e.target.checked)}
+                className="size-4 rounded border-border accent-accent cursor-pointer"
+              />
+              <label htmlFor={onlineBookingInputId} className="text-xs font-medium text-foreground cursor-pointer">
+                Online időpontfoglalás engedélyezése
+              </label>
+            </div>
+
+            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${availabilityCalendarId ? "hidden" : ""}`}>
               <div>
                 <label htmlFor={durationInputId} className="block text-xs font-semibold text-foreground">
                   Időtartam (perc) *
@@ -215,7 +256,7 @@ export function CreateServiceModal() {
                   type="number"
                   min={5}
                   max={600}
-                  required
+                  required={!availabilityCalendarId}
                   value={durationMinutes}
                   onChange={(e) => setDurationMinutes(Number(e.target.value))}
                   className="mt-1.5 w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"

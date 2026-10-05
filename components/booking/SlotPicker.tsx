@@ -49,7 +49,7 @@ export function SlotPicker({ serviceId, dateIso, selectedSlot, onSelect }: SlotP
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       {slots.map((slot) => {
         const isSelected = selectedSlot?.startAt === slot.startAt;
         return (
@@ -59,11 +59,11 @@ export function SlotPicker({ serviceId, dateIso, selectedSlot, onSelect }: SlotP
             onClick={() => onSelect(slot)}
             aria-pressed={isSelected}
             className={cn(
-              "min-h-11 rounded-md border text-sm font-medium transition-colors",
+              "min-h-11 rounded-md border text-xs font-medium tabular-nums transition-colors sm:text-sm",
               isSelected ? "border-accent bg-accent text-white" : "border-border hover:border-accent",
             )}
           >
-            {formatZonedTime(new Date(slot.startAt))}
+            {formatZonedTime(new Date(slot.startAt))}–{formatZonedTime(new Date(slot.endAt))}
           </button>
         );
       })}
