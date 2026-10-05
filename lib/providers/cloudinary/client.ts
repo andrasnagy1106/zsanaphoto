@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
 
 const DEFAULT_WATERMARK_TEXT = process.env.CLOUDINARY_WATERMARK_TEXT ?? "ZsaNa Photo";
@@ -29,6 +30,63 @@ export function configureCloudinary(): typeof cloudinary {
     });
   }
   return cloudinary;
+}
+
+export interface SignedEventPhotoUpload {
+  apiKey: string;
+  cloudName: string;
+  assetFolder: string;
+  publicId: string;
+  overwrite: false;
+  signature: string;
+  tags: string;
+  timestamp: number;
+}
+
+export function createSignedEventPhotoUpload(pin: string): SignedEventPhotoUpload {
+  const normalizedPin = pin.trim().toUpperCase();
+  const client = configureCloudinary();
+  const { api_key: apiKey, api_secret: apiSecret, cloud_name: cloudName } = client.config();
+  if (!apiKey || !apiSecret || !cloudName) {
+    throw new Error("Cloudinary is not fully configured for signed uploads.");
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const assetFolder = getCloudinaryFolderForPin(normalizedPin);
+  const publicId = `${assetFolder}/${randomUUID()}`;
+  const tags = normalizedPin;
+  const overwrite = false;
+  const paramsToSign = {
+    asset_folder: assetFolder,
+    overwrite,
+    public_id: publicId,
+    tags,
+    timestamp,
+  };
+  const signature = client.utils.api_sign_request(paramsToSign, apiSecret);
+
+  return {
+    apiKey,
+    cloudName,
+    assetFolder,
+    publicId,
+    overwrite,
+    signature,
+    tags,
+    timestamp,
+  };
+}
+
+export function verifyCloudinaryUploadResponseSignature(
+  publicId: string,
+  version: number,
+  signature: string,
+): boolean {
+  const client = configureCloudinary();
+  const utils = client.utils as typeof client.utils & {
+    verify_api_response_signature?: (publicId: string, version: number, signature: string) => boolean;
+  };
+  return utils.verify_api_response_signature?.(publicId, version, signature) ?? false;
 }
 
 export interface WatermarkOptions {
@@ -76,53 +134,6 @@ export function buildWatermarkedUrl(
       },
     ],
   });
-}
-
-export interface UploadFileOptions {
-  file: Buffer | string; // Buffer, base64 data URI, remote URL, or local path
-  pin: string;
-  filename?: string;
-  tags?: string[];
-  watermarkOptions?: WatermarkOptions;
-}
-
-export interface UploadResult {
-  publicId: string;
-  secureUrl: string;
-  watermarkedUrl: string;
-  width?: number;
-  height?: number;
-  bytes?: number;
-  format?: string;
-  originalFilename?: string;
-}
-
-export async function uploadPhotoToCloudinary(
-  options: UploadFileOptions,
-): Promise<UploadResult> {
-  const folder = getCloudinaryFolderForPin(options.pin);
-  const uploadResponse = await uploadToCloudinaryFolder({
-    file: options.file,
-    folder,
-    filename: options.filename,
-    tags: [options.pin, ...(options.tags ?? [])],
-  });
-
-  const watermarkedUrl = buildWatermarkedUrl(
-    uploadResponse.public_id,
-    options.watermarkOptions,
-  );
-
-  return {
-    publicId: uploadResponse.public_id,
-    secureUrl: uploadResponse.secure_url,
-    watermarkedUrl,
-    width: uploadResponse.width,
-    height: uploadResponse.height,
-    bytes: uploadResponse.bytes,
-    format: uploadResponse.format,
-    originalFilename: options.filename ?? uploadResponse.original_filename,
-  };
 }
 
 export interface UploadGalleryPhotoOptions {

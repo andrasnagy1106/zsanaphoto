@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildWatermarkedUrl,
+  createSignedEventPhotoUpload,
   getCloudinaryFolderForPin,
   isCloudinaryConfigured,
 } from "./client";
@@ -14,6 +15,40 @@ describe("cloudinary client utilities", () => {
   it("checks if credentials are configured", () => {
     // In test environment without env vars it returns boolean
     expect(typeof isCloudinaryConfigured()).toBe("boolean");
+  });
+
+  it("creates a signed upload restricted to the normalized PIN folder", () => {
+    const previousEnvironment = {
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      apiSecret: process.env.CLOUDINARY_API_SECRET,
+      cloudinaryUrl: process.env.CLOUDINARY_URL,
+    };
+    process.env.CLOUDINARY_URL = "";
+    process.env.CLOUDINARY_CLOUD_NAME = "test-cloud";
+    process.env.CLOUDINARY_API_KEY = "test-api-key";
+    process.env.CLOUDINARY_API_SECRET = "test-api-secret";
+
+    try {
+      const upload = createSignedEventPhotoUpload("ab12345");
+
+      expect(upload.apiKey).toBe("test-api-key");
+      expect(upload.cloudName).toBe("test-cloud");
+      expect(upload.assetFolder).toBe("zsanaphoto/events/AB12345");
+      expect(upload.publicId).toMatch(/^zsanaphoto\/events\/AB12345\//);
+      expect(upload.tags).toBe("AB12345");
+      expect(upload.overwrite).toBe(false);
+      expect(upload.signature).not.toContain("test-api-secret");
+    } finally {
+      if (previousEnvironment.cloudName === undefined) delete process.env.CLOUDINARY_CLOUD_NAME;
+      else process.env.CLOUDINARY_CLOUD_NAME = previousEnvironment.cloudName;
+      if (previousEnvironment.apiKey === undefined) delete process.env.CLOUDINARY_API_KEY;
+      else process.env.CLOUDINARY_API_KEY = previousEnvironment.apiKey;
+      if (previousEnvironment.apiSecret === undefined) delete process.env.CLOUDINARY_API_SECRET;
+      else process.env.CLOUDINARY_API_SECRET = previousEnvironment.apiSecret;
+      if (previousEnvironment.cloudinaryUrl === undefined) delete process.env.CLOUDINARY_URL;
+      else process.env.CLOUDINARY_URL = previousEnvironment.cloudinaryUrl;
+    }
   });
 
   it("builds watermarked URL with transformation overlay", () => {

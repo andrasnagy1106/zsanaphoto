@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Allura, Fraunces, Geist, Geist_Mono } from "next/font/google";
 import type { ReactNode } from "react";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
+import { redactAccessTokenFromAnalyticsEvent } from "@/lib/utils/analytics";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -50,7 +51,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
-        <Analytics />
+        <Analytics beforeSend={redactAccessTokenFromAnalyticsEvent} />
       </body>
     </html>
   );

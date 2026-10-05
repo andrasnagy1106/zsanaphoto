@@ -207,7 +207,8 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
     - A privát teljes képgalériában (`/fotogaleria`) a rendszer az eredeti, vízjelmentes fotókat jeleníti meg és teszi letölthetővé (egyedi és kötegelt ZIP formátumban).
     - Az eseményfotók eredeti felbontású masterként kerülnek a Cloudinary tárhelyre (legfeljebb 25 MB/kép). A megrendelői nézetek vízjeles előnézetet használnak; a teljes galéria eredeti fájlokat ad le tokennel és foglalással ellenőrzött letöltési útvonalon.
   - **Képfeltöltés és tájolás:** Az admin feltöltők JPG, PNG, WEBP és AVIF képeket fogadnak
-    legfeljebb 25 MB-os fájlméretig. Az eseményfotók eredeti méretben, egyenként töltődnek fel;
+    legfeljebb 25 MB-os fájlméretig. Az eseményfotók eredeti méretben, egyenként, közvetlenül a
+    Cloudinaryba töltődnek fel, így nem mennek át a Vercel Function 4,5 MB-os kéréslimitjén;
     a többi admin képfeltöltő szükség esetén automatikusan leméretezi a nagy fájlokat. Az álló és
     fekvő fotók eredeti képaránya megmarad, a galéria- és rendelési nézetek nem vágnak le a képből.
   - **Főoldali fotók kezelése az adminban:** Az `/admin/settings` oldalon közvetlenül feltölthető és cserélhető a főoldali Hero borítókép, a "Rólam" portré, valamint a "Miben segíthetek?" szolgáltatáskártyák egyedi képei.

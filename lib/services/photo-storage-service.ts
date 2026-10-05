@@ -6,38 +6,126 @@ import {
   services,
   type Booking,
   type EventPhoto,
-  type NewEventPhoto,
 } from "@/db/schema";
 import {
   buildWatermarkedUrl,
+  configureCloudinary,
+  createSignedEventPhotoUpload,
   deleteFolderFromCloudinary,
   deleteMultiplePhotosFromCloudinary,
   deletePhotoFromCloudinary,
-  uploadPhotoToCloudinary,
+  getCloudinaryFolderForPin,
+  verifyCloudinaryUploadResponseSignature,
   type WatermarkOptions,
+  type SignedEventPhotoUpload,
 } from "@/lib/providers/cloudinary/client";
 import { NotFoundError } from "@/lib/utils/errors";
 import { reorderIdsByMove } from "@/lib/utils/photo-layout";
 import type { EventPhotoEditInput, PhotoMoveDirection } from "@/lib/validation/photo-edit";
 
-export interface UploadPhotoInput {
-  pin: string;
-  file: Buffer | string;
-  filename?: string;
-  title?: string;
-  sortOrder?: number;
-  watermarkOptions?: WatermarkOptions;
+const MAX_EVENT_PHOTO_SIZE_BYTES = 25 * 1024 * 1024;
+const ALLOWED_EVENT_PHOTO_FORMATS = new Set(["jpg", "jpeg", "png", "webp", "avif"]);
+
+export async function getSignedEventPhotoUpload(pin: string): Promise<SignedEventPhotoUpload> {
+  const normalizedPin = pin.trim().toUpperCase();
+  const [booking] = await db
+    .select({ id: bookings.id })
+    .from(bookings)
+    .where(eq(bookings.pin, normalizedPin))
+    .limit(1);
+
+  if (!booking) throw new NotFoundError("Nem található foglalás a megadott PIN kóddal.");
+  return createSignedEventPhotoUpload(normalizedPin);
 }
 
-export interface UploadMultiplePhotosInput {
+export async function registerUploadedPhotoForPin(input: {
   pin: string;
-  items: Array<{
-    file: Buffer | string;
-    filename?: string;
-    title?: string;
-    sortOrder?: number;
-  }>;
-  watermarkOptions?: WatermarkOptions;
+  filename: string;
+  publicId: string;
+  version: number;
+  signature: string;
+}): Promise<EventPhoto> {
+  const normalizedPin = input.pin.trim().toUpperCase();
+  const expectedFolderPrefix = `${getCloudinaryFolderForPin(normalizedPin)}/`;
+  if (!input.publicId.startsWith(expectedFolderPrefix)) {
+    throw new NotFoundError("A feltöltött kép nem ehhez az eseményhez tartozik.");
+  }
+  if (!verifyCloudinaryUploadResponseSignature(input.publicId, input.version, input.signature)) {
+    throw new Error("A Cloudinary feltöltés hitelesítése sikertelen.");
+  }
+
+  const [booking] = await db
+    .select({ id: bookings.id })
+    .from(bookings)
+    .where(eq(bookings.pin, normalizedPin))
+    .limit(1);
+  if (!booking) throw new NotFoundError("Nem található foglalás a megadott PIN kóddal.");
+
+  const [existing] = await db
+    .select()
+    .from(eventPhotos)
+    .where(eq(eventPhotos.publicId, input.publicId))
+    .limit(1);
+  if (existing) {
+    if (existing.bookingId === booking.id) return existing;
+    throw new NotFoundError("A feltöltött kép már másik eseményhez tartozik.");
+  }
+
+  const cloudinary = configureCloudinary();
+  const resource = await cloudinary.api.resource(input.publicId, {
+    resource_type: "image",
+    type: "upload",
+  });
+  const format = String(resource.format ?? "").toLowerCase();
+  const bytes = Number(resource.bytes);
+  const tags = Array.isArray(resource.tags) ? resource.tags : [];
+  if (
+    resource.public_id !== input.publicId ||
+    !tags.includes(normalizedPin) ||
+    !ALLOWED_EVENT_PHOTO_FORMATS.has(format) ||
+    !Number.isFinite(bytes) ||
+    bytes <= 0 ||
+    bytes > MAX_EVENT_PHOTO_SIZE_BYTES ||
+    typeof resource.secure_url !== "string"
+  ) {
+    throw new Error("A Cloudinary által visszaadott kép adatai érvénytelenek.");
+  }
+
+  const filename = input.filename.trim().slice(0, 255);
+  const title = filename.replace(/\.[^/.]+$/, "").slice(0, 200) || "Fotó";
+  const [maxOrderRow] = await db
+    .select({ maxSortOrder: max(eventPhotos.sortOrder) })
+    .from(eventPhotos)
+    .where(eq(eventPhotos.bookingId, booking.id));
+
+  try {
+    const [created] = await db
+      .insert(eventPhotos)
+      .values({
+        bookingId: booking.id,
+        pin: normalizedPin,
+        publicId: input.publicId,
+        secureUrl: resource.secure_url,
+        watermarkedUrl: buildWatermarkedUrl(input.publicId),
+        originalFilename: String(resource.original_filename ?? filename),
+        title,
+        width: Number(resource.width) || null,
+        height: Number(resource.height) || null,
+        bytes,
+        format,
+        sortOrder: (maxOrderRow?.maxSortOrder ?? -1) + 1,
+      })
+      .returning();
+    return created;
+  } catch (error) {
+    const [concurrentInsert] = await db
+      .select()
+      .from(eventPhotos)
+      .where(eq(eventPhotos.publicId, input.publicId))
+      .limit(1);
+    if (concurrentInsert?.bookingId === booking.id) return concurrentInsert;
+    throw error;
+  }
 }
 
 /**
@@ -128,117 +216,6 @@ export async function listEventsWithPin(): Promise<EventWithPinOption[]> {
     showPhotoTitles: row.booking.showPhotoTitles,
     photoCount: row.photoCount,
   }));
-}
-
-/**
- * Uploads a single photo to Cloudinary under the PIN folder, generates its watermarked URL,
- * and saves the metadata record in the database linked to the booking.
- */
-export async function uploadPhotoForPin(input: UploadPhotoInput): Promise<EventPhoto> {
-  const normalizedPin = input.pin.trim().toUpperCase();
-
-  const [booking] = await db
-    .select({ id: bookings.id })
-    .from(bookings)
-    .where(eq(bookings.pin, normalizedPin))
-    .limit(1);
-
-  if (!booking) {
-    throw new NotFoundError(`Nem található foglalás a megadott PIN kóddal (${normalizedPin}).`);
-  }
-
-  const uploadResult = await uploadPhotoToCloudinary({
-    file: input.file,
-    pin: normalizedPin,
-    filename: input.filename,
-    watermarkOptions: input.watermarkOptions,
-  });
-
-  const photoTitle =
-    input.title?.trim() ||
-    input.filename?.replace(/\.[^/.]+$/, "") ||
-    "Fotó";
-
-  const [created] = await db
-    .insert(eventPhotos)
-    .values({
-      bookingId: booking.id,
-      pin: normalizedPin,
-      publicId: uploadResult.publicId,
-      secureUrl: uploadResult.secureUrl,
-      watermarkedUrl: uploadResult.watermarkedUrl,
-      originalFilename: uploadResult.originalFilename ?? null,
-      title: photoTitle,
-      width: uploadResult.width ?? null,
-      height: uploadResult.height ?? null,
-      bytes: uploadResult.bytes ?? null,
-      format: uploadResult.format ?? null,
-      sortOrder: input.sortOrder ?? 0,
-    })
-    .returning();
-
-  return created;
-}
-
-/**
- * Uploads multiple photos to Cloudinary under the PIN folder and saves their records in the database.
- */
-export async function uploadMultiplePhotosForPin(
-  input: UploadMultiplePhotosInput,
-): Promise<EventPhoto[]> {
-  const normalizedPin = input.pin.trim().toUpperCase();
-
-  const [booking] = await db
-    .select({ id: bookings.id })
-    .from(bookings)
-    .where(eq(bookings.pin, normalizedPin))
-    .limit(1);
-
-  if (!booking) {
-    throw new NotFoundError(`Nem található foglalás a megadott PIN kóddal (${normalizedPin}).`);
-  }
-
-  const uploadedRecords: NewEventPhoto[] = [];
-
-  const [{ maxSortOrder }] = await db
-    .select({ maxSortOrder: max(eventPhotos.sortOrder) })
-    .from(eventPhotos)
-    .where(eq(eventPhotos.bookingId, booking.id));
-  const firstSortOrder = (maxSortOrder ?? -1) + 1;
-
-  for (let i = 0; i < input.items.length; i += 1) {
-    const item = input.items[i];
-    const uploadResult = await uploadPhotoToCloudinary({
-      file: item.file,
-      pin: normalizedPin,
-      filename: item.filename,
-      watermarkOptions: input.watermarkOptions,
-    });
-
-    const photoTitle =
-      item.title?.trim() ||
-      item.filename?.replace(/\.[^/.]+$/, "") ||
-      `Fotó ${i + 1}`;
-
-    uploadedRecords.push({
-      bookingId: booking.id,
-      pin: normalizedPin,
-      publicId: uploadResult.publicId,
-      secureUrl: uploadResult.secureUrl,
-      watermarkedUrl: uploadResult.watermarkedUrl,
-      originalFilename: uploadResult.originalFilename ?? null,
-      title: photoTitle,
-      width: uploadResult.width ?? null,
-      height: uploadResult.height ?? null,
-      bytes: uploadResult.bytes ?? null,
-      format: uploadResult.format ?? null,
-      sortOrder: firstSortOrder + (item.sortOrder ?? i),
-    });
-  }
-
-  if (uploadedRecords.length === 0) return [];
-
-  return db.insert(eventPhotos).values(uploadedRecords).returning();
 }
 
 export async function updateEventPhotoDetails(photoId: string, input: EventPhotoEditInput): Promise<boolean> {

@@ -8,14 +8,16 @@ import {
   deleteEventPhotoAction,
   deleteMultipleEventPhotosAction,
   moveEventPhotoAction,
+  createEventPhotoUploadSignatureAction,
+  registerUploadedEventPhotoAction,
   updateCustomerPhotoViewModeAction,
   updateEventPhotoAction,
   updateShowPhotoTitlesAction,
-  uploadEventPhotosAction,
 } from "@/app/actions/admin-photo-actions";
 import type { Booking, EventPhoto, PhotoOrder, PhotoOrderItem, Service } from "@/db/schema";
 import type { EventWithPinOption } from "@/lib/services/photo-storage-service";
 import { formatPrice } from "@/lib/photo-order-catalog";
+import { uploadEventPhotoDirectlyToCloudinary } from "@/lib/utils/cloudinary-browser-upload";
 import { toObjectPosition } from "@/lib/utils/photo-layout";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
 import { CreateEventUserModal } from "@/components/admin/CreateEventUserModal";
@@ -59,6 +61,7 @@ export function EventPhotoManager({
   const [viewMode, setViewMode] = useState<ViewMode>("gallery");
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [isUploading, startUploadTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -175,6 +178,10 @@ export function EventPhotoManager({
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const filesArray = e.target.files ? Array.from(e.target.files) : [];
     if (filesArray.length === 0) return;
+    if (isUploading) {
+      setErrorMessage("Feltöltés közben nem lehet újabb képeket hozzáadni.");
+      return;
+    }
 
     setErrorMessage(null);
     setSelectedFiles((prev) => [...prev, ...filesArray]);
@@ -197,32 +204,55 @@ export function EventPhotoManager({
     setErrorMessage(null);
     setSuccessMessage(null);
 
+    const filesToUpload = [...selectedFiles];
+    setUploadProgress({ done: 0, total: filesToUpload.length });
+
     startUploadTransition(async () => {
       let uploadedCount = 0;
 
-      for (const file of selectedFiles) {
-        const formData = new FormData();
-        formData.append("pin", currentPin);
-        formData.append("files", file);
+      for (const file of filesToUpload) {
+        try {
+          const signatureResult = await createEventPhotoUploadSignatureAction({
+            pin: currentPin,
+            fileName: file.name,
+            fileSize: file.size,
+            mimeType: file.type,
+          });
+          if (!signatureResult.success || !signatureResult.upload) {
+            throw new Error(signatureResult.error ?? "A feltöltés engedélyezése sikertelen volt.");
+          }
 
-        const result = await uploadEventPhotosAction(formData);
-        if (!result.success) {
+          const uploadedPhoto = await uploadEventPhotoDirectlyToCloudinary(file, signatureResult.upload);
+          const registrationResult = await registerUploadedEventPhotoAction({
+            pin: currentPin,
+            fileName: file.name,
+            ...uploadedPhoto,
+          });
+          if (!registrationResult.success) {
+            throw new Error(registrationResult.error ?? "A kép adatainak mentése nem sikerült.");
+          }
+
+          uploadedCount += 1;
+          setSelectedFiles((pending) => pending.filter((pendingFile) => pendingFile !== file));
+          setUploadProgress({ done: uploadedCount, total: filesToUpload.length });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "A feltöltés nem sikerült.";
           setErrorMessage(
             uploadedCount > 0
-              ? `${uploadedCount} kép feltöltve, majd hiba történt: ${result.error ?? "A feltöltés nem sikerült."}`
-              : result.error ?? "A feltöltés nem sikerült.",
+              ? `${uploadedCount} kép sikeresen feltöltve, a következő képnél hiba történt: ${message}`
+              : message,
           );
+          setUploadProgress(null);
           return;
         }
-        uploadedCount += result.count ?? 1;
       }
 
       if (uploadedCount > 0) {
-        setSelectedFiles([]);
         if (fileInputRef.current) fileInputRef.current.value = "";
         setSuccessMessage(`${uploadedCount} kép sikeresen feltöltve a Cloudinary tárhelyre!`);
         router.refresh();
       }
+      setUploadProgress(null);
     });
   }
 
@@ -495,7 +525,7 @@ export function EventPhotoManager({
                 <div>
                   <h2 className="text-base font-semibold text-foreground">Képek feltöltése a mappába ({selectedEvent.pin})</h2>
                   <p className="text-xs text-foreground/60">
-                    Az eredeti felbontás megmarad. Az ügyfelek vízjeles, optimalizált előnézetet látnak; a teljes képek eredeti minőségben tölthetők le. JPG, PNG, WEBP és AVIF, legfeljebb 25 MB/kép.
+                    Az eredeti fájl közvetlenül a Cloudinaryba töltődik fel, teljes felbontásban. Az ügyfelek vízjeles, optimalizált előnézetet látnak; a teljes képek eredeti minőségben tölthetők le. JPG, PNG, WEBP és AVIF, legfeljebb 25 MB/kép.
                   </p>
                 </div>
                 {selectedFiles.length > 0 && (
@@ -508,7 +538,7 @@ export function EventPhotoManager({
                     {isUploading ? (
                       <>
                         <span className="inline-block size-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        Feltöltés folyamatban ({selectedFiles.length} kép)...
+                        Feltöltés folyamatban ({uploadProgress?.done ?? 0}/{uploadProgress?.total ?? selectedFiles.length})...
                       </>
                     ) : (
                       `Feltöltés indítása (${selectedFiles.length} kép)`
