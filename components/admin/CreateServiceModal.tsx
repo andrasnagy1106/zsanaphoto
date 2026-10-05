@@ -28,6 +28,7 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
   const activeInputId = useId();
   const onlineBookingInputId = useId();
   const requiresChildNameInputId = useId();
+  const includePaymentInformationInputId = useId();
   const generatesPinInputId = useId();
 
   const [name, setName] = useState("");
@@ -42,6 +43,7 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
   const [dateRangeStart, setDateRangeStart] = useState("");
   const [dateRangeEnd, setDateRangeEnd] = useState("");
   const [requiresChildName, setRequiresChildName] = useState(false);
+  const [includePaymentInformation, setIncludePaymentInformation] = useState(false);
   const [generatesPin, setGeneratesPin] = useState(false);
   const [active, setActive] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +82,7 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
         dateRangeStart: dateRangeStart || null,
         dateRangeEnd: dateRangeEnd || null,
         requiresChildName,
+        includePaymentInformation,
         generatesPin,
         active,
       });
@@ -95,6 +98,7 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
       setDescription("");
       setDateRangeStart("");
       setDateRangeEnd("");
+      setIncludePaymentInformation(false);
       router.refresh();
     });
   }
@@ -347,6 +351,19 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
                 className="text-xs font-medium text-foreground cursor-pointer select-none"
               >
                 Kérje be a gyermek nevét is a foglalási űrlapon
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id={includePaymentInformationInputId}
+                type="checkbox"
+                checked={includePaymentInformation}
+                onChange={(e) => setIncludePaymentInformation(e.target.checked)}
+                className="size-4 rounded border-border text-accent focus:ring-accent accent-accent cursor-pointer"
+              />
+              <label htmlFor={includePaymentInformationInputId} className="text-xs font-medium text-foreground cursor-pointer select-none">
+                Fizetési információk a fotórendelés visszaigazoló e-mailjében
               </label>
             </div>
 

@@ -242,6 +242,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
       customerName: saved.booking.customerName,
       customerEmail: saved.booking.customerEmail,
       serviceName: saved.service.name,
+      includePaymentInformation: saved.service.includePaymentInformation,
       adminNotificationEmail: settings.adminNotificationEmail,
       billingName: saved.order.billingName,
       billingPostalCode: saved.order.billingPostalCode,

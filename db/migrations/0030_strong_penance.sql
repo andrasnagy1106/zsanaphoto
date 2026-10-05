@@ -1,0 +1,1 @@
+ALTER TABLE "services" ADD COLUMN "include_payment_information" boolean DEFAULT false NOT NULL;

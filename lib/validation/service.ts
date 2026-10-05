@@ -33,6 +33,7 @@ export const updateServiceSchema = z.object({
     .optional()
     .transform((val) => (val === "" ? null : val ?? null)),
   requiresChildName: z.coerce.boolean().default(false),
+  includePaymentInformation: z.coerce.boolean().default(false),
   generatesPin: z.coerce.boolean().default(false),
   active: z.coerce.boolean(),
 });
@@ -69,6 +70,7 @@ export const createServiceSchema = z.object({
     .optional()
     .transform((val) => (val === "" ? null : val ?? null)),
   requiresChildName: z.coerce.boolean().default(false),
+  includePaymentInformation: z.coerce.boolean().default(false),
   generatesPin: z.coerce.boolean().default(false),
   active: z.coerce.boolean().default(true),
 });

@@ -60,6 +60,7 @@ export type CreateServiceInput = {
   dateRangeStart?: string | null;
   dateRangeEnd?: string | null;
   requiresChildName?: boolean;
+  includePaymentInformation?: boolean;
   generatesPin?: boolean;
   active?: boolean;
 };
@@ -100,6 +101,7 @@ export async function createService(input: CreateServiceInput): Promise<Service>
       dateRangeStart: input.dateRangeStart || null,
       dateRangeEnd: input.dateRangeEnd || null,
       requiresChildName: input.requiresChildName ?? false,
+      includePaymentInformation: input.includePaymentInformation ?? false,
       generatesPin: input.generatesPin ?? false,
       active: input.active ?? true,
       sortOrder: nextSortOrder,
@@ -124,6 +126,7 @@ export type UpdateServiceInput = Partial<
     | "dateRangeStart"
     | "dateRangeEnd"
     | "requiresChildName"
+    | "includePaymentInformation"
     | "generatesPin"
     | "active"
     | "sortOrder"

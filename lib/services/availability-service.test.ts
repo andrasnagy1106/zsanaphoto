@@ -22,6 +22,7 @@ function makeService(overrides: Partial<Service> = {}): Service {
     dateRangeStart: null,
     dateRangeEnd: null,
     requiresChildName: false,
+    includePaymentInformation: false,
     generatesPin: false,
     active: true,
     sortOrder: 1,

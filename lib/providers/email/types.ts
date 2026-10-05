@@ -24,6 +24,7 @@ export interface PhotoOrderEmailInput {
   customerEmail: string;
   serviceName: string;
   adminNotificationEmail: string;
+  includePaymentInformation?: boolean;
   billingName?: string | null;
   billingPostalCode?: string | null;
   billingCity?: string | null;

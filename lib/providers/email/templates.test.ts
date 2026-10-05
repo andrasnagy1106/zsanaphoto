@@ -89,6 +89,31 @@ describe("buildGoogleCalendarUrl", () => {
 });
 
 describe("buildPhotoOrderConfirmationEmail", () => {
+  it.each([false, true])("includes payment instructions only when enabled (%s)", (includePaymentInformation) => {
+    const email = buildPhotoOrderConfirmationEmail({
+      orderNumber: "ZR-2026-12345",
+      bookingNumber: "ZS-2026-0001",
+      customerName: "Teszt Elek",
+      customerEmail: "teszt@example.com",
+      serviceName: "Intézményi fotózás",
+      adminNotificationEmail: "admin@example.com",
+      isUpdate: true,
+      totalAmount: 1200,
+      items: [],
+      includePaymentInformation,
+    });
+
+    if (includePaymentInformation) {
+      expect(email.text).toContain("Számlaszám:11748076-25511136");
+      expect(email.text).toContain("gyermek nevét/intézményét");
+      expect(email.text).toContain("Főtéri cukrászdába");
+      expect(email.text).toContain("Törpe Élelmiszerben");
+    } else {
+      expect(email.text).not.toContain("Fizetési információk:");
+      expect(email.text).not.toContain("11748076-25511136");
+    }
+  });
+
   it("includes the order identifiers, line item prices, and total amount", () => {
     const input = {
       orderNumber: "ZR-2026-12345",

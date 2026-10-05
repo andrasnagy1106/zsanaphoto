@@ -53,6 +53,7 @@ export function ServiceEditForm({ service, customRules = [], calendars = [], def
       dateRangeStart: service.dateRangeStart ?? "",
       dateRangeEnd: service.dateRangeEnd ?? "",
       requiresChildName: service.requiresChildName,
+      includePaymentInformation: service.includePaymentInformation,
       generatesPin: service.generatesPin,
       active: service.active,
     },
@@ -280,6 +281,18 @@ export function ServiceEditForm({ service, customRules = [], calendars = [], def
             />
             <label htmlFor={`${service.id}-requiresChildName`} className="text-sm font-medium text-foreground">
               Kérje be a gyermek nevét is a foglalási űrlapon
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2 sm:col-span-2">
+            <input
+              id={`${service.id}-includePaymentInformation`}
+              type="checkbox"
+              className="h-5 w-5"
+              {...register("includePaymentInformation")}
+            />
+            <label htmlFor={`${service.id}-includePaymentInformation`} className="text-sm font-medium text-foreground">
+              Fizetési információk a fotórendelés visszaigazoló e-mailjében
             </label>
           </div>
 

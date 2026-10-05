@@ -219,6 +219,9 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
   - **Adminisztrátori fiókok kezelése:** Az `/admin/settings` oldalon közvetlenül hozzáadhatók új admin felhasználók (név, e-mail, min. 8 karakteres jelszó), illetve törölhetők a meglévő adminok (a saját fiók és az utolsó admin törlése védett).
   - A rendelés mentésekor tételes áras és végösszeggel ellátott e-mailes visszaigazolást küld a rendszer
     az ügyfélnek és az adminnak.
+    Az `/admin/services` oldalon új és meglévő szolgáltatásoknál külön kapcsolható a fizetési
+    tájékoztató: bekapcsolva az ügyfél fotórendelési visszaigazolásába (módosításkor is) bekerülnek
+    a banki utalás és a készpénzes fizetés részletei. Alapértelmezés szerint ki van kapcsolva.
   - Az `/admin/photo-orders` oldalon követhető az összes rendelés állapota, összbevétele, valamint a tételes
     egységárak és összegek. Egy PIN-hez egyszerre egy aktív (`NEW`/`PROCESSING`) rendelés tartozhat;
     ismételt belépéskor a tételek, darabszámok, méretek és a rendelési megjegyzés módosíthatók.

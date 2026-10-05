@@ -211,6 +211,13 @@
       "when": 1791232894813,
       "tag": "0029_big_expediter",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1791234093038,
+      "tag": "0030_strong_penance",
+      "breakpoints": true
     }
   ]
 }
