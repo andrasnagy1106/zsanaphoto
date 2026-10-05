@@ -205,10 +205,11 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
   - **Képek vízjelezése és privát galéria:**
     - A fotórendelés felületén (`/fotorendeles`) a képek Cloudinary által vízjelezett formátumban jelennek meg a kiválasztáshoz és rendeléshez.
     - A privát teljes képgalériában (`/fotogaleria`) a rendszer az eredeti, vízjelmentes fotókat jeleníti meg és teszi letölthetővé (egyedi és kötegelt ZIP formátumban).
+    - Az eseményfotók eredeti felbontású masterként kerülnek a Cloudinary tárhelyre (legfeljebb 25 MB/kép). A megrendelői nézetek vízjeles előnézetet használnak; a teljes galéria eredeti fájlokat ad le tokennel és foglalással ellenőrzött letöltési útvonalon.
   - **Képfeltöltés és tájolás:** Az admin feltöltők JPG, PNG, WEBP és AVIF képeket fogadnak
-    legfeljebb 25 MB-os fájlméretig. A böngésző a nagy képeket feltöltés előtt automatikusan
-    leméretezi, az eseményfotókat pedig egyenként küldi fel. Az álló és fekvő fotók eredeti
-    képaránya megmarad, a galéria- és rendelési nézetek nem vágnak le a képből.
+    legfeljebb 25 MB-os fájlméretig. Az eseményfotók eredeti méretben, egyenként töltődnek fel;
+    a többi admin képfeltöltő szükség esetén automatikusan leméretezi a nagy fájlokat. Az álló és
+    fekvő fotók eredeti képaránya megmarad, a galéria- és rendelési nézetek nem vágnak le a képből.
   - **Főoldali fotók kezelése az adminban:** Az `/admin/settings` oldalon közvetlenül feltölthető és cserélhető a főoldali Hero borítókép, a "Rólam" portré, valamint a "Miben segíthetek?" szolgáltatáskártyák egyedi képei.
   - **Globális alapárak módosítása:** Az `/admin/settings` oldalon a rendszer globális alapértelmezett darabárai
     is közvetlenül szerkeszthetők és adatbázisban tárolódnak.

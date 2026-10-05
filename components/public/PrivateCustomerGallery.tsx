@@ -9,19 +9,25 @@ interface PrivateCustomerGalleryProps {
   customerName: string;
   bookingNumber: string;
   pin: string;
+  token: string;
   serviceName: string;
-  photos: EventPhoto[];
+  photos: GalleryPhoto[];
   /** When false, photo names (usually camera file numbers) are hidden. */
   showPhotoTitles: boolean;
 }
 
-function getPhotoFileExtension(photo: EventPhoto): string {
+type GalleryPhoto = Pick<
+  EventPhoto,
+  "id" | "createdAt" | "format" | "title" | "watermarkedUrl" | "width" | "height"
+>;
+
+function getPhotoFileExtension(photo: GalleryPhoto): string {
   if (photo.format) return photo.format;
-  const match = (photo.secureUrl || photo.watermarkedUrl).match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
+  const match = photo.watermarkedUrl.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
   return match ? match[1] : "jpg";
 }
 
-function getPhotoFileName(photo: EventPhoto): string {
+function getPhotoFileName(photo: GalleryPhoto): string {
   const safeTitle = photo.title.trim().replace(/[\\/:*?"<>|]+/g, "-") || "foto";
   return `${safeTitle}.${getPhotoFileExtension(photo)}`;
 }
@@ -41,6 +47,7 @@ export function PrivateCustomerGallery({
   customerName,
   bookingNumber,
   pin,
+  token,
   serviceName,
   photos,
   showPhotoTitles,
@@ -73,11 +80,11 @@ export function PrivateCustomerGallery({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lightboxIndex, goToPreviousPhoto, goToNextPhoto]);
 
-  const downloadSinglePhoto = useCallback(async (photo: EventPhoto) => {
+  const downloadSinglePhoto = useCallback(async (photo: GalleryPhoto) => {
     setDownloadErrorMessage(null);
     setDownloadingPhotoId(photo.id);
     try {
-      const downloadUrl = photo.secureUrl || photo.watermarkedUrl;
+      const downloadUrl = `/api/customer-gallery/${encodeURIComponent(token)}/${encodeURIComponent(photo.id)}`;
       const response = await fetch(downloadUrl);
       if (!response.ok) throw new Error("Letöltési hiba");
       const blob = await response.blob();
@@ -87,7 +94,7 @@ export function PrivateCustomerGallery({
     } finally {
       setDownloadingPhotoId(null);
     }
-  }, []);
+  }, [token]);
 
   const downloadAllPhotosAsZip = useCallback(async () => {
     if (photos.length === 0) return;
@@ -99,7 +106,7 @@ export function PrivateCustomerGallery({
       const usedFileNames = new Set<string>();
 
       for (const [index, photo] of photos.entries()) {
-        const downloadUrl = photo.secureUrl || photo.watermarkedUrl;
+        const downloadUrl = `/api/customer-gallery/${encodeURIComponent(token)}/${encodeURIComponent(photo.id)}`;
         const response = await fetch(downloadUrl);
         if (!response.ok) throw new Error("Letöltési hiba");
         const blob = await response.blob();
@@ -122,7 +129,7 @@ export function PrivateCustomerGallery({
     } finally {
       setBulkDownloadState(null);
     }
-  }, [photos, bookingNumber]);
+  }, [photos, bookingNumber, token]);
 
   const isBulkDownloading = bulkDownloadState !== null;
   const bulkDownloadProgressPercent = useMemo(() => {
@@ -145,7 +152,7 @@ export function PrivateCustomerGallery({
           {customerName} · {serviceName} · Foglalás: {bookingNumber}
         </p>
         <p className="mt-2 max-w-2xl text-sm text-foreground/55">
-          Az alábbiakban megtekintheted a fotózáson készült képeket. Kattints bármelyik fotóra a nagyításhoz, vagy töltsd le egyenként, illetve egyszerre az összeset.
+          Az előnézetek vízjelesek. A letöltött képek eredeti felbontásúak; kattints egy fotóra a nagyításhoz, vagy töltsd le egyenként, illetve egyszerre az összeset.
         </p>
 
         {photos.length > 0 && (
@@ -204,7 +211,7 @@ export function PrivateCustomerGallery({
               >
                 <div className="relative w-full overflow-hidden bg-muted">
                   <Image
-                    src={photo.secureUrl || photo.watermarkedUrl}
+                    src={photo.watermarkedUrl}
                     alt={photo.title}
                     width={photo.width ?? 800}
                     height={photo.height ?? 600}
@@ -295,7 +302,7 @@ export function PrivateCustomerGallery({
               )}
               <div className="relative h-[65vh] w-[85vw] max-w-4xl">
                 <Image
-                  src={lightboxPhoto.secureUrl || lightboxPhoto.watermarkedUrl}
+                  src={lightboxPhoto.watermarkedUrl}
                   alt={lightboxPhoto.title}
                   fill
                   className="object-contain"

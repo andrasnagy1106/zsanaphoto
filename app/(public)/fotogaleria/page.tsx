@@ -41,6 +41,15 @@ export default async function PhotoGalleryPage({ searchParams }: PhotoGalleryPag
   }
 
   const photos = await listPhotosByBookingId(access.booking.id);
+  const galleryPhotos = photos.map((photo) => ({
+    id: photo.id,
+    createdAt: photo.createdAt,
+    format: photo.format,
+    title: photo.title,
+    watermarkedUrl: photo.watermarkedUrl,
+    width: photo.width,
+    height: photo.height,
+  }));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
@@ -48,8 +57,9 @@ export default async function PhotoGalleryPage({ searchParams }: PhotoGalleryPag
         customerName={access.booking.customerName}
         bookingNumber={access.booking.bookingNumber}
         pin={access.booking.pin!}
+        token={token!}
         serviceName={access.service.name}
-        photos={photos}
+        photos={galleryPhotos}
         showPhotoTitles={access.booking.showPhotoTitles}
       />
     </div>
