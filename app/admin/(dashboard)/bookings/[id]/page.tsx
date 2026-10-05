@@ -3,12 +3,10 @@ import { notFound } from "next/navigation";
 import { getBookingById } from "@/lib/services/booking-service";
 import { getServiceById } from "@/lib/services/service-service";
 import { getPhotoOrdersForBooking } from "@/lib/services/photo-order-service";
-import { getSiteSettings } from "@/lib/services/availability-service";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
 import { formatPrice } from "@/lib/photo-order-catalog";
 import { BookingDetailActions } from "@/components/admin/BookingDetailActions";
-import { BookingPhotoPricingForm } from "@/components/admin/BookingPhotoPricingForm";
 import { PhotoOrderDetailsDialog } from "@/components/admin/PhotoOrderDetailsDialog";
 import { PhotoOrderStatusControl } from "@/components/admin/PhotoOrderStatusControl";
 
@@ -21,10 +19,9 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
   const booking = await getBookingById(id);
   if (!booking) notFound();
 
-  const [service, photoOrders, settings] = await Promise.all([
+  const [service, photoOrders] = await Promise.all([
     getServiceById(booking.serviceId),
     getPhotoOrdersForBooking(booking.id),
-    getSiteSettings(),
   ]);
 
   const totalPhotoOrdersRevenue = photoOrders.reduce(
@@ -127,15 +124,6 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
 
       <div className="mt-6">
         <BookingDetailActions booking={booking} />
-      </div>
-
-      {/* Event Photo Pricing */}
-      <div className="mt-6">
-        <BookingPhotoPricingForm
-          bookingId={booking.id}
-          customPrices={booking.customPhotoPrices}
-          defaultSitePrices={settings.defaultPhotoPrices}
-        />
       </div>
 
       {/* Photo Orders for this booking/event */}

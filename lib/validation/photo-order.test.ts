@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   savePhotoOrderSchema,
-  updateBookingPhotoPricesSchema,
   verifyPhotoOrderPinSchema,
 } from "./photo-order";
+import { photoPriceOverridesSchema } from "./photo-pricing";
 
 describe("verifyPhotoOrderPinSchema", () => {
   it("normalizes a valid PIN", () => {
@@ -91,41 +91,28 @@ describe("savePhotoOrderSchema", () => {
   });
 });
 
-describe("updateBookingPhotoPricesSchema", () => {
-  const bookingId = "c6d64d12-8018-4c7c-8079-4841e2017892";
-
-  it("accepts valid custom prices", () => {
-    expect(
-      updateBookingPhotoPricesSchema.safeParse({
-        bookingId,
-        prices: {
-          "10x15 cm": 700,
-          "13x18 cm": 850,
-          "15x21 cm": 1300,
-          "A4 21x30 cm": 2000,
-          "Digitális változat": 2500,
-        },
-      }).success,
-    ).toBe(true);
+describe("photoPriceOverridesSchema", () => {
+  it("keeps service-specific print and digital prices", () => {
+    expect(photoPriceOverridesSchema.parse({
+      "10x15 cm": "700",
+      "Digitális kép": "2500",
+    })).toEqual({
+      "10x15 cm": 700,
+      "Digitális kép": 2500,
+    });
   });
 
-  it("accepts null prices to reset to default", () => {
-    expect(
-      updateBookingPhotoPricesSchema.safeParse({
-        bookingId,
-        prices: null,
-      }).success,
-    ).toBe(true);
+  it("uses global defaults when all overrides are empty", () => {
+    expect(photoPriceOverridesSchema.parse({
+      "10x15 cm": "",
+      "13x18 cm": "",
+      "15x21 cm": "",
+      "A4 21x30 cm": "",
+      "Digitális kép": "",
+    })).toBeNull();
   });
 
   it("rejects negative prices", () => {
-    expect(
-      updateBookingPhotoPricesSchema.safeParse({
-        bookingId,
-        prices: {
-          "10x15 cm": -100,
-        },
-      }).success,
-    ).toBe(false);
+    expect(photoPriceOverridesSchema.safeParse({ "10x15 cm": "-100" }).success).toBe(false);
   });
 });

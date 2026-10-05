@@ -111,7 +111,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SettingsFormDat
             Alapértelmezett fotórendelési darabárak (Ft / db)
           </label>
           <p className="mt-1 text-xs text-foreground/60">
-            Ezek a fotónyomatok és a digitális képek darabárai. Az új rendelések ezeket használják, ha az adott foglaláshoz nincs egyedi árlista megadva.
+            Ezek a fotónyomatok és a digitális képek darabárai. Az adott szolgáltatás egyedi árai felülírhatják ezeket.
           </p>
 
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">

@@ -29,6 +29,8 @@ export async function updateSettingsAction(formData: unknown): Promise<AdminActi
   try {
     await updateSettings(parsed.data);
     revalidatePath("/admin/settings");
+    revalidatePath("/admin/services");
+    revalidatePath("/fotorendeles");
     return { success: true };
   } catch (error) {
     console.error("[updateSettingsAction] Failed:", error);

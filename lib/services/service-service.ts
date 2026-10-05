@@ -11,6 +11,7 @@ import {
 } from "@/db/schema";
 import { deleteFolderFromCloudinary } from "@/lib/providers/cloudinary/client";
 import { getEmailProvider } from "@/lib/providers/email";
+import type { PhotoPrintSize } from "@/lib/photo-order-catalog";
 import { NotFoundError } from "@/lib/utils/errors";
 import { slugify } from "@/lib/utils/slug";
 import { getSiteSettings } from "./availability-service";
@@ -49,6 +50,7 @@ export type CreateServiceInput = {
   name: string;
   slug?: string;
   description?: string;
+  customPhotoPrices?: Partial<Record<PhotoPrintSize, number>> | null;
   durationMinutes?: number;
   bufferMinutes?: number;
   approvalMode?: "AUTO" | "MANUAL";
@@ -88,6 +90,7 @@ export async function createService(input: CreateServiceInput): Promise<Service>
       name: input.name.trim(),
       slug,
       description: input.description?.trim() ?? "",
+      customPhotoPrices: input.customPhotoPrices ?? null,
       durationMinutes: input.durationMinutes ?? 60,
       bufferMinutes: input.bufferMinutes ?? 0,
       approvalMode: input.approvalMode ?? "AUTO",
@@ -111,6 +114,7 @@ export type UpdateServiceInput = Partial<
     NewService,
     | "name"
     | "description"
+    | "customPhotoPrices"
     | "durationMinutes"
     | "bufferMinutes"
     | "approvalMode"

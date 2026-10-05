@@ -26,6 +26,7 @@ export async function createServiceAction(formData: unknown): Promise<AdminActio
     name: parsed.data.name,
     slug: parsed.data.slug || undefined,
     description: parsed.data.description,
+    customPhotoPrices: parsed.data.customPhotoPrices,
     durationMinutes: parsed.data.durationMinutes,
     bufferMinutes: parsed.data.bufferMinutes,
     approvalMode: parsed.data.approvalMode,
@@ -62,6 +63,7 @@ export async function updateServiceAction(formData: unknown): Promise<AdminActio
   const input: UpdateServiceInput = {
     name: parsed.data.name,
     description: parsed.data.description,
+    customPhotoPrices: parsed.data.customPhotoPrices,
     durationMinutes: parsed.data.durationMinutes,
     bufferMinutes: parsed.data.bufferMinutes,
     approvalMode: parsed.data.approvalMode,
@@ -80,6 +82,8 @@ export async function updateServiceAction(formData: unknown): Promise<AdminActio
     revalidatePath("/admin/services");
     revalidatePath("/admin/event-photos");
     revalidatePath("/idopontfoglalas");
+    revalidatePath("/fotorendeles");
+    revalidatePath("/admin/photo-orders");
     return { success: true };
   } catch (error) {
     console.error("[updateServiceAction] Failed:", error);

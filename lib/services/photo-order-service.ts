@@ -134,7 +134,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
   }
 
   const prices = resolvePhotoPrices(
-    access.booking.customPhotoPrices,
+    access.service.customPhotoPrices,
     settings.defaultPhotoPrices,
   );
 

@@ -12,6 +12,7 @@ function makeService(overrides: Partial<Service> = {}): Service {
     name: "Családi fotózás",
     slug: "csaladi-fotozas",
     description: "",
+    customPhotoPrices: null,
     durationMinutes: 60,
     bufferMinutes: 15,
     approvalMode: "AUTO",

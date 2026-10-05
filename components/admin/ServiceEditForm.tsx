@@ -7,6 +7,7 @@ import type { z } from "zod";
 import { updateServiceSchema } from "@/lib/validation/service";
 import { updateServiceAction } from "@/app/actions/admin-service-actions";
 import type { AvailabilityCalendar, Service, ServiceAvailabilityRule } from "@/db/schema";
+import { DEFAULT_PHOTO_PRICES, PHOTO_PRINT_SIZES, formatPrice, resolvePhotoPrices, type PhotoPrintSize } from "@/lib/photo-order-catalog";
 import { ServiceAvailabilityRuleRow } from "./ServiceAvailabilityRuleRow";
 import { DeleteServiceModal } from "./DeleteServiceModal";
 
@@ -19,9 +20,10 @@ interface ServiceEditFormProps {
   service: Service;
   customRules?: ServiceAvailabilityRule[];
   calendars?: AvailabilityCalendar[];
+  defaultPhotoPrices?: Partial<Record<PhotoPrintSize, number>> | null;
 }
 
-export function ServiceEditForm({ service, customRules = [], calendars = [] }: ServiceEditFormProps) {
+export function ServiceEditForm({ service, customRules = [], calendars = [], defaultPhotoPrices }: ServiceEditFormProps) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const {
@@ -35,6 +37,13 @@ export function ServiceEditForm({ service, customRules = [], calendars = [] }: S
       id: service.id,
       name: service.name,
       description: service.description,
+      customPhotoPrices: {
+        "10x15 cm": service.customPhotoPrices?.["10x15 cm"] ?? "",
+        "13x18 cm": service.customPhotoPrices?.["13x18 cm"] ?? "",
+        "15x21 cm": service.customPhotoPrices?.["15x21 cm"] ?? "",
+        "A4 21x30 cm": service.customPhotoPrices?.["A4 21x30 cm"] ?? "",
+        "Digitális kép": service.customPhotoPrices?.["Digitális kép"] ?? "",
+      },
       durationMinutes: service.durationMinutes,
       bufferMinutes: service.bufferMinutes,
       approvalMode: service.approvalMode,
@@ -51,6 +60,7 @@ export function ServiceEditForm({ service, customRules = [], calendars = [] }: S
 
   const availabilityMode = useWatch({ control, name: "availabilityMode" });
   const availabilityCalendarId = useWatch({ control, name: "availabilityCalendarId" });
+  const fallbackPrices = resolvePhotoPrices(defaultPhotoPrices);
   const ruleByDay = new Map(customRules.map((r) => [r.dayOfWeek, r]));
 
   const onSubmit = handleSubmit(async (data) => {
@@ -205,6 +215,41 @@ export function ServiceEditForm({ service, customRules = [], calendars = [] }: S
               className="mt-1.5 block w-full rounded-md border border-border px-3 py-2 text-sm"
               {...register("description")}
             />
+          </div>
+
+          <div className="sm:col-span-2 border-t border-border pt-4">
+            <h3 className="text-sm font-semibold text-foreground">Fotó- és digitális árak (Ft / db)</h3>
+            <p className="mt-1 text-xs text-foreground/60">
+              Csak a szolgáltatás egyedi árait töltsd ki. Üres mezőnél a Beállítások globális alapára érvényes.
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {PHOTO_PRINT_SIZES.map((size) => (
+                <div key={size}>
+                  <label className="block text-xs font-medium text-foreground" htmlFor={`${service.id}-price-${size}`}>
+                    {size}
+                  </label>
+                  <div className="mt-1 flex items-center gap-2">
+                    <input
+                      id={`${service.id}-price-${size}`}
+                      type="number"
+                      min={0}
+                      max={100000}
+                      step={10}
+                      placeholder={String(fallbackPrices[size] ?? DEFAULT_PHOTO_PRICES[size])}
+                      className="block min-h-10 w-full rounded-md border border-border px-3 py-2 text-sm"
+                      {...register(`customPhotoPrices.${size}` as const)}
+                    />
+                    <span className="text-xs text-foreground/60">Ft</span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-foreground/50">
+                    Alapár: {formatPrice(fallbackPrices[size] ?? DEFAULT_PHOTO_PRICES[size])}
+                  </p>
+                  {errors.customPhotoPrices?.[size] ? (
+                    <p className="mt-1 text-xs text-red-600">{errors.customPhotoPrices[size]?.message}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center gap-2 sm:col-span-2">

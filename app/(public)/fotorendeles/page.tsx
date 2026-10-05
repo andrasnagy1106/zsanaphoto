@@ -53,7 +53,7 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
   ]);
 
   const prices = resolvePhotoPrices(
-    access.booking.customPhotoPrices,
+    access.service.customPhotoPrices,
     settings.defaultPhotoPrices,
   );
 

@@ -4,10 +4,14 @@ import { ServiceEditForm } from "@/components/admin/ServiceEditForm";
 import { CreateServiceModal } from "@/components/admin/CreateServiceModal";
 import { AvailabilityCalendarsManager } from "@/components/admin/AvailabilityCalendarsManager";
 import { listAvailabilityCalendars } from "@/lib/services/availability-calendar-service";
+import { getSettings } from "@/lib/services/settings-service";
 
 export default async function AdminServicesPage() {
-  const services = await listServices();
-  const calendarsWithSlots = await listAvailabilityCalendars();
+  const [services, calendarsWithSlots, settings] = await Promise.all([
+    listServices(),
+    listAvailabilityCalendars(),
+    getSettings(),
+  ]);
   const calendars = calendarsWithSlots.map(({ calendar }) => calendar);
 
   const servicesWithRules = await Promise.all(
@@ -23,7 +27,7 @@ export default async function AdminServicesPage() {
         <div>
           <h1 className="font-display text-2xl text-foreground">Szolgáltatások & Események</h1>
           <p className="mt-1 text-sm text-foreground/60">
-            Állítsd be a fotózási szolgáltatások alapadatait, érvényességi idejét és egyedi elérhetőségeit.
+            Állítsd be a szolgáltatások adatait, fotó- és digitális árait, valamint az elérhetőségüket.
           </p>
         </div>
         <CreateServiceModal calendars={calendars} />
@@ -40,6 +44,7 @@ export default async function AdminServicesPage() {
             service={service}
             customRules={customRules}
             calendars={calendars}
+            defaultPhotoPrices={settings.defaultPhotoPrices}
           />
         ))}
       </div>
