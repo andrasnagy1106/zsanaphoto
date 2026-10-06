@@ -2,17 +2,18 @@ import { z } from "zod";
 import { photoPriceOverridesSchema } from "@/lib/validation/photo-pricing";
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+const servicePhotoPricesSchema = z.union([photoPriceOverridesSchema, z.null()]).optional().default(null);
 
 export const updateServiceSchema = z.object({
   id: z.string().min(1),
   name: z.string().trim().min(2).max(200),
   description: z.string().trim().max(2000).optional().default(""),
-  customPhotoPrices: photoPriceOverridesSchema.optional().default(null),
+  customPhotoPrices: servicePhotoPricesSchema,
   durationMinutes: z.coerce.number().int().min(5).max(600),
   bufferMinutes: z.coerce.number().int().min(0).max(600),
   approvalMode: z.enum(["AUTO", "MANUAL"]),
   availabilityMode: z.enum(["GLOBAL", "CUSTOM"]).default("GLOBAL"),
-  availabilityCalendarId: z.string().trim().optional().transform((value) => value || null),
+  availabilityCalendarId: z.string().trim().nullable().optional().transform((value) => value || null),
   onlineBookingEnabled: z.coerce.boolean().default(true),
   dateRangeStart: z
     .string()
@@ -44,12 +45,12 @@ export const createServiceSchema = z.object({
   name: z.string().trim().min(2, "A név legalább 2 karakter legyen.").max(200),
   slug: z.string().trim().max(100).optional().default(""),
   description: z.string().trim().max(2000).optional().default(""),
-  customPhotoPrices: photoPriceOverridesSchema.optional().default(null),
+  customPhotoPrices: servicePhotoPricesSchema,
   durationMinutes: z.coerce.number().int().min(5, "Minimum 5 perc.").max(600).default(60),
   bufferMinutes: z.coerce.number().int().min(0).max(600).default(0),
   approvalMode: z.enum(["AUTO", "MANUAL"]).default("AUTO"),
   availabilityMode: z.enum(["GLOBAL", "CUSTOM"]).default("GLOBAL"),
-  availabilityCalendarId: z.string().trim().optional().transform((value) => value || null),
+  availabilityCalendarId: z.string().trim().nullable().optional().transform((value) => value || null),
   onlineBookingEnabled: z.coerce.boolean().default(true),
   dateRangeStart: z
     .string()

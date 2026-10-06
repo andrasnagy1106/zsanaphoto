@@ -58,4 +58,29 @@ describe("updateServiceSchema", () => {
     expect(parsed.id).toBe("service-123");
     expect(parsed.active).toBe(false);
   });
+
+  it("accepts the parsed form output again when custom prices are empty", () => {
+    const input = {
+      id: "service-123",
+      name: "Módosított név",
+      customPhotoPrices: {
+        "10x15 cm": "",
+        "13x18 cm": "",
+        "15x21 cm": "",
+        "A4 21x30 cm": "",
+        "Digitális kép": "",
+      },
+      durationMinutes: 60,
+      bufferMinutes: 15,
+      approvalMode: "MANUAL",
+      availabilityMode: "GLOBAL",
+      onlineBookingEnabled: false,
+      active: true,
+    };
+
+    const parsed = updateServiceSchema.parse(input);
+
+    expect(parsed.onlineBookingEnabled).toBe(false);
+    expect(updateServiceSchema.safeParse(parsed).success).toBe(true);
+  });
 });
