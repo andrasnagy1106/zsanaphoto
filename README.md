@@ -167,11 +167,11 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
 - A szabad időpontokat a rendszer **mindig** az adatbázisban tárolt `availabilityRules`,
   `availabilityDateOverrides`, `blockedPeriods` és aktív (`PENDING`/`CONFIRMED`) `bookings`
   rekordok alapján számolja ki - nincsenek frontendbe égetett időpontok.
-- Az `/admin/services` oldalon szolgáltatásonként kapcsolható az online időpontfoglalás. Kikapcsolt
-  szolgáltatás nem jelenik meg a foglalóban, és szerveroldalon sem foglalható. Ha nincs aktív,
-  foglalható szolgáltatás, az `/idopontfoglalas` oldal űrlap helyett a telefonszámot jeleníti meg.
-  A kapcsoló a szolgáltatás aktív állapotától függetlenül állítható; az üres egyedi árak és a
-  naptárválasztás nélküli állapot is érvényes, menthető beállítás.
+- Az `/admin/services` oldalon szolgáltatásonként kapcsolható az online időpontfoglalás. Minden
+  aktív szolgáltatás megjelenik az `/idopontfoglalas` oldalon: amelyiknél az online foglalás ki van
+  kapcsolva, annál telefonos egyeztetés érhető el, online időpontot nem lehet választani vagy
+  beküldeni. Ha nincs aktív szolgáltatás, az oldal űrlap helyett a telefonszámot jeleníti meg.
+  Az üres egyedi árak és a naptárválasztás nélküli állapot is érvényes, menthető beállítás.
 - Az adminban névvel ellátott eseménynaptárak hozhatók létre, dátumonkénti, kézzel megadott
   kezdési és befejezési időkkel. Minden bejegyzés egy külön foglalható alkalom; a rendszer nem
   generál további időpontokat az időtartam vagy a puffer alapján. Ha egy naptár hozzá van rendelve

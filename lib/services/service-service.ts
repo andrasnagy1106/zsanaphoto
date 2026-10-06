@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   bookings,
@@ -25,14 +25,6 @@ export async function listActiveServices(): Promise<Service[]> {
     .select()
     .from(services)
     .where(eq(services.active, true))
-    .orderBy(asc(services.sortOrder));
-}
-
-export async function listActiveBookableServices(): Promise<Service[]> {
-  return db
-    .select()
-    .from(services)
-    .where(and(eq(services.active, true), eq(services.onlineBookingEnabled, true)))
     .orderBy(asc(services.sortOrder));
 }
 
