@@ -188,6 +188,20 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
   foglalásokat - ez race condition esetén is garantáltan megakadályozza a dupla foglalást.
 - `approvalMode = AUTO`: a foglalás azonnal `CONFIRMED`. `MANUAL`: `PENDING`, admin jóváhagyása
   szükséges (`/admin/bookings`).
+- **Lemondás és végleges törlés:** Az `/admin/bookings` listában és a foglalás részleteinél
+  minden státuszban elérhető a **Törlés** gomb, megerősítő ablakkal. Véglegesen eltávolítja a
+  foglalást, a hozzá kapcsolódó ügyféladatokat, PIN-t és kezelési tokent, a Cloudinary-képeket
+  (CDN-érvénytelenítéssel), az összes fotórendelést és tételt, számlázási adatot, valamint a
+  kapcsolódó tárolt e-maileket, beleértve a kiküldésre váró leveleket is. **A törlés soha nem
+  küld e-mailt.** Más foglalások adatai ugyanazon ügyfél e-mail-címe esetén is megmaradnak.
+  Képtártörlési hiba esetén az adatbázis-tranzakció visszagördül; a törlés újrapróbálható.
+  A már eltávolított képek nem állíthatók vissza, ha egy későbbi törlési lépés hibázik.
+  A korábban kézbesített e-mailek a címzettek postafiókjából nem törölhetők; a Cloudinary CDN
+  gyorsítótárának érvénytelenítése sem feltétlenül azonnali.
+  Ha értesítés szükséges, az aktív (`PENDING` / `CONFIRMED`) foglalásnál a **Lemondás** gombot
+  kell használni: ez megtartja a foglalást, `CANCELLED` státuszt állít be, visszavonja a PIN-t
+  és lemondási e-mailt küld az ügyfélnek (Resend napi limitnél várólistára teszi;
+  Resend-beállítás nélkül csak a fejlesztői konzolba írja).
 - Az egyedi, két nagybetűből és öt számjegyből álló PIN kizárólag intézményi foglaláshoz készül.
   Megerősített vagy teljesített foglalás PIN-jével a fejlécből megnyitható a privát fotórendelő.
 - **Esemény fotók & PIN kezelés az adminban (`/admin/event-photos` és `/admin/bookings`):**

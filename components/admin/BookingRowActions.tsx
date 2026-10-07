@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cancelBookingAction, confirmBookingAction } from "@/app/actions/admin-booking-actions";
 import type { Booking } from "@/db/schema";
+import { DeleteBookingModal } from "./DeleteBookingModal";
 
 export function BookingRowActions({ booking }: { booking: Pick<Booking, "id" | "status"> }) {
   const router = useRouter();
@@ -24,7 +25,7 @@ export function BookingRowActions({ booking }: { booking: Pick<Booking, "id" | "
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {booking.status === "PENDING" ? (
           <button
             type="button"
@@ -45,6 +46,7 @@ export function BookingRowActions({ booking }: { booking: Pick<Booking, "id" | "
             Lemondás
           </button>
         ) : null}
+        <DeleteBookingModal bookingId={booking.id} />
       </div>
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>

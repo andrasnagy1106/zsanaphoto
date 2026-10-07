@@ -7,6 +7,7 @@ import {
   completeBooking,
   confirmBooking,
   createAdminEventUser,
+  deleteBookingWithoutNotification,
 } from "@/lib/services/booking-service";
 import { createAdminEventUserSchema } from "@/lib/validation/booking";
 import { zonedDateTimeToUtc } from "@/lib/utils/time";
@@ -43,6 +44,25 @@ export async function cancelBookingAction(id: string): Promise<AdminActionResult
   } catch (error) {
     console.error("[cancelBookingAction] Failed:", error);
     return { success: false, error: error instanceof Error ? error.message : "Valami hiba történt." };
+  }
+}
+
+export async function deleteBookingAction(id: string): Promise<AdminActionResult> {
+  await requireAdmin();
+  if (typeof id !== "string" || !id.trim()) {
+    return { success: false, error: "Érvénytelen foglalási azonosító." };
+  }
+  try {
+    await deleteBookingWithoutNotification(id);
+    revalidatePath("/admin/bookings");
+    revalidatePath(`/admin/bookings/${id}`);
+    revalidatePath("/admin/event-photos");
+    revalidatePath("/admin/photo-orders");
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (error) {
+    console.error("[deleteBookingAction] Failed:", error);
+    return { success: false, error: error instanceof Error ? error.message : "A foglalás törlése nem sikerült." };
   }
 }
 

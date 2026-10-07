@@ -91,20 +91,29 @@ export async function flushQueuedEmails(
     if (sentToday >= DAILY_EMAIL_SEND_LIMIT) break;
 
     try {
-      await deliver(email.toAddress, email.subject, email.body);
+      const sent = await db.transaction(async (tx) => {
+        const [current] = await tx.select().from(emailOutbox)
+          .where(and(eq(emailOutbox.id, email.id), eq(emailOutbox.status, "QUEUED")))
+          .for("update");
+        if (!current) return false;
+
+        await deliver(current.toAddress, current.subject, current.body);
+        await tx.update(emailOutbox)
+          .set({ status: "SENT", sentAt: new Date(), updatedAt: new Date() })
+          .where(eq(emailOutbox.id, current.id));
+        return true;
+      });
+      if (sent) {
+        sentToday += 1;
+        sentCount += 1;
+      }
     } catch (error) {
       console.error(`[email-outbox] Failed to deliver queued email to ${email.toAddress}:`, error);
       continue;
     }
-
-    await db
-      .update(emailOutbox)
-      .set({ status: "SENT", sentAt: new Date(), updatedAt: new Date() })
-      .where(eq(emailOutbox.id, email.id));
-
-    sentToday += 1;
-    sentCount += 1;
   }
 
-  return { sent: sentCount, remaining: queued.length - sentCount };
+  const [remaining] = await db.select({ count: sql<number>`count(*)::int` })
+    .from(emailOutbox).where(eq(emailOutbox.status, "QUEUED"));
+  return { sent: sentCount, remaining: remaining?.count ?? 0 };
 }

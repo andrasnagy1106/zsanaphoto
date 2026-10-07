@@ -1,6 +1,7 @@
-import { and, asc, desc, eq, gte, inArray, lte, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { bookings, services, type Booking, type Service } from "@/db/schema";
+import { bookings, emailOutbox, eventPhotos, photoOrders, services, type Booking, type Service } from "@/db/schema";
+import { deleteMultiplePhotosFromCloudinary } from "@/lib/providers/cloudinary/client";
 import {
   ACTIVE_BOOKING_STATUSES,
   BOOKING_NUMBER_PREFIX,
@@ -39,12 +40,11 @@ function isPgErrorCode(error: unknown, code: string): boolean {
 }
 
 async function generateBookingNumber(tx: Tx, year: number): Promise<string> {
-  const [{ count }] = await tx
-    .select({ count: sql<number>`count(*)::int` })
-    .from(bookings)
-    .where(sql`extract(year from ${bookings.startAt}) = ${year}`);
+  const [{ lastSequence }] = await tx
+    .select({ lastSequence: sql<number>`coalesce(max(substring(${bookings.bookingNumber} from ${`^${BOOKING_NUMBER_PREFIX}-${year}-([0-9]+)`})::integer), 0)::int` })
+    .from(bookings);
 
-  const sequence = count + 1;
+  const sequence = lastSequence + 1;
   return `${BOOKING_NUMBER_PREFIX}-${year}-${String(sequence).padStart(4, "0")}`;
 }
 
@@ -424,6 +424,26 @@ export async function cancelBooking(id: string): Promise<Booking> {
   }
 
   return updated;
+}
+
+export async function deleteBookingWithoutNotification(id: string): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [booking] = await tx.select().from(bookings).where(eq(bookings.id, id)).for("update");
+    if (!booking) throw new NotFoundError("A foglalás nem található.");
+
+    await tx.delete(emailOutbox).where(or(
+      sql`strpos(E'\n' || ${emailOutbox.body} || E'\n', ${`\nFoglalási azonosító: ${booking.bookingNumber}\n`}) > 0`,
+      eq(emailOutbox.subject, `Új foglalás érkezett - ${booking.bookingNumber}`),
+    ));
+
+    const photos = await tx.select({ publicId: eventPhotos.publicId })
+      .from(eventPhotos).where(eq(eventPhotos.bookingId, id));
+    await deleteMultiplePhotosFromCloudinary(photos.map((photo) => photo.publicId));
+
+    await tx.delete(photoOrders).where(eq(photoOrders.bookingId, id));
+    await tx.delete(eventPhotos).where(eq(eventPhotos.bookingId, id));
+    await tx.delete(bookings).where(eq(bookings.id, id));
+  });
 }
 
 export async function completeBooking(id: string): Promise<Booking> {

@@ -259,7 +259,13 @@ export async function deletePhotoFromCloudinary(publicId: string): Promise<boole
 export async function deleteMultiplePhotosFromCloudinary(publicIds: string[]): Promise<void> {
   if (publicIds.length === 0) return;
   const client = configureCloudinary();
-  await client.api.delete_resources(publicIds, { resource_type: "image" });
+  for (let offset = 0; offset < publicIds.length; offset += 100) {
+    const batch = publicIds.slice(offset, offset + 100);
+    const result = await client.api.delete_resources(batch, { resource_type: "image", invalidate: true });
+    if (batch.some((publicId) => !["deleted", "not_found"].includes(result.deleted?.[publicId]))) {
+      throw new Error("Nem sikerült minden képet törölni a Cloudinary tárhelyről. Próbáld újra a törlést.");
+    }
+  }
 }
 
 export async function deleteFolderFromCloudinary(pin: string): Promise<void> {

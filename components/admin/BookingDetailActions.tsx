@@ -8,6 +8,7 @@ import {
   confirmBookingAction,
 } from "@/app/actions/admin-booking-actions";
 import type { Booking } from "@/db/schema";
+import { DeleteBookingModal } from "./DeleteBookingModal";
 
 export function BookingDetailActions({ booking }: { booking: Pick<Booking, "id" | "status"> }) {
   const router = useRouter();
@@ -59,6 +60,7 @@ export function BookingDetailActions({ booking }: { booking: Pick<Booking, "id" 
             Teljesítettnek jelölés
           </button>
         ) : null}
+        <DeleteBookingModal bookingId={booking.id} returnToList />
       </div>
       {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
     </div>
