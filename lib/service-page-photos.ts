@@ -10,8 +10,24 @@ export const SERVICE_PAGE_PHOTO_COLLECTIONS = [
   { key: "oldal:intezmenyi-fotozas", label: "Intézményi fotózás", href: "/intezmenyi-fotozas" },
 ] as const;
 
+export const ABOUT_PAGE_PHOTO_COLLECTION = {
+  key: "oldal:rolam",
+  label: "Rólam",
+  href: "/rolam",
+} as const;
+
+export const PAGE_PHOTO_COLLECTIONS = [
+  ...SERVICE_PAGE_PHOTO_COLLECTIONS,
+  ABOUT_PAGE_PHOTO_COLLECTION,
+] as const;
+
 export type ServicePagePhotoKey = (typeof SERVICE_PAGE_PHOTO_COLLECTIONS)[number]["key"];
+export type PagePhotoKey = (typeof PAGE_PHOTO_COLLECTIONS)[number]["key"];
 
 export function isServicePagePhotoKey(value: string): value is ServicePagePhotoKey {
   return SERVICE_PAGE_PHOTO_COLLECTIONS.some((collection) => collection.key === value);
+}
+
+export function isPagePhotoKey(value: string): value is PagePhotoKey {
+  return PAGE_PHOTO_COLLECTIONS.some((collection) => collection.key === value);
 }

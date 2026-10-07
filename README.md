@@ -246,6 +246,7 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
     a többi admin képfeltöltő szükség esetén automatikusan leméretezi a nagy fájlokat. Az álló és
     fekvő fotók eredeti képaránya megmarad, a galéria- és rendelési nézetek nem vágnak le a képből.
   - **Főoldali fotók kezelése az adminban:** Az `/admin/settings` oldalon közvetlenül feltölthető és cserélhető a főoldali Hero borítókép, a "Rólam" portré, valamint a "Miben segíthetek?" szolgáltatáskártyák egyedi képei.
+  - **Rólam oldal többképes galériája:** A "Bemutatkozó oldalak képei" adminfelületen (`/admin/service-page-photos`) a "Rólam" gyűjteményhez több kép tölthető fel. A sorrend első képe jelenik meg kiemelt portréként a `/rolam` oldalon, a többi fotó alatta galériában látható. A képek sorrendje, felirata, igazítása és törlése ugyanitt kezelhető. Ez külön funkció a Beállítások oldalon kezelhető, egyképes főoldali portrétól.
   - **Fotó- és digitális képek árai:** Az `/admin/settings` oldalon a nyomatméretek és a digitális képek
     globális darabárai szerkeszthetők. A `/admin/services` oldalon szolgáltatásonként külön árak adhatók
     meg; az üresen hagyott méretek a globális alapárat használják. A rendelés a PIN-hez tartozó

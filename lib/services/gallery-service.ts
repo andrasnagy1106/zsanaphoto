@@ -9,7 +9,7 @@ import {
   GALLERY_CATEGORY_DEFAULT_CAPTIONS,
   type GalleryCategory,
 } from "@/lib/gallery-categories";
-import type { ServicePagePhotoKey } from "@/lib/service-page-photos";
+import { ABOUT_PAGE_PHOTO_COLLECTION, type ServicePagePhotoKey } from "@/lib/service-page-photos";
 import { reorderIdsByMove, toObjectPosition } from "@/lib/utils/photo-layout";
 import type { GalleryPhotoEditInput, PhotoMoveDirection } from "@/lib/validation/photo-edit";
 
@@ -81,6 +81,11 @@ export async function getServicePagePhotos(
   const pagePhotos = await listGalleryPhotosByCategory(pageKey);
   if (pagePhotos.length > 0) return pagePhotos.map(toGalleryPhotoDisplay);
   return getFeaturedGalleryPhotos(fallbackCategories);
+}
+
+export async function getAboutPagePhotos(): Promise<GalleryPhotoDisplay[]> {
+  const pagePhotos = await listGalleryPhotosByCategory(ABOUT_PAGE_PHOTO_COLLECTION.key);
+  return pagePhotos.map(toGalleryPhotoDisplay);
 }
 
 export interface UploadGalleryPhotoInput {

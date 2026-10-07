@@ -9,7 +9,7 @@ import {
   uploadGalleryPhoto,
 } from "@/lib/services/gallery-service";
 import { isGalleryCategory } from "@/lib/gallery-categories";
-import { isServicePagePhotoKey } from "@/lib/service-page-photos";
+import { isPagePhotoKey } from "@/lib/service-page-photos";
 import { galleryPhotoEditSchema, photoMoveDirectionSchema } from "@/lib/validation/photo-edit";
 
 export interface AdminGalleryActionResult {
@@ -40,7 +40,7 @@ export async function uploadGalleryPhotoAction(formData: FormData): Promise<Admi
     if (
       !category ||
       typeof category !== "string" ||
-      !(isGalleryCategory(category) || isServicePagePhotoKey(category))
+      !(isGalleryCategory(category) || isPagePhotoKey(category))
     ) {
       return { success: false, error: "Válassz érvényes galéria kategóriát." };
     }

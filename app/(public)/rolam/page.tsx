@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { PhotoGrid } from "@/components/public/PhotoGrid";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { getAboutPagePhotos } from "@/lib/services/gallery-service";
 import { getPlaceholderImageUrl } from "@/lib/utils/placeholder-image";
 
 export const metadata: Metadata = {
@@ -10,7 +12,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/rolam" },
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const photos = await getAboutPagePhotos();
+  const portrait = photos[0];
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <div className="grid gap-10 lg:grid-cols-[2fr_1fr] lg:items-start">
@@ -35,14 +40,23 @@ export default function AboutPage() {
         </div>
         <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-border">
           <Image
-            src={getPlaceholderImageUrl("zsana-portre", 600, 800)}
-            alt=""
+            src={portrait?.src || getPlaceholderImageUrl("zsana-portre", 600, 800)}
+            alt={portrait?.caption || "ZsaNa bemutatkozó fotója"}
             fill
             sizes="(max-width: 1024px) 60vw, 320px"
             className="object-cover"
+            style={portrait?.objectPosition ? { objectPosition: portrait.objectPosition } : undefined}
           />
         </div>
       </div>
+      {photos.length > 1 ? (
+        <section className="mt-16">
+          <SectionHeading level="h2" eyebrow="ZsaNa Photo" title="Pillanatok rólam" />
+          <div className="mt-8">
+            <PhotoGrid photos={photos.slice(1)} />
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
