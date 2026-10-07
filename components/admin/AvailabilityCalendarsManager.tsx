@@ -95,9 +95,7 @@ export function AvailabilityCalendarsManager({ calendars }: AvailabilityCalendar
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="font-display text-xl text-foreground">Eseménynaptárak</h2>
-          <p className="mt-1 max-w-2xl text-sm text-foreground/60">
-            Minden sor egy külön foglalható alkalom: add meg a dátumát, kezdését és végét. Naptár hozzárendelésekor csak ezek jelennek meg.
-          </p>
+          <p className="mt-1 text-sm text-foreground/60">{calendars.length} naptár</p>
         </div>
       </div>
 
@@ -115,7 +113,7 @@ export function AvailabilityCalendarsManager({ calendars }: AvailabilityCalendar
         <button
           type="submit"
           disabled={isPending}
-          className="min-h-11 rounded-md bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-60"
+          className="min-h-11 cursor-pointer rounded-md bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-60"
         >
           Naptár létrehozása
         </button>
@@ -126,18 +124,28 @@ export function AvailabilityCalendarsManager({ calendars }: AvailabilityCalendar
       <div className="mt-5 divide-y divide-border border-t border-border">
         {calendars.length === 0 ? (
           <p className="py-5 text-sm text-foreground/60">Még nincs létrehozott eseménynaptár.</p>
-        ) : calendars.map(({ calendar, slots }) => (
-          <div key={calendar.id} className="py-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="font-semibold text-foreground">{calendar.name}</h3>
-                <p className="text-xs text-foreground/55">{slots.length} rögzített idősáv</p>
-              </div>
+        ) : calendars.map(({ calendar, slots }) => {
+          const slotsByDate = new Map<string, typeof slots>();
+          for (const slot of slots) {
+            const dateSlots = slotsByDate.get(slot.date) ?? [];
+            dateSlots.push(slot);
+            slotsByDate.set(slot.date, dateSlots);
+          }
+
+          return (
+          <details key={calendar.id} className="min-w-0 open:pb-5">
+            <summary className="cursor-pointer py-4 text-foreground marker:text-accent focus-visible:outline-2 focus-visible:outline-accent">
+              <span className="ml-1 inline-flex max-w-[calc(100%-2rem)] flex-wrap items-center gap-x-3 gap-y-1 align-middle">
+                <span className="min-w-0 break-words font-semibold">{calendar.name}</span>
+                <span className="text-xs text-foreground/55">{slotsByDate.size} nap · {slots.length} időpont</span>
+              </span>
+            </summary>
+            <div className="flex justify-end">
               <button
                 type="button"
                 disabled={isPending}
                 onClick={() => handleDeleteCalendar(calendar.id, calendar.name)}
-                className="min-h-9 rounded-md border border-border px-3 text-sm text-red-700 hover:bg-red-50 disabled:opacity-60"
+                className="min-h-9 cursor-pointer rounded-md border border-border px-3 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Naptár törlése
               </button>
@@ -211,7 +219,7 @@ export function AvailabilityCalendarsManager({ calendars }: AvailabilityCalendar
               <button
                 type="submit"
                 disabled={isPending}
-                className="min-h-10 rounded-md border border-accent px-4 text-sm font-semibold text-accent hover:bg-accent/5 disabled:opacity-60"
+                className="min-h-10 cursor-pointer rounded-md border border-accent px-4 text-sm font-semibold text-accent hover:bg-accent/5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {slotModes[calendar.id] === "split" ? "Időpontok létrehozása" : "Idősáv hozzáadása"}
               </button>
@@ -219,25 +227,38 @@ export function AvailabilityCalendarsManager({ calendars }: AvailabilityCalendar
             {slotMessages[calendar.id] ? <p className="mt-3 text-sm text-foreground/75" role="status">{slotMessages[calendar.id]}</p> : null}
 
             {slots.length > 0 ? (
-              <ul className="mt-4 divide-y divide-border rounded-md border border-border">
-                {slots.map((slot) => (
-                  <li key={slot.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                    <span className="font-medium tabular-nums">{slot.date} · {slot.startTime}–{slot.endTime}</span>
-                    <button
-                      type="button"
-                      disabled={isPending}
-                      onClick={() => handleDeleteSlot(slot.id)}
-                      className="min-h-8 px-2 text-xs font-medium text-red-700 hover:underline disabled:opacity-60"
-                      aria-label={`${slot.date} ${slot.startTime}–${slot.endTime} idősáv törlése`}
-                    >
-                      Törlés
-                    </button>
-                  </li>
+              <div className="mt-4 max-h-80 overflow-y-auto overscroll-contain divide-y divide-border border-t border-border focus-visible:outline-2 focus-visible:outline-accent" role="region" tabIndex={0} aria-label={`${calendar.name} időpontjai`}>
+                {Array.from(slotsByDate, ([date, dateSlots]) => (
+                  <details key={date} name={`${calendar.id}-dates`}>
+                    <summary className="cursor-pointer py-3 text-sm marker:text-accent focus-visible:outline-2 focus-visible:outline-accent">
+                      <span className="ml-1 inline-flex max-w-[calc(100%-2rem)] flex-wrap items-center gap-x-3 gap-y-1 align-middle">
+                        <span className="font-medium">{new Date(`${date}T12:00:00`).toLocaleDateString("hu-HU", { year: "numeric", month: "long", day: "numeric" })}</span>
+                        <span className="text-xs text-foreground/55">{dateSlots.length} időpont</span>
+                      </span>
+                    </summary>
+                    <ul className="divide-y divide-border border-t border-border pl-4">
+                      {dateSlots.map((slot) => (
+                        <li key={slot.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                          <span className="font-medium tabular-nums">{slot.startTime}–{slot.endTime}</span>
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            onClick={() => handleDeleteSlot(slot.id)}
+                            className="min-h-8 cursor-pointer px-2 text-xs font-medium text-red-700 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+                            aria-label={`${slot.date} ${slot.startTime}–${slot.endTime} idősáv törlése`}
+                          >
+                            Törlés
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
                 ))}
-              </ul>
-            ) : null}
-          </div>
-        ))}
+              </div>
+            ) : <p className="mt-4 text-sm text-foreground/60">Még nincs rögzített időpont.</p>}
+          </details>
+          );
+        })}
       </div>
     </section>
   );

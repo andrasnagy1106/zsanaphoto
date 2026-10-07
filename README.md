@@ -173,7 +173,13 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
   beküldeni. Ha nincs aktív szolgáltatás, az oldal űrlap helyett a telefonszámot jeleníti meg.
   Az üres egyedi árak és a naptárválasztás nélküli állapot is érvényes, menthető beállítás.
 - Az adminban névvel ellátott eseménynaptárak hozhatók létre, dátumonkénti, kézzel megadott
-  kezdési és befejezési időkkel. Minden bejegyzés egy külön foglalható alkalom; a rendszer nem
+  kezdési és befejezési időkkel. Az `/admin/services` oldalon a naptárak alapból összecsukva,
+  névvel, napszámmal és időpontszámmal jelennek meg. A naptár nevére kattintva nyitható meg
+  a szerkesztő; az időpontok dátumonként csoportosítva, külön nyitható napokkal láthatók.
+  Egy naptáron belül egyszerre egy nap időpontjai nyílnak meg. A dátumlista magassága
+  legfeljebb 320 px, saját görgetéssel, így sok időpont sem tolja le a szolgáltatások űrlapjait.
+  A naptár- és dátumsorok, valamint a görgethető lista billentyűzettel is elérhetők.
+  Minden bejegyzés egy külön foglalható alkalom; a rendszer nem
   generál további időpontokat a szolgáltatás időtartama vagy puffere alapján. Az **Eseménynaptárak**
   résznél a **Rögzítés módja → Időszak felosztása** választással viszont egyszerre létrehozható
   egy teljes nap több, egymást követő alkalma. Például `2026-11-06`, `13:30`–`19:00`,

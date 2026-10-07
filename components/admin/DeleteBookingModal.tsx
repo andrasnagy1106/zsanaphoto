@@ -48,7 +48,7 @@ export function DeleteBookingModal({ bookingId, returnToList = false }: {
         type="button"
         onClick={openDeleteConfirmation}
         disabled={isPending}
-        className="min-h-9 rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 disabled:opacity-50"
+        className="min-h-9 cursor-pointer rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         Törlés
       </button>
@@ -75,11 +75,11 @@ export function DeleteBookingModal({ bookingId, returnToList = false }: {
         {error ? <p role="alert" className="mt-4 text-sm text-red-700">{error}</p> : null}
         <div className="mt-6 flex flex-wrap justify-end gap-3">
           <button type="button" autoFocus disabled={isPending} onClick={closeDeleteConfirmation}
-            className="min-h-10 rounded-md border border-border px-4 py-2 text-sm font-semibold disabled:opacity-50">
+            className="min-h-10 cursor-pointer rounded-md border border-border px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50">
             Mégse
           </button>
           <button type="button" disabled={isPending} onClick={confirmBookingDeletion}
-            className="min-h-10 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            className="min-h-10 cursor-pointer rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
             {isPending ? "Törlés folyamatban..." : "Végleges törlés"}
           </button>
         </div>
