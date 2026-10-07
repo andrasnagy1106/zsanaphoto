@@ -1,10 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Service, SiteSettings } from "@/db/schema";
+import { buildAvailabilityCalendarSlots, createAvailabilityCalendarSlots } from "./availability-calendar-service";
+import { availabilityCalendarSlotBatchSchema } from "@/lib/validation/availability-calendar";
 import {
   computeSlotsForDate,
   overlaps,
   type AvailabilityContext,
 } from "./availability-service";
+
+const calendarDb = vi.hoisted(() => ({ transaction: vi.fn() }));
+vi.mock("@/db/client", () => ({ db: calendarDb }));
 
 function makeService(overrides: Partial<Service> = {}): Service {
   return {
@@ -82,6 +87,68 @@ describe("overlaps", () => {
     const c = new Date("2026-01-01T11:00:00Z");
     const d = new Date("2026-01-01T12:00:00Z");
     expect(overlaps(a, b, c, d)).toBe(false);
+  });
+});
+
+describe("availability calendar slot batches", () => {
+  const input = {
+    calendarId: "calendar-1", date: "2026-11-06", startTime: "13:30", endTime: "19:00", durationMinutes: 10,
+  };
+
+  it("creates 33 adjacent ten-minute appointments on November 6", () => {
+    const slots = buildAvailabilityCalendarSlots(input);
+    expect(slots).toHaveLength(33);
+    expect(slots[0]).toEqual({ calendarId: "calendar-1", date: "2026-11-06", startTime: "13:30", endTime: "13:40" });
+    expect(slots[32]).toEqual({ calendarId: "calendar-1", date: "2026-11-06", startTime: "18:50", endTime: "19:00" });
+    expect(slots.every((slot, index) => index === 0 || slots[index - 1].endTime === slot.startTime)).toBe(true);
+    const available = computeSlotsForDate(input.date, makeContext({
+      service: makeService({ availabilityCalendarId: input.calendarId }),
+      calendarSlotsByDate: new Map([[input.date, slots]]),
+    }));
+    expect(available).toHaveLength(33);
+    expect(available[0].start.toISOString()).toBe("2026-11-06T12:30:00.000Z");
+    expect(available[32].end.toISOString()).toBe("2026-11-06T18:00:00.000Z");
+  });
+
+  it.each([0, -10, 1.5, 400, 12])("rejects invalid or non-divisible duration %s", (durationMinutes) => {
+    expect(availabilityCalendarSlotBatchSchema.safeParse({ ...input, durationMinutes }).success).toBe(false);
+  });
+
+  it("rejects invalid dates and reversed times", () => {
+    expect(availabilityCalendarSlotBatchSchema.safeParse({ ...input, date: "2026-02-30" }).success).toBe(false);
+    expect(availabilityCalendarSlotBatchSchema.safeParse({ ...input, endTime: "13:00" }).success).toBe(false);
+  });
+
+  it("saves all 33 appointments in one transaction and insert", async () => {
+    const values = vi.fn().mockReturnValue({ returning: async () => Array.from({ length: 33 }, (_, index) => ({ id: String(index) })) });
+    const insert = vi.fn().mockReturnValue({ values });
+    const lock = vi.fn().mockResolvedValue([{ id: input.calendarId }]);
+    const select = vi.fn()
+      .mockReturnValueOnce({ from: () => ({ where: () => ({ for: lock }) }) })
+      .mockReturnValueOnce({ from: () => ({ where: () => ({ limit: async () => [] }) }) });
+    calendarDb.transaction.mockImplementation(async (callback) => callback({ select, insert }));
+    await expect(createAvailabilityCalendarSlots(input)).resolves.toBe(33);
+    expect(lock).toHaveBeenCalledWith("update");
+    expect(insert).toHaveBeenCalledTimes(1);
+    expect(values).toHaveBeenCalledWith(buildAvailabilityCalendarSlots(input));
+  });
+
+  it("does not insert any appointments when an existing slot overlaps", async () => {
+    const insert = vi.fn();
+    const select = vi.fn()
+      .mockReturnValueOnce({ from: () => ({ where: () => ({ for: async () => [{ id: input.calendarId }] }) }) })
+      .mockReturnValueOnce({ from: () => ({ where: () => ({ limit: async () => [{ id: "existing-slot" }] }) }) });
+    calendarDb.transaction.mockImplementation(async (callback) => callback({ select, insert }));
+    await expect(createAvailabilityCalendarSlots(input)).rejects.toThrow("már van rögzített idősáv");
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing calendar without inserting appointments", async () => {
+    const insert = vi.fn();
+    const select = vi.fn().mockReturnValue({ from: () => ({ where: () => ({ for: async () => [] }) }) });
+    calendarDb.transaction.mockImplementation(async (callback) => callback({ select, insert }));
+    await expect(createAvailabilityCalendarSlots(input)).rejects.toThrow("A naptár nem található.");
+    expect(insert).not.toHaveBeenCalled();
   });
 });
 

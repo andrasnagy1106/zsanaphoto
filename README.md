@@ -174,7 +174,15 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
   Az üres egyedi árak és a naptárválasztás nélküli állapot is érvényes, menthető beállítás.
 - Az adminban névvel ellátott eseménynaptárak hozhatók létre, dátumonkénti, kézzel megadott
   kezdési és befejezési időkkel. Minden bejegyzés egy külön foglalható alkalom; a rendszer nem
-  generál további időpontokat az időtartam vagy a puffer alapján. Ha egy naptár hozzá van rendelve
+  generál további időpontokat a szolgáltatás időtartama vagy puffere alapján. Az **Eseménynaptárak**
+  résznél a **Rögzítés módja → Időszak felosztása** választással viszont egyszerre létrehozható
+  egy teljes nap több, egymást követő alkalma. Például `2026-11-06`, `13:30`–`19:00`,
+  **Időpont hossza: 10 perc** és **Időpontok létrehozása**: 33 alkalom, az utolsó `18:50`–`19:00`.
+  A teljes időszaknak maradék nélkül oszthatónak kell lennie; meglévő átfedő idősáv esetén
+  a rendszer nem ment semmit, hanem hibaüzenetet ad. Az egyedi alkalmak az **Egy időpont**
+  móddal továbbra is felvehetők. Az intézményi szolgáltatásnál ezt a naptárat kell kiválasztani,
+  majd bekapcsolni az **Online időpontfoglalás engedélyezése ehhez a szolgáltatáshoz** jelölőt
+  és menteni a szolgáltatást. Ha egy naptár hozzá van rendelve
   egy szolgáltatáshoz, kizárólag annak idősávjai érvényesek, és felülírják az általános, illetve
   szolgáltatásspecifikus heti szabályokat. Naptár hozzárendelése nélkül a meglévő heti szabályok
   működnek változatlanul.

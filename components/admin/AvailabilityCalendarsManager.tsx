@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   createAvailabilityCalendarAction,
   createAvailabilityCalendarSlotAction,
+  createAvailabilityCalendarSlotsAction,
   deleteAvailabilityCalendarAction,
   deleteAvailabilityCalendarSlotAction,
 } from "@/app/actions/admin-availability-calendar-actions";
@@ -18,6 +19,8 @@ export function AvailabilityCalendarsManager({ calendars }: AvailabilityCalendar
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [slotModes, setSlotModes] = useState<Record<string, string>>({});
+  const [slotMessages, setSlotMessages] = useState<Record<string, string>>({});
 
   function handleCreateCalendar(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,22 +38,33 @@ export function AvailabilityCalendarsManager({ calendars }: AvailabilityCalendar
     });
   }
 
-  function handleCreateSlot(event: React.FormEvent<HTMLFormElement>, calendarId: string) {
+  function handleCreateCalendarSlots(event: React.FormEvent<HTMLFormElement>, calendarId: string) {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
-    setMessage(null);
+    const splitIntoAppointments = formData.get("mode") === "split";
+    setSlotMessages((current) => ({ ...current, [calendarId]: "" }));
 
     startTransition(async () => {
-      const result = await createAvailabilityCalendarSlotAction({
+      const input = {
         calendarId,
         date: String(formData.get("date") ?? ""),
         startTime: String(formData.get("startTime") ?? ""),
         endTime: String(formData.get("endTime") ?? ""),
-      });
-      setMessage(result.success ? "Az idősáv mentve." : result.error ?? "Az idősáv mentése nem sikerült.");
+      };
+      const result = splitIntoAppointments
+        ? await createAvailabilityCalendarSlotsAction({ ...input, durationMinutes: formData.get("durationMinutes") })
+        : await createAvailabilityCalendarSlotAction(input);
+      const savedMessage = "createdCount" in result
+        ? `${result.createdCount} időpont létrehozva.`
+        : "Az idősáv mentve.";
+      setSlotMessages((current) => ({
+        ...current,
+        [calendarId]: result.success ? savedMessage : result.error ?? "Az időpontok mentése nem sikerült.",
+      }));
       if (result.success) {
         form.reset();
+        setSlotModes((current) => ({ ...current, [calendarId]: "single" }));
         router.refresh();
       }
     });
@@ -130,9 +144,23 @@ export function AvailabilityCalendarsManager({ calendars }: AvailabilityCalendar
             </div>
 
             <form
-              onSubmit={(event) => handleCreateSlot(event, calendar.id)}
-              className="mt-4 grid gap-3 sm:grid-cols-[1.2fr_1fr_1fr_auto] sm:items-end"
+              onSubmit={(event) => handleCreateCalendarSlots(event, calendar.id)}
+              className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3 sm:items-end"
             >
+              <div>
+                <label className="block text-xs font-medium text-foreground" htmlFor={`${calendar.id}-slot-mode`}>Rögzítés módja</label>
+                <select
+                  id={`${calendar.id}-slot-mode`}
+                  name="mode"
+                  value={slotModes[calendar.id] ?? "single"}
+                  onChange={(event) => setSlotModes((current) => ({ ...current, [calendar.id]: event.target.value }))}
+                  disabled={isPending}
+                  className="mt-1 block min-h-10 w-full rounded-md border border-border px-3 py-2 text-sm"
+                >
+                  <option value="single">Egy időpont</option>
+                  <option value="split">Időszak felosztása</option>
+                </select>
+              </div>
               <div>
                 <label className="block text-xs font-medium text-foreground" htmlFor={`${calendar.id}-slot-date`}>Dátum</label>
                 <input
@@ -163,14 +191,32 @@ export function AvailabilityCalendarsManager({ calendars }: AvailabilityCalendar
                   className="mt-1 block min-h-10 w-full rounded-md border border-border px-3 py-2 text-sm"
                 />
               </div>
+              {slotModes[calendar.id] === "split" ? (
+                <div>
+                  <label className="block text-xs font-medium text-foreground" htmlFor={`${calendar.id}-slot-duration`}>Időpont hossza (perc)</label>
+                  <input
+                    id={`${calendar.id}-slot-duration`}
+                    name="durationMinutes"
+                    type="number"
+                    defaultValue={10}
+                    min={1}
+                    max={1440}
+                    step={1}
+                    required
+                    disabled={isPending}
+                    className="mt-1 block min-h-10 w-full rounded-md border border-border px-3 py-2 text-sm"
+                  />
+                </div>
+              ) : null}
               <button
                 type="submit"
                 disabled={isPending}
                 className="min-h-10 rounded-md border border-accent px-4 text-sm font-semibold text-accent hover:bg-accent/5 disabled:opacity-60"
               >
-                Idősáv hozzáadása
+                {slotModes[calendar.id] === "split" ? "Időpontok létrehozása" : "Idősáv hozzáadása"}
               </button>
             </form>
+            {slotMessages[calendar.id] ? <p className="mt-3 text-sm text-foreground/75" role="status">{slotMessages[calendar.id]}</p> : null}
 
             {slots.length > 0 ? (
               <ul className="mt-4 divide-y divide-border rounded-md border border-border">

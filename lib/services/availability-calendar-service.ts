@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, gt, lt } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   availabilityCalendarSlots,
@@ -6,6 +6,8 @@ import {
   type AvailabilityCalendar,
   type AvailabilityCalendarSlot,
 } from "@/db/schema";
+import { NotFoundError } from "@/lib/utils/errors";
+import { availabilityCalendarSlotBatchSchema, type AvailabilityCalendarSlotBatchInput } from "@/lib/validation/availability-calendar";
 
 export interface AvailabilityCalendarWithSlots {
   calendar: AvailabilityCalendar;
@@ -52,6 +54,48 @@ export async function createAvailabilityCalendarSlot(
     .values(input)
     .returning();
   return slot;
+}
+
+export function buildAvailabilityCalendarSlots(input: AvailabilityCalendarSlotBatchInput) {
+  const parsed = availabilityCalendarSlotBatchSchema.parse(input);
+  const [startHours, startMinutes] = parsed.startTime.split(":").map(Number);
+  const [endHours, endMinutes] = parsed.endTime.split(":").map(Number);
+  const rangeEnd = endHours * 60 + endMinutes;
+  const slots: Pick<AvailabilityCalendarSlot, "calendarId" | "date" | "startTime" | "endTime">[] = [];
+
+  for (let cursor = startHours * 60 + startMinutes; cursor + parsed.durationMinutes <= rangeEnd; cursor += parsed.durationMinutes) {
+    const slotEnd = cursor + parsed.durationMinutes;
+    slots.push({
+      calendarId: parsed.calendarId,
+      date: parsed.date,
+      startTime: `${String(Math.floor(cursor / 60)).padStart(2, "0")}:${String(cursor % 60).padStart(2, "0")}`,
+      endTime: `${String(Math.floor(slotEnd / 60)).padStart(2, "0")}:${String(slotEnd % 60).padStart(2, "0")}`,
+    });
+  }
+  return slots;
+}
+
+export async function createAvailabilityCalendarSlots(input: AvailabilityCalendarSlotBatchInput): Promise<number> {
+  const slots = buildAvailabilityCalendarSlots(input);
+  return db.transaction(async (tx) => {
+    const [calendar] = await tx.select({ id: availabilityCalendars.id }).from(availabilityCalendars)
+      .where(eq(availabilityCalendars.id, input.calendarId)).for("update");
+    if (!calendar) throw new NotFoundError("A naptár nem található.");
+
+    const overlapping = await tx.select({ id: availabilityCalendarSlots.id }).from(availabilityCalendarSlots)
+      .where(and(
+        eq(availabilityCalendarSlots.calendarId, input.calendarId),
+        eq(availabilityCalendarSlots.date, input.date),
+        lt(availabilityCalendarSlots.startTime, input.endTime),
+        gt(availabilityCalendarSlots.endTime, input.startTime),
+      )).limit(1);
+    if (overlapping.length > 0) {
+      throw new Error("Ebben az időszakban már van rögzített idősáv. Előbb töröld az átfedő idősávot, vagy válassz másik időszakot.");
+    }
+
+    const created = await tx.insert(availabilityCalendarSlots).values(slots).returning({ id: availabilityCalendarSlots.id });
+    return created.length;
+  });
 }
 
 export async function deleteAvailabilityCalendarSlot(slotId: string): Promise<boolean> {

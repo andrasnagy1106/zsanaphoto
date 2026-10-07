@@ -5,12 +5,14 @@ import { requireAdmin } from "@/lib/auth/guard";
 import {
   createAvailabilityCalendar,
   createAvailabilityCalendarSlot,
+  createAvailabilityCalendarSlots,
   deleteAvailabilityCalendar,
   deleteAvailabilityCalendarSlot,
 } from "@/lib/services/availability-calendar-service";
 import {
   availabilityCalendarSchema,
   availabilityCalendarSlotSchema,
+  availabilityCalendarSlotBatchSchema,
 } from "@/lib/validation/availability-calendar";
 import type { AdminActionResult } from "./admin-booking-actions";
 
@@ -65,6 +67,23 @@ export async function createAvailabilityCalendarSlotAction(input: unknown): Prom
   } catch (error) {
     console.error("[createAvailabilityCalendarSlotAction] Failed:", error);
     return { success: false, error: "Az idősáv mentése nem sikerült. Lehet, hogy már rögzítve van." };
+  }
+}
+
+export async function createAvailabilityCalendarSlotsAction(input: unknown): Promise<AdminActionResult & { createdCount?: number }> {
+  await requireAdmin();
+  const parsed = availabilityCalendarSlotBatchSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Érvénytelen időszak." };
+  }
+
+  try {
+    const createdCount = await createAvailabilityCalendarSlots(parsed.data);
+    revalidateCalendarViews();
+    return { success: true, createdCount };
+  } catch (error) {
+    console.error("[createAvailabilityCalendarSlotsAction] Failed:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Az időpontok mentése nem sikerült." };
   }
 }
 

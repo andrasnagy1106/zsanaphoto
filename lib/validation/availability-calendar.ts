@@ -15,3 +15,20 @@ export const availabilityCalendarSlotSchema = z.object({
   message: "A záró időpontnak későbbinek kell lennie a kezdésnél.",
   path: ["endTime"],
 });
+
+export const availabilityCalendarSlotBatchSchema = availabilityCalendarSlotSchema.safeExtend({
+  durationMinutes: z.coerce.number().int().min(1, "Az időpont hossza legalább 1 perc legyen.").max(1440),
+}).superRefine((input, context) => {
+  const [startHours, startMinutes] = input.startTime.split(":").map(Number);
+  const [endHours, endMinutes] = input.endTime.split(":").map(Number);
+  const totalMinutes = (endHours - startHours) * 60 + endMinutes - startMinutes;
+  if (totalMinutes < input.durationMinutes || totalMinutes % input.durationMinutes !== 0) {
+    context.addIssue({
+      code: "custom",
+      message: "Az időszaknak egész számú, teljes hosszúságú időpontokra kell oszthatónak lennie.",
+      path: ["durationMinutes"],
+    });
+  }
+});
+
+export type AvailabilityCalendarSlotBatchInput = z.output<typeof availabilityCalendarSlotBatchSchema>;
