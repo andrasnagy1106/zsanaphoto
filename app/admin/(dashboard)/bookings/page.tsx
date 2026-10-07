@@ -1,11 +1,8 @@
 import Link from "next/link";
 import { listBookings } from "@/lib/services/booking-service";
 import { listServices } from "@/lib/services/service-service";
-import { AdminTable } from "@/components/admin/AdminTable";
-import { BookingRowActions } from "@/components/admin/BookingRowActions";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { BookingsBulkManager } from "@/components/admin/BookingsBulkManager";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
 import type { Booking } from "@/db/schema";
 
 const STATUS_OPTIONS: { value: Booking["status"] | ""; label: string }[] = [
@@ -203,46 +200,21 @@ export default async function AdminBookingsPage({ searchParams }: AdminBookingsP
         {bookings.length === 0 ? (
           <EmptyState title="Jelenleg nincs foglalás." />
         ) : (
-          <AdminTable
-            rows={bookings}
-            rowKey={(booking) => booking.id}
-            columns={[
-              {
-                key: "number",
-                header: "Azonosító",
-                render: (b) => (
-                  <Link href={`/admin/bookings/${b.id}`} className="font-medium text-accent hover:underline">
-                    {b.bookingNumber}
-                  </Link>
-                ),
+          <BookingsBulkManager
+            key={`${status ?? "all"}:${serviceId ?? "all"}:${fromDate ?? "all"}:${toDate ?? "all"}:${sortBy}`}
+            bookings={bookings.map((booking) => ({
+              booking: {
+                id: booking.id,
+                bookingNumber: booking.bookingNumber,
+                pin: booking.pin,
+                startAt: booking.startAt,
+                endAt: booking.endAt,
+                customerName: booking.customerName,
+                serviceId: booking.serviceId,
+                status: booking.status,
               },
-              { key: "pin", header: "PIN", render: (b) => <span className="font-mono">{b.pin ?? "-"}</span> },
-              { key: "date", header: "Dátum", render: (b) => formatZonedHungarianDate(b.startAt) },
-              { key: "time", header: "Időpont", render: (b) => `${formatZonedTime(b.startAt)} - ${formatZonedTime(b.endAt)}` },
-              { key: "customer", header: "Ügyfél", render: (b) => b.customerName },
-              { key: "service", header: "Szolgáltatás", render: (b) => serviceNameById.get(b.serviceId) ?? "-" },
-              { key: "status", header: "Státusz", render: (b) => <StatusBadge status={b.status} /> },
-              { key: "actions", header: "Műveletek", render: (b) => <BookingRowActions booking={b} /> },
-            ]}
-            mobileCard={(b) => (
-              <div>
-                <div className="flex items-center justify-between">
-                  <Link href={`/admin/bookings/${b.id}`} className="font-medium text-accent hover:underline">
-                    {b.bookingNumber}
-                  </Link>
-                  <StatusBadge status={b.status} />
-                </div>
-                <p className="mt-1 text-sm text-foreground/70">{b.customerName}</p>
-                <p className="font-mono text-sm text-foreground/70">PIN: {b.pin ?? "-"}</p>
-                <p className="text-sm text-foreground/70">
-                  {formatZonedHungarianDate(b.startAt)} · {formatZonedTime(b.startAt)} - {formatZonedTime(b.endAt)}
-                </p>
-                <p className="text-sm text-foreground/50">{serviceNameById.get(b.serviceId) ?? "-"}</p>
-                <div className="mt-3">
-                  <BookingRowActions booking={b} />
-                </div>
-              </div>
-            )}
+              serviceName: serviceNameById.get(booking.serviceId) ?? "-",
+            }))}
           />
         )}
       </div>

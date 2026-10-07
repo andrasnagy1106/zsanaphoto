@@ -24,6 +24,13 @@ export const rescheduleBookingByCustomerSchema = z.object({
   startAt: z.string().min(1, "Válassz új időpontot."),
 });
 
+export const bulkDeleteBookingsSchema = z.object({
+  bookingIds: z.array(z.string().uuid()).min(1, "Jelölj ki legalább egy foglalást.").max(500),
+}).refine(({ bookingIds }) => new Set(bookingIds).size === bookingIds.length, {
+  message: "Ugyanaz a foglalás csak egyszer jelölhető ki.",
+  path: ["bookingIds"],
+});
+
 export type RescheduleBookingByCustomerForm = z.infer<typeof rescheduleBookingByCustomerSchema>;
 
 export const createAdminEventUserSchema = z.object({

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { bookings, emailOutbox, eventPhotos, photoOrders } from "@/db/schema";
-import { cancelBooking, createAdminEventUser, deleteBookingWithoutNotification } from "./booking-service";
+import { cancelBooking, createAdminEventUser, deleteBookingWithoutNotification, deleteBookingsWithoutNotification } from "./booking-service";
 
 const mocks = vi.hoisted(() => ({
   transaction: vi.fn(), select: vi.fn(), update: vi.fn(),
@@ -26,7 +26,7 @@ const booking = {
   endAt: new Date("2026-10-07T11:00:00Z"), pin: "AB12345" as string | null, notes: null,
 };
 
-function mockDeletionTransaction(rows = [booking]) {
+function mockDeletionTransaction(rows = [booking], deletedRows = rows) {
   const deletedTables: unknown[] = [];
   const conditions: unknown[] = [];
   const tx = {
@@ -37,7 +37,7 @@ function mockDeletionTransaction(rows = [booking]) {
     delete: vi.fn((table) => ({ where: vi.fn((condition) => {
       deletedTables.push(table);
       conditions.push(condition);
-      if (table === bookings) return { returning: async () => [{ id: booking.id }] };
+      if (table === bookings) return { returning: async () => deletedRows.map(({ id }) => ({ id })) };
       return Promise.resolve();
     }) })),
   };
@@ -76,18 +76,34 @@ describe("deleteBookingWithoutNotification", () => {
 
   it("rejects an unknown booking without deleting anything", async () => {
     const { deletedTables } = mockDeletionTransaction([]);
-    await expect(deleteBookingWithoutNotification("missing")).rejects.toThrow("A foglalás nem található.");
+    await expect(deleteBookingWithoutNotification("missing")).rejects.toThrow("A kijelölt foglalások egy része már nem található");
     expect(deletedTables).toEqual([]);
     expect(mocks.deletePhotos).not.toHaveBeenCalled();
   });
 
   it("reports a database delete that returned no booking row", async () => {
-    const { tx } = mockDeletionTransaction();
-    tx.delete.mockImplementation((table) => ({ where: vi.fn(() => {
-      if (table === bookings) return { returning: async () => [] };
-      return Promise.resolve();
-    }) }));
-    await expect(deleteBookingWithoutNotification(booking.id)).rejects.toThrow("adatbázisból való törlése nem sikerült");
+    mockDeletionTransaction([booking], []);
+    await expect(deleteBookingWithoutNotification(booking.id)).rejects.toThrow("Nem sikerült minden kijelölt foglalást törölni");
+  });
+
+  it("bulk deletes selected bookings and related photos without email", async () => {
+    const secondBooking = { ...booking, id: "booking-2", bookingNumber: "ZS-2026-0003" };
+    const { deletedTables, conditions } = mockDeletionTransaction([booking, secondBooking]);
+    await expect(deleteBookingsWithoutNotification([booking.id, secondBooking.id])).resolves.toBe(2);
+    expect(mocks.deletePhotos).toHaveBeenCalledWith(["events/photo-1", "events/photo-2"]);
+    expect(deletedTables).toEqual([emailOutbox, photoOrders, eventPhotos, bookings]);
+    const query = new PgDialect().sqlToQuery(conditions[0] as Parameters<PgDialect["sqlToQuery"]>[0]);
+    expect(query.params).toContain("\nFoglalási azonosító: ZS-2026-0002\n");
+    expect(query.params).toContain("\nFoglalási azonosító: ZS-2026-0003\n");
+    expect(mocks.getEmailProvider).not.toHaveBeenCalled();
+  });
+
+  it("rejects a stale bulk selection without deleting any associated data", async () => {
+    const { deletedTables } = mockDeletionTransaction([booking]);
+    await expect(deleteBookingsWithoutNotification([booking.id, "booking-missing"]))
+      .rejects.toThrow("egy része már nem található");
+    expect(deletedTables).toEqual([]);
+    expect(mocks.deletePhotos).not.toHaveBeenCalled();
   });
 });
 

@@ -7,9 +7,10 @@ import {
   completeBooking,
   confirmBooking,
   createAdminEventUser,
+  deleteBookingsWithoutNotification,
   deleteBookingWithoutNotification,
 } from "@/lib/services/booking-service";
-import { createAdminEventUserSchema } from "@/lib/validation/booking";
+import { bulkDeleteBookingsSchema, createAdminEventUserSchema } from "@/lib/validation/booking";
 import { zonedDateTimeToUtc } from "@/lib/utils/time";
 
 export interface AdminActionResult {
@@ -17,6 +18,7 @@ export interface AdminActionResult {
   error?: string;
   pin?: string;
   bookingId?: string;
+  deletedCount?: number;
 }
 
 export async function confirmBookingAction(id: string): Promise<AdminActionResult> {
@@ -63,6 +65,26 @@ export async function deleteBookingAction(id: string): Promise<AdminActionResult
   } catch (error) {
     console.error("[deleteBookingAction] Failed:", error);
     return { success: false, error: error instanceof Error ? error.message : "A foglalás törlése nem sikerült." };
+  }
+}
+
+export async function bulkDeleteBookingsAction(input: unknown): Promise<AdminActionResult> {
+  await requireAdmin();
+  const parsed = bulkDeleteBookingsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Érvénytelen foglaláskijelölés." };
+  }
+
+  try {
+    const deletedCount = await deleteBookingsWithoutNotification(parsed.data.bookingIds);
+    revalidatePath("/admin/bookings");
+    revalidatePath("/admin/event-photos");
+    revalidatePath("/admin/photo-orders");
+    revalidatePath("/admin");
+    return { success: true, deletedCount };
+  } catch (error) {
+    console.error("[bulkDeleteBookingsAction] Failed:", error);
+    return { success: false, error: error instanceof Error ? error.message : "A kijelölt foglalások törlése nem sikerült." };
   }
 }
 

@@ -426,27 +426,41 @@ export async function cancelBooking(id: string): Promise<Booking> {
   return updated;
 }
 
-export async function deleteBookingWithoutNotification(id: string): Promise<void> {
-  await db.transaction(async (tx) => {
-    const [booking] = await tx.select().from(bookings).where(eq(bookings.id, id)).for("update");
-    if (!booking) throw new NotFoundError("A foglalás nem található.");
+export async function deleteBookingsWithoutNotification(ids: string[]): Promise<number> {
+  if (ids.length === 0) return 0;
 
-    await tx.delete(emailOutbox).where(or(
-      sql`strpos(E'\n' || ${emailOutbox.body} || E'\n', ${`\nFoglalási azonosító: ${booking.bookingNumber}\n`}) > 0`,
-      eq(emailOutbox.subject, `Új foglalás érkezett - ${booking.bookingNumber}`),
-    ));
+  await db.transaction(async (tx) => {
+    const selectedBookings = await tx.select({ id: bookings.id, bookingNumber: bookings.bookingNumber })
+      .from(bookings)
+      .where(inArray(bookings.id, ids))
+      .for("update");
+    if (selectedBookings.length !== ids.length) {
+      throw new NotFoundError("A kijelölt foglalások egy része már nem található. Frissítsd az oldalt, majd próbáld újra.");
+    }
+
+    await tx.delete(emailOutbox).where(or(...selectedBookings.flatMap(({ bookingNumber }) => [
+      sql`strpos(E'\n' || ${emailOutbox.body} || E'\n', ${`\nFoglalási azonosító: ${bookingNumber}\n`}) > 0`,
+      eq(emailOutbox.subject, `Új foglalás érkezett - ${bookingNumber}`),
+    ])));
 
     const photos = await tx.select({ publicId: eventPhotos.publicId })
-      .from(eventPhotos).where(eq(eventPhotos.bookingId, id));
+      .from(eventPhotos).where(inArray(eventPhotos.bookingId, ids));
     await deleteMultiplePhotosFromCloudinary(photos.map((photo) => photo.publicId));
 
-    await tx.delete(photoOrders).where(eq(photoOrders.bookingId, id));
-    await tx.delete(eventPhotos).where(eq(eventPhotos.bookingId, id));
-    const [deletedBooking] = await tx.delete(bookings)
-      .where(eq(bookings.id, id))
+    await tx.delete(photoOrders).where(inArray(photoOrders.bookingId, ids));
+    await tx.delete(eventPhotos).where(inArray(eventPhotos.bookingId, ids));
+    const deletedBookings = await tx.delete(bookings)
+      .where(inArray(bookings.id, ids))
       .returning({ id: bookings.id });
-    if (!deletedBooking) throw new Error("A foglalás adatbázisból való törlése nem sikerült.");
+    if (deletedBookings.length !== selectedBookings.length) {
+      throw new Error("Nem sikerült minden kijelölt foglalást törölni. A művelet nem lett véglegesítve.");
+    }
   });
+  return ids.length;
+}
+
+export async function deleteBookingWithoutNotification(id: string): Promise<void> {
+  await deleteBookingsWithoutNotification([id]);
 }
 
 export async function completeBooking(id: string): Promise<Booking> {
