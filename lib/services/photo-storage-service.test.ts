@@ -21,7 +21,10 @@ describe("deleteMultiplePhotosFromCloudinary", () => {
     const ids = Array.from({ length: 101 }, (_, index) => `events/photo-${index}`);
     const remove = vi.spyOn(configureCloudinary().api, "delete_resources")
       .mockImplementation(async (publicIds) => ({
-        deleted: Object.fromEntries((publicIds as string[]).map((publicId) => [publicId, publicId === ids[0] ? "not_found" : "deleted"])),
+        deleted: Object.fromEntries((publicIds as string[]).map((publicId) => [
+          publicId,
+          publicId === ids[0] ? "not found" : publicId === ids[1] ? "not_found" : "deleted",
+        ])),
       }));
     await deleteMultiplePhotosFromCloudinary(ids);
     expect(remove).toHaveBeenCalledTimes(2);

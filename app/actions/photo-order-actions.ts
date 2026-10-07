@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guard";
 import {
   getPhotoOrderAccessByPin,
+  bulkDeletePhotoOrders,
   savePhotoOrder,
   updatePhotoOrderStatus,
 } from "@/lib/services/photo-order-service";
@@ -12,6 +13,7 @@ import { checkRateLimit } from "@/lib/utils/rate-limit";
 import {
   savePhotoOrderSchema,
   updatePhotoOrderStatusSchema,
+  bulkDeletePhotoOrdersSchema,
   verifyPhotoOrderPinSchema,
 } from "@/lib/validation/photo-order";
 
@@ -22,6 +24,7 @@ export interface PhotoOrderActionResult {
   orderNumber?: string;
   wasUpdated?: boolean;
   redirectUrl?: string;
+  deletedCount?: number;
 }
 
 export async function verifyPhotoOrderPinAction(pin: string): Promise<PhotoOrderActionResult> {
@@ -91,5 +94,23 @@ export async function updatePhotoOrderStatusAction(input: unknown): Promise<Phot
   } catch (error) {
     console.error("[updatePhotoOrderStatusAction] Failed:", error);
     return { success: false, error: error instanceof Error ? error.message : "A módosítás nem sikerült." };
+  }
+}
+
+export async function bulkDeletePhotoOrdersAction(input: unknown): Promise<PhotoOrderActionResult> {
+  await requireAdmin();
+  const parsed = bulkDeletePhotoOrdersSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Érvénytelen rendeléskijelölés." };
+  }
+
+  try {
+    const deletedCount = await bulkDeletePhotoOrders(parsed.data.orderIds);
+    revalidatePath("/admin/photo-orders");
+    revalidatePath("/admin");
+    return { success: true, deletedCount };
+  } catch (error) {
+    console.error("[bulkDeletePhotoOrdersAction] Failed:", error);
+    return { success: false, error: error instanceof Error ? error.message : "A kijelölt rendelések törlése nem sikerült." };
   }
 }

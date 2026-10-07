@@ -1,12 +1,9 @@
 import Link from "next/link";
-import { AdminTable } from "@/components/admin/AdminTable";
-import { PhotoOrderDetailsDialog } from "@/components/admin/PhotoOrderDetailsDialog";
-import { PhotoOrderStatusControl } from "@/components/admin/PhotoOrderStatusControl";
+import { PhotoOrdersBulkManager } from "@/components/admin/PhotoOrdersBulkManager";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatPrice } from "@/lib/photo-order-catalog";
 import { listPhotoOrders } from "@/lib/services/photo-order-service";
 import { listServices } from "@/lib/services/service-service";
-import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
 import type { PhotoOrder } from "@/db/schema";
 
 const STATUS_OPTIONS: { value: PhotoOrder["status"] | ""; label: string }[] = [
@@ -16,17 +13,6 @@ const STATUS_OPTIONS: { value: PhotoOrder["status"] | ""; label: string }[] = [
   { value: "COMPLETED", label: "Teljesítve" },
   { value: "CANCELLED", label: "Törölve" },
 ];
-
-function renderOrderDetails(row: Awaited<ReturnType<typeof listPhotoOrders>>[number]) {
-  return (
-    <PhotoOrderDetailsDialog
-      order={row.order}
-      customerName={row.booking.customerName}
-      bookingNumber={row.booking.bookingNumber}
-      items={row.items}
-    />
-  );
-}
 
 interface AdminPhotoOrdersPageProps {
   searchParams: Promise<{
@@ -155,31 +141,38 @@ export default async function AdminPhotoOrdersPage({ searchParams }: AdminPhotoO
         {orders.length === 0 ? (
           <EmptyState title="Nem található a szűrésnek megfelelő fotórendelés." />
         ) : (
-          <AdminTable
-            rows={orders}
-            rowKey={(row) => row.order.id}
-            columns={[
-              { key: "number", header: "Rendelés", render: (row) => <span className="font-mono font-medium">{row.order.orderNumber}</span> },
-              { key: "booking", header: "Foglalás", render: (row) => <span className="font-mono">{row.booking.bookingNumber}</span> },
-              { key: "customer", header: "Ügyfél", render: (row) => <span>{row.booking.customerName}<br /><span className="text-xs text-foreground/55">{row.booking.customerEmail}</span></span> },
-              { key: "service", header: "Szolgáltatás", render: (row) => row.service.name },
-              { key: "items", header: "Tételek & Összeg", render: renderOrderDetails },
-              { key: "created", header: "Érkezett", render: (row) => `${formatZonedHungarianDate(row.order.createdAt)} ${formatZonedTime(row.order.createdAt)}` },
-              { key: "status", header: "Állapot", render: (row) => <PhotoOrderStatusControl order={row.order} /> },
-            ]}
-            mobileCard={(row) => (
-              <div>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-mono font-medium">{row.order.orderNumber}</p>
-                    <p className="mt-1 text-sm text-foreground/70">{row.booking.customerName}</p>
-                    <p className="text-xs text-foreground/50">{row.booking.bookingNumber} · {row.service.name}</p>
-                  </div>
-                  <PhotoOrderStatusControl order={row.order} />
-                </div>
-                <div className="mt-4 border-t border-border pt-3">{renderOrderDetails(row)}</div>
-              </div>
-            )}
+          <PhotoOrdersBulkManager
+            key={`${status ?? "all"}:${serviceId ?? "all"}`}
+            orders={orders.map(({ order, booking, service, items }) => ({
+              order: {
+                id: order.id,
+                orderNumber: order.orderNumber,
+                status: order.status,
+                createdAt: order.createdAt,
+                totalAmount: order.totalAmount,
+                includesDigital: order.includesDigital,
+                notes: order.notes,
+                billingName: order.billingName,
+                billingPostalCode: order.billingPostalCode,
+                billingCity: order.billingCity,
+                billingAddress: order.billingAddress,
+              },
+              booking: {
+                customerName: booking.customerName,
+                customerEmail: booking.customerEmail,
+                bookingNumber: booking.bookingNumber,
+              },
+              service: { name: service.name },
+              items: items.map((item) => ({
+                id: item.id,
+                photoId: item.photoId,
+                photoTitle: item.photoTitle,
+                size: item.size,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                totalPrice: item.totalPrice,
+              })),
+            }))}
           />
         )}
       </div>

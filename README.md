@@ -208,7 +208,9 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
   (CDN-érvénytelenítéssel), az összes fotórendelést és tételt, számlázási adatot, valamint a
   kapcsolódó tárolt e-maileket, beleértve a kiküldésre váró leveleket is. **A törlés soha nem
   küld e-mailt.** Más foglalások adatai ugyanazon ügyfél e-mail-címe esetén is megmaradnak.
-  Képtártörlési hiba esetén az adatbázis-tranzakció visszagördül; a törlés újrapróbálható.
+  Ha egy kép már nem található a Cloudinaryban, az sikeres törlési állapotnak számít.
+  Más képtártörlési hiba vagy adatbázis-törlési hiba esetén az adatbázis-tranzakció visszagördül;
+  a törlés újrapróbálható.
   A már eltávolított képek nem állíthatók vissza, ha egy későbbi törlési lépés hibázik.
   A korábban kézbesített e-mailek a címzettek postafiókjából nem törölhetők; a Cloudinary CDN
   gyorsítótárának érvénytelenítése sem feltétlenül azonnali.
@@ -255,6 +257,9 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
   - Az `/admin/photo-orders` oldalon követhető az összes rendelés állapota, összbevétele, valamint a tételes
     egységárak és összegek. Egy PIN-hez egyszerre egy aktív (`NEW`/`PROCESSING`) rendelés tartozhat;
     ismételt belépéskor a tételek, darabszámok, méretek és a rendelési megjegyzés módosíthatók.
+    A rendeléslista sorai és mobilkártyái kijelölhetők; az aktuálisan szűrt/megjelenített rendelések
+    tömegesen törölhetők megerősítés után. A rendelési tételek és a még sorban álló kapcsolódó
+    értesítések is törlődnek, a foglalás és a képek megmaradnak; a már elküldött e-mail nem vonható vissza.
 - **Google Naptár (Google Calendar) integráció:**
   - A visszaigazoló és időpontmódosító e-mailek automatikusan tartalmaznak egy egykattintásos Google Naptár esemény-linket a fotózás időpontjával, részleteivel és helyszínével.
 - Minden foglalási/admin mutáció szerveroldali Server Actionön keresztül történik, Zod validációval,

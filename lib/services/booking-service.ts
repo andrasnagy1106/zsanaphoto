@@ -442,7 +442,10 @@ export async function deleteBookingWithoutNotification(id: string): Promise<void
 
     await tx.delete(photoOrders).where(eq(photoOrders.bookingId, id));
     await tx.delete(eventPhotos).where(eq(eventPhotos.bookingId, id));
-    await tx.delete(bookings).where(eq(bookings.id, id));
+    const [deletedBooking] = await tx.delete(bookings)
+      .where(eq(bookings.id, id))
+      .returning({ id: bookings.id });
+    if (!deletedBooking) throw new Error("A foglalás adatbázisból való törlése nem sikerült.");
   });
 }
 

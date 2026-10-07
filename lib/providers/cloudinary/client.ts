@@ -262,7 +262,7 @@ export async function deleteMultiplePhotosFromCloudinary(publicIds: string[]): P
   for (let offset = 0; offset < publicIds.length; offset += 100) {
     const batch = publicIds.slice(offset, offset + 100);
     const result = await client.api.delete_resources(batch, { resource_type: "image", invalidate: true });
-    if (batch.some((publicId) => !["deleted", "not_found"].includes(result.deleted?.[publicId]))) {
+    if (batch.some((publicId) => !["deleted", "not_found", "not found"].includes(result.deleted?.[publicId]))) {
       throw new Error("Nem sikerült minden képet törölni a Cloudinary tárhelyről. Próbáld újra a törlést.");
     }
   }

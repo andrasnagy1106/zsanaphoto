@@ -1,8 +1,9 @@
 import { randomInt } from "node:crypto";
-import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   bookings,
+  emailOutbox,
   photoOrderItems,
   photoOrders,
   services,
@@ -345,4 +346,31 @@ export async function updatePhotoOrderStatus(
 
   if (!updated) throw new NotFoundError("A rendelés nem található.");
   return updated;
+}
+
+export async function bulkDeletePhotoOrders(orderIds: string[]): Promise<number> {
+  if (orderIds.length === 0) return 0;
+
+  return db.transaction(async (tx) => {
+    const orders = await tx.select({ id: photoOrders.id, orderNumber: photoOrders.orderNumber })
+      .from(photoOrders)
+      .where(inArray(photoOrders.id, orderIds))
+      .for("update");
+    if (orders.length !== orderIds.length) {
+      throw new NotFoundError("A kijelölt rendelések egy része már nem található. Frissítsd az oldalt, majd próbáld újra.");
+    }
+
+    await tx.delete(emailOutbox).where(and(
+      eq(emailOutbox.status, "QUEUED"),
+      or(...orders.map(({ orderNumber }) => sql`strpos(E'\n' || ${emailOutbox.body} || E'\n', ${`\nRendelési azonosító: ${orderNumber}\n`}) > 0`)),
+    ));
+
+    const deleted = await tx.delete(photoOrders)
+      .where(inArray(photoOrders.id, orders.map((order) => order.id)))
+      .returning({ id: photoOrders.id });
+    if (deleted.length !== orders.length) {
+      throw new Error("Nem sikerült minden kijelölt rendelést törölni. A művelet nem lett véglegesítve.");
+    }
+    return deleted.length;
+  });
 }

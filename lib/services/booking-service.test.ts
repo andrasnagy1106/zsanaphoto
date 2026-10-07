@@ -37,6 +37,7 @@ function mockDeletionTransaction(rows = [booking]) {
     delete: vi.fn((table) => ({ where: vi.fn((condition) => {
       deletedTables.push(table);
       conditions.push(condition);
+      if (table === bookings) return { returning: async () => [{ id: booking.id }] };
       return Promise.resolve();
     }) })),
   };
@@ -78,6 +79,15 @@ describe("deleteBookingWithoutNotification", () => {
     await expect(deleteBookingWithoutNotification("missing")).rejects.toThrow("A foglalás nem található.");
     expect(deletedTables).toEqual([]);
     expect(mocks.deletePhotos).not.toHaveBeenCalled();
+  });
+
+  it("reports a database delete that returned no booking row", async () => {
+    const { tx } = mockDeletionTransaction();
+    tx.delete.mockImplementation((table) => ({ where: vi.fn(() => {
+      if (table === bookings) return { returning: async () => [] };
+      return Promise.resolve();
+    }) }));
+    await expect(deleteBookingWithoutNotification(booking.id)).rejects.toThrow("adatbázisból való törlése nem sikerült");
   });
 });
 

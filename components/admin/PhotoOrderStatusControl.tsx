@@ -11,7 +11,7 @@ const STATUS_OPTIONS: Array<{ value: PhotoOrder["status"]; label: string }> = [
   { value: "CANCELLED", label: "Törölve" },
 ];
 
-export function PhotoOrderStatusControl({ order }: { order: PhotoOrder }) {
+export function PhotoOrderStatusControl({ order }: { order: Pick<PhotoOrder, "id" | "orderNumber" | "status"> }) {
   const [status, setStatus] = useState(order.status);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();

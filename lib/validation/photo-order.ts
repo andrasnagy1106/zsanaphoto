@@ -44,4 +44,11 @@ export const updatePhotoOrderStatusSchema = z.object({
   status: z.enum(["NEW", "PROCESSING", "COMPLETED", "CANCELLED"]),
 });
 
+export const bulkDeletePhotoOrdersSchema = z.object({
+  orderIds: z.array(z.string().uuid()).min(1, "Jelölj ki legalább egy rendelést.").max(500),
+}).refine(({ orderIds }) => new Set(orderIds).size === orderIds.length, {
+  message: "Ugyanaz a rendelés csak egyszer jelölhető ki.",
+  path: ["orderIds"],
+});
+
 export type SavePhotoOrderForm = z.infer<typeof savePhotoOrderSchema>;
