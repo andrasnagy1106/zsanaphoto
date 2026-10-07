@@ -1,5 +1,6 @@
 export const GALLERY_CATEGORIES = [
   "Családi",
+  "Portré",
   "Páros",
   "Szülinapi",
   "Baba",
@@ -15,6 +16,7 @@ export type GalleryCategory = (typeof GALLERY_CATEGORIES)[number];
 /** Fallback caption shown under a category's placeholder card until a real photo is uploaded. */
 export const GALLERY_CATEGORY_DEFAULT_CAPTIONS: Record<GalleryCategory, string> = {
   "Családi": "Családi pillanatok",
+  "Portré": "Portréfotók",
   "Páros": "Közös történetek",
   "Szülinapi": "Születésnapi emlékek",
   "Baba": "Első pillanatok",
