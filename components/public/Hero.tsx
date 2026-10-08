@@ -55,7 +55,7 @@ export async function Hero() {
         <div className="max-w-xl lg:max-w-2xl text-left">
           {/* Script Titles */}
           <h1 className="mb-5 text-sm font-semibold uppercase tracking-wider text-white sm:text-base">
-            Családi és intézményi fotózás Sárbogárdon
+            Családi és portré fotózás Sárbogárdon
           </h1>
           <p className="font-script text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-white leading-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
             {texts["hero.title"]}
@@ -108,10 +108,10 @@ export async function Hero() {
               <span aria-hidden="true" className="text-xs font-bold">›</span>
             </Link>
             <Link
-              href="/intezmenyi-fotozas"
+              href="/portre-fotozas"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#fbfaf8] border border-transparent px-6 sm:px-8 py-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-[#670c18] shadow-xl transition-all duration-200 hover:bg-white hover:scale-105 active:scale-95"
             >
-              <span>{texts["hero.secondaryButton"]}</span>
+              <span>{texts["hero.portraitButton"]}</span>
               <span aria-hidden="true" className="text-xs font-bold">›</span>
             </Link>
           </div>

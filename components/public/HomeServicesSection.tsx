@@ -4,7 +4,7 @@ import { getServiceCardTexts } from "@/lib/home-texts";
 import { getHomeTexts } from "@/lib/services/home-text-service";
 import { getSitePhotos } from "@/lib/services/site-photo-service";
 
-/** Homepage-only "Miben segíthetek?" services teaser with 4 admin-editable cards. */
+/** Homepage-only "Miben segíthetek?" services teaser with admin-editable cards. */
 export async function HomeServicesSection() {
   const [photosByKey, texts] = await Promise.all([
     getSitePhotos(HOME_SERVICE_CARDS.map((card) => card.key)),

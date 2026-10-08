@@ -5,13 +5,19 @@ export interface HomeServiceCardDefinition {
   href: string;
 }
 
-/** The 4 marketing service cards shown on the homepage "Miben segíthetek?" section. */
+/** The marketing service cards shown on the homepage "Miben segíthetek?" section. */
 export const HOME_SERVICE_CARDS: readonly HomeServiceCardDefinition[] = [
   {
     key: "service-csaladi",
     title: "Családi fotózás",
     description: "Őszinte pillanatok. Közös emlékek. Rólatok.",
     href: "/csaladi-fotozas",
+  },
+  {
+    key: "service-portre",
+    title: "Portré fotózás",
+    description: "Természetes portrék, amelyek megmutatják az egyéniségedet.",
+    href: "/portre-fotozas",
   },
   {
     key: "service-bolcsode-ovoda",

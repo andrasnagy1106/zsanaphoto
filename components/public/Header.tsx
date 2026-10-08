@@ -10,6 +10,7 @@ import { PhotoOrderPinDialog } from "./PhotoOrderPinDialog";
 const SERVICE_LINKS = [
   { href: "/szolgaltatasok", label: "Összes szolgáltatás" },
   { href: "/csaladi-fotozas", label: "Családi fotózás" },
+  { href: "/portre-fotozas", label: "Portré fotózás" },
   { href: "/bolcsodei-es-ovodai-fotozas", label: "Bölcsődei & óvodai fotózás" },
   { href: "/iskolai-fotozas", label: "Iskolai fotózás" },
   { href: "/szezonalis-fotozas", label: "Szezonális fotózás" },

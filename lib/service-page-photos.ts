@@ -4,10 +4,10 @@
  */
 export const SERVICE_PAGE_PHOTO_COLLECTIONS = [
   { key: "oldal:csaladi-fotozas", label: "Családi fotózás", href: "/csaladi-fotozas" },
+  { key: "oldal:intezmenyi-fotozas", label: "Portré fotózás", href: "/portre-fotozas" },
   { key: "oldal:bolcsodei-es-ovodai-fotozas", label: "Bölcsődei & óvodai fotózás", href: "/bolcsodei-es-ovodai-fotozas" },
   { key: "oldal:iskolai-fotozas", label: "Iskolai fotózás", href: "/iskolai-fotozas" },
   { key: "oldal:szezonalis-fotozas", label: "Szezonális fotózás", href: "/szezonalis-fotozas" },
-  { key: "oldal:intezmenyi-fotozas", label: "Intézményi fotózás", href: "/intezmenyi-fotozas" },
 ] as const;
 
 export const ABOUT_PAGE_PHOTO_COLLECTION = {

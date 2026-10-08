@@ -45,10 +45,10 @@ export default function ContactPage() {
               Időpontot foglalok
             </Link>
             <Link
-              href="/intezmenyi-fotozas"
+              href="/portre-fotozas"
               className="inline-flex min-h-11 items-center justify-center rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-foreground hover:border-accent hover:text-accent"
             >
-              Intézményi időpontot foglalok
+              Portré fotózás
             </Link>
           </div>
         </div>

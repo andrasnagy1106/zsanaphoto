@@ -162,6 +162,21 @@ keresőkifejezéseket és megjelenéseket a Search Console Teljesítmény riport
 4. A build nem függ helyi fájlrendszertől vagy mock adatbázistól - a Vercel build ugyanazt a Next.js
    alkalmazást deployolja, amit lokálisan futtatsz.
 
+## Portré fotózás és bemutatkozó képek
+
+A portré fotózás bemutatkozó oldala a `/portre-fotozas` címen érhető el. A korábbi
+`/intezmenyi-fotozas` cím 308-as végleges átirányítással ide vezet. A portré a családi
+fotózás után szerepel a szolgáltatások menüjében, az összesítő oldalon és a főoldali
+szolgáltatáskártyák között; a főoldali második gomb is erre az oldalra mutat.
+
+Az `/admin/service-page-photos` oldalon a **Portré fotózás** gyűjtemény szintén a családi
+után található. A képek feltöltése, sorrendje, felirata, igazítása és törlése a többi
+bemutatkozó oldalhoz hasonlóan kezelhető. A gyűjtemény belső azonosítója továbbra is
+`oldal:intezmenyi-fotozas`, így a korábban feltöltött képek megmaradnak, adatbázis-migráció
+nem szükséges. A portré főoldali kártyaképe az `/admin/settings`, szövegei és a főoldali
+gomb felirata az `/admin/home-texts` oldalon szerkeszthetők. A foglalási rendszer
+adatbázisban tárolt intézményi szolgáltatását ez az átnevezés nem módosítja.
+
 ## Foglalási üzleti szabályok (összefoglaló)
 
 - A szabad időpontokat a rendszer **mindig** az adatbázisban tárolt `availabilityRules`,

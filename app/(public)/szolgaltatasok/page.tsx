@@ -9,7 +9,7 @@ import { getSitePhotos } from "@/lib/services/site-photo-service";
 
 export const metadata: Metadata = {
   title: "Fotózási szolgáltatások Sárbogárdon",
-  description: "Családi, bölcsődei, óvodai, iskolai és szezonális fotózás Sárbogárdon és környékén. Ismerd meg a ZsaNa Photo szolgáltatásait.",
+  description: "Családi, portré, bölcsődei, óvodai, iskolai és szezonális fotózás Sárbogárdon és környékén. Ismerd meg a ZsaNa Photo szolgáltatásait.",
   alternates: { canonical: "/szolgaltatasok" },
 };
 
