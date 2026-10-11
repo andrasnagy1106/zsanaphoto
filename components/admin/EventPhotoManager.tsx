@@ -395,6 +395,12 @@ export function EventPhotoManager({
               <div>
                 <span className="text-foreground/50">Ügyfél:</span> <strong className="text-foreground">{selectedEvent.customerName}</strong>
               </div>
+              {selectedEvent.childName ? (
+                <div>
+                  <span className="text-foreground/50">Gyermek neve:</span>{" "}
+                  <strong className="text-foreground">{selectedEvent.childName}</strong>
+                </div>
+              ) : null}
               <div>
                 <span className="text-foreground/50">E-mail:</span> <span className="text-foreground">{selectedEvent.customerEmail}</span>
               </div>

@@ -170,6 +170,7 @@ export interface EventWithPinOption {
   manageToken: string;
   pin: string;
   customerName: string;
+  childName: string | null;
   customerEmail: string;
   customerPhone: string;
   serviceId: string;
@@ -205,6 +206,7 @@ export async function listEventsWithPin(): Promise<EventWithPinOption[]> {
     manageToken: row.booking.manageToken,
     pin: row.booking.pin!,
     customerName: row.booking.customerName,
+    childName: row.booking.childName,
     customerEmail: row.booking.customerEmail,
     customerPhone: row.booking.customerPhone,
     serviceId: row.service.id,

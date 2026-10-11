@@ -240,6 +240,7 @@ adatbázisban tárolt intézményi szolgáltatását ez az átnevezés nem módo
 - **Esemény fotók & PIN kezelés az adminban (`/admin/event-photos` és `/admin/bookings`):**
   - **Új ügyfél & PIN létrehozása:** Az admin felületen modál ablakban bármikor létrehozható új ügyfél bármelyik eseményhez/szolgáltatáshoz, egyedi vagy böngészőkompatibilisen generált PIN-kóddal és opcionális értesítő e-maillel.
   - **Esemény/Szolgáltatás szerinti szűrés:** A fotókezelőben eseménykategóriák szerint szűrhető a PIN-kódok és ügyfelek listája.
+  - **Gyermek neve:** Az `/admin/event-photos` oldalon a kiválasztott ügyfél adatai mellett a foglalásban megadott gyermek neve is látható. Ha nincs kitöltve, a mező nem jelenik meg.
   - **Ügyfél hozzáférési nézet kapcsoló (`ORDER_ONLY` / `GALLERY_ONLY`):**
     - Az adminban egy gombnyomással beállítható, hogy az adott PIN-kóddal belépő ügyfél a **Megrendelő felületet** (`/fotorendeles`) kapja meg, vagy a **Teljes képgalériát** (`/fotogaleria`).
     - **Szigorú szerveroldali védelem:** Közvetlen URL megnyitása esetén a szerver ellenőrzi a jogosultságot, és automatikusan átirányítja az ügyfelet a számára engedélyezett felületre.
