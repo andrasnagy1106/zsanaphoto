@@ -6,7 +6,6 @@ interface BookingSummaryProps {
   serviceName: string;
   slot: Slot;
   customer: CustomerFormData;
-  showPhotoPublicationConsent?: boolean;
   showChildNameField?: boolean;
   submitting: boolean;
   error: string | null;
@@ -18,7 +17,6 @@ export function BookingSummary({
   serviceName,
   slot,
   customer,
-  showPhotoPublicationConsent = false,
   showChildNameField = false,
   submitting,
   error,
@@ -62,14 +60,12 @@ export function BookingSummary({
               <dd className="text-foreground">{customer.notes}</dd>
             </div>
           ) : null}
-          {showPhotoPublicationConsent ? (
-            <div className="flex justify-between gap-4">
-              <dt className="text-foreground/60">Online képmegjelenés</dt>
-              <dd className="text-right text-foreground">
-                {customer.photoPublicationConsent ? "Hozzájárulok" : "Nem járulok hozzá"}
-              </dd>
-            </div>
-          ) : null}
+          <div className="flex justify-between gap-4">
+            <dt className="text-foreground/60">Online képmegjelenés</dt>
+            <dd className="text-right text-foreground">
+              {customer.photoPublicationConsent ? "Hozzájárulok" : "Nem járulok hozzá"}
+            </dd>
+          </div>
         </dl>
       </div>
 

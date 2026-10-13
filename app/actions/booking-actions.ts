@@ -14,7 +14,6 @@ import {
 } from "@/lib/services/booking-service";
 import { getServiceById } from "@/lib/services/service-service";
 import { getAvailableSlotsForDate } from "@/lib/services/availability-service";
-import { INSTITUTION_SERVICE_SLUG } from "@/lib/constants";
 import { checkRateLimit } from "@/lib/utils/rate-limit";
 import { BookingConflictError, NotFoundError } from "@/lib/utils/errors";
 import { getZonedDateIso } from "@/lib/utils/time";
@@ -91,8 +90,7 @@ export async function createBookingAction(formData: unknown): Promise<CreateBook
       childName: service.requiresChildName ? parsed.data.childName : null,
       customerEmail: parsed.data.email,
       customerPhone: parsed.data.phone,
-      photoPublicationConsent:
-        service.slug === INSTITUTION_SERVICE_SLUG ? parsed.data.photoPublicationConsent : null,
+      photoPublicationConsent: parsed.data.photoPublicationConsent,
       notes: parsed.data.notes,
     });
 

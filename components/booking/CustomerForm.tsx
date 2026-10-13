@@ -18,14 +18,12 @@ export type CustomerFormData = z.infer<typeof customerFormSchema>;
 
 interface CustomerFormProps {
   defaultValues?: Partial<CustomerFormData>;
-  showPhotoPublicationConsent?: boolean;
   showChildNameField?: boolean;
   onSubmit: (data: CustomerFormData) => void;
 }
 
 export function CustomerForm({
   defaultValues,
-  showPhotoPublicationConsent = false,
   showChildNameField = false,
   onSubmit,
 }: CustomerFormProps) {
@@ -109,24 +107,22 @@ export function CustomerForm({
         />
       </div>
 
-      {showPhotoPublicationConsent ? (
-        <div className="rounded-lg border border-border bg-white/60 p-4">
-          <label className="flex cursor-pointer items-start gap-3 text-sm text-foreground">
-            <input
-              type="checkbox"
-              className="mt-0.5 size-5 shrink-0 accent-accent"
-              {...register("photoPublicationConsent")}
-            />
-            <span>
-              Hozzájárulok, hogy a gyermekemről készült képek megjelenjenek a ZsaNa Photo
-              weboldalán és/vagy az intézmény Facebook-csoportjában.
-            </span>
-          </label>
-          <p className="mt-2 pl-8 text-xs text-foreground/60">
-            A hozzájárulás önkéntes, és nem feltétele a foglalásnak.
-          </p>
-        </div>
-      ) : null}
+      <div className="rounded-lg border border-border bg-white/60 p-4">
+        <label className="flex cursor-pointer items-start gap-3 text-sm text-foreground">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-5 shrink-0 accent-accent"
+            {...register("photoPublicationConsent")}
+          />
+          <span>
+            Hozzájárulok, hogy a fotózás során készült képek megjelenjenek a ZsaNa Photo
+            weboldalán és közösségi felületein.
+          </span>
+        </label>
+        <p className="mt-2 pl-8 text-xs text-foreground/60">
+          A hozzájárulás önkéntes, és nem feltétele a foglalásnak.
+        </p>
+      </div>
 
       <div className="hidden" aria-hidden="true">
         <label htmlFor="company">Cég</label>
