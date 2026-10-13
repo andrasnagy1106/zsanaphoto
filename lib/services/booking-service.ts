@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, lte, ne, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, lt, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { bookings, emailOutbox, eventPhotos, photoOrders, services, type Booking, type Service } from "@/db/schema";
 import { deleteMultiplePhotosFromCloudinary } from "@/lib/providers/cloudinary/client";
@@ -77,8 +77,8 @@ export async function createBooking(input: CreateBookingInput): Promise<Booking>
         .where(
           and(
             inArray(bookings.status, ACTIVE_BOOKING_STATUSES),
-            lte(bookings.startAt, input.end),
-            gte(bookings.endAt, input.start),
+            lt(bookings.startAt, input.end),
+            gt(bookings.endAt, input.start),
           ),
         )
         .limit(1);
