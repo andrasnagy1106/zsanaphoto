@@ -116,6 +116,7 @@ export async function createAdminEventUserAction(input: unknown): Promise<AdminA
     const created = await createAdminEventUser({
       serviceId: parsed.data.serviceId,
       customerName: parsed.data.customerName,
+      childName: parsed.data.childName,
       customerEmail: parsed.data.customerEmail,
       customerPhone: parsed.data.customerPhone || "-",
       pin: parsed.data.pin || undefined,

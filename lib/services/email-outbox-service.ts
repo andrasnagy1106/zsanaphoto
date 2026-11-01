@@ -51,7 +51,7 @@ export async function sendOrQueueEmail(input: SendOrQueueEmailInput): Promise<vo
     await input.deliver();
   } catch (error) {
     console.error(`[email-outbox] Failed to deliver email to ${input.to}:`, error);
-    return;
+    throw error;
   }
 
   await db.insert(emailOutbox).values({

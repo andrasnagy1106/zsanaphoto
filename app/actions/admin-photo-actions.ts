@@ -14,7 +14,15 @@ import {
   registerUploadedPhotoForPin,
   updateEventPhotoDetails,
 } from "@/lib/services/photo-storage-service";
+import {
+  savePhotoOrderDeadlineForBooking,
+  sendPhotoReadyEmailsForEvent,
+} from "@/lib/services/photo-notification-service";
 import { eventPhotoEditSchema, photoMoveDirectionSchema } from "@/lib/validation/photo-edit";
+import {
+  savePhotoOrderDeadlineSchema,
+  sendPhotoReadyEmailSchema,
+} from "@/lib/validation/photo-notification";
 import type { Booking } from "@/db/schema";
 import { z } from "zod";
 
@@ -22,6 +30,56 @@ export interface AdminPhotoActionResult {
   success: boolean;
   count?: number;
   error?: string;
+}
+
+export async function savePhotoOrderDeadlineAction(input: unknown): Promise<AdminPhotoActionResult> {
+  await requireAdmin();
+  const parsed = savePhotoOrderDeadlineSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Érvénytelen rendelési határidő." };
+  }
+
+  try {
+    await savePhotoOrderDeadlineForBooking(
+      parsed.data.bookingId,
+      parsed.data.orderDeadline || null,
+    );
+    revalidatePath("/admin/event-photos");
+    revalidatePath(`/admin/bookings/${parsed.data.bookingId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("[savePhotoOrderDeadlineAction] Failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "A határidő mentése nem sikerült.",
+    };
+  }
+}
+
+export async function sendPhotoReadyEmailsAction(input: unknown): Promise<AdminPhotoActionResult> {
+  await requireAdmin();
+  const parsed = sendPhotoReadyEmailSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Érvénytelen ügyfélazonosító." };
+
+  try {
+    const result = await sendPhotoReadyEmailsForEvent(parsed.data.bookingId);
+    revalidatePath("/admin/event-photos");
+    revalidatePath(`/admin/bookings/${parsed.data.bookingId}`);
+    if (result.failed > 0) {
+      return {
+        success: false,
+        count: result.sent,
+        error: `${result.sent} email sikeresen elindult, ${result.failed} email küldése nem sikerült.`,
+      };
+    }
+    return { success: true, count: result.sent };
+  } catch (error) {
+    console.error("[sendPhotoReadyEmailsAction] Failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Az email küldése nem sikerült.",
+    };
+  }
 }
 
 const EVENT_PHOTO_MIME_TYPES = new Set([

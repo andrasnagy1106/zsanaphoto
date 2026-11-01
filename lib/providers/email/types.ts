@@ -42,6 +42,16 @@ export interface PhotoOrderEmailInput {
   }>;
 }
 
+export interface PhotoReadyEmailInput {
+  customerName: string;
+  childName?: string | null;
+  customerEmail: string;
+  serviceName: string;
+  pin: string;
+  orderDeadline: string;
+  galleryUrl: string;
+}
+
 export interface EmailProvider {
   sendBookingCreatedEmail(input: BookingEmailInput): Promise<void>;
   sendAdminNewBookingEmail(input: BookingEmailInput): Promise<void>;
@@ -52,4 +62,5 @@ export interface EmailProvider {
   sendAdminBookingRescheduledEmail(input: BookingEmailInput): Promise<void>;
   sendPhotoOrderConfirmationEmail(input: PhotoOrderEmailInput): Promise<void>;
   sendAdminPhotoOrderNotificationEmail(input: PhotoOrderEmailInput): Promise<void>;
+  sendPhotoReadyEmail(input: PhotoReadyEmailInput): Promise<void>;
 }

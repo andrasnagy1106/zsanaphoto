@@ -173,6 +173,7 @@ export const bookings = pgTable("bookings", {
   photoPublicationConsent: boolean("photo_publication_consent"),
   customerPhotoViewMode: customerPhotoViewModeEnum("customer_photo_view_mode").notNull().default("ORDER_ONLY"),
   showPhotoTitles: boolean("show_photo_titles").notNull().default(false),
+  photoReadyEmailSentAt: timestamp("photo_ready_email_sent_at", { withTimezone: true }),
   startAt: timestamp("start_at", { withTimezone: true }).notNull(),
   endAt: timestamp("end_at", { withTimezone: true }).notNull(),
   status: bookingStatusEnum("status").notNull().default("PENDING"),
@@ -256,6 +257,18 @@ export const eventPhotos = pgTable("event_photos", {
   index("event_photos_booking_id_idx").on(table.bookingId),
   index("event_photos_pin_idx").on(table.pin),
   index("event_photos_sort_order_idx").on(table.sortOrder),
+]);
+
+export const photoEventNotices = pgTable("photo_event_notices", {
+  id: id(),
+  serviceId: text("service_id")
+    .notNull()
+    .references(() => services.id, { onDelete: "cascade" }),
+  eventDate: text("event_date").notNull(),
+  orderDeadline: text("order_deadline"),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("photo_event_notices_service_date_idx").on(table.serviceId, table.eventDate),
 ]);
 
 export const adminUsers = pgTable("admin_users", {

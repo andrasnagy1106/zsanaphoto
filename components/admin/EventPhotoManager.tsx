@@ -10,6 +10,8 @@ import {
   moveEventPhotoAction,
   createEventPhotoUploadSignatureAction,
   registerUploadedEventPhotoAction,
+  savePhotoOrderDeadlineAction,
+  sendPhotoReadyEmailsAction,
   updateCustomerPhotoViewModeAction,
   updateEventPhotoAction,
   updateShowPhotoTitlesAction,
@@ -19,7 +21,7 @@ import type { EventWithPinOption } from "@/lib/services/photo-storage-service";
 import { formatPrice } from "@/lib/photo-order-catalog";
 import { uploadEventPhotoDirectlyToCloudinary } from "@/lib/utils/cloudinary-browser-upload";
 import { toObjectPosition } from "@/lib/utils/photo-layout";
-import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
+import { formatZonedHungarianDate, formatZonedTime, getZonedDateIso } from "@/lib/utils/time";
 import { CreateEventUserModal } from "@/components/admin/CreateEventUserModal";
 import { PhotoEditDialog, type PhotoEditValues } from "@/components/admin/PhotoEditDialog";
 import { PhotoOrderStatusControl } from "@/components/admin/PhotoOrderStatusControl";
@@ -54,10 +56,15 @@ export function EventPhotoManager({
 }: EventPhotoManagerProps) {
   const router = useRouter();
   const fileInputId = useId();
+  const orderDeadlineInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [currentPin, setCurrentPin] = useState(selectedPin ?? (events[0]?.pin ?? ""));
+  const [orderDeadlineDraftState, setOrderDeadlineDraftState] = useState<{
+    bookingId: string;
+    value: string;
+  } | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("gallery");
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -66,6 +73,8 @@ export function EventPhotoManager({
   const [isUploading, startUploadTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
   const [isUpdatingMode, startModeTransition] = useTransition();
+  const [isSavingDeadline, startDeadlineTransition] = useTransition();
+  const [isSendingPhotoReadyEmail, startPhotoReadyEmailTransition] = useTransition();
   const [isMoving, startMoveTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -79,6 +88,65 @@ export function EventPhotoManager({
   }, [events, selectedServiceId]);
 
   const selectedEvent = events.find((e) => e.pin === currentPin);
+  const photoEventRecipients = selectedEvent
+    ? events.filter(
+        (event) =>
+          event.serviceId === selectedEvent.serviceId &&
+          getZonedDateIso(event.startAt) === getZonedDateIso(selectedEvent.startAt) &&
+          event.photoCount > 0,
+      )
+    : [];
+  const photoEventSentCount = photoEventRecipients.filter(
+    (event) => event.photoReadyEmailSentAt !== null,
+  ).length;
+  const orderDeadlineDraft =
+    selectedEvent && orderDeadlineDraftState?.bookingId === selectedEvent.bookingId
+      ? orderDeadlineDraftState.value
+      : selectedEvent?.orderDeadline ?? "";
+
+  function handleSaveOrderDeadline() {
+    if (!selectedEvent) return;
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    startDeadlineTransition(async () => {
+      const result = await savePhotoOrderDeadlineAction({
+        bookingId: selectedEvent.bookingId,
+        orderDeadline: orderDeadlineDraft,
+      });
+      if (result.success) {
+        setOrderDeadlineDraftState({ bookingId: selectedEvent.bookingId, value: orderDeadlineDraft });
+        setSuccessMessage("A rendelési határidő elmentve az aznapi fotózáshoz.");
+        router.refresh();
+      } else {
+        setErrorMessage(result.error ?? "A határidő mentése nem sikerült.");
+      }
+    });
+  }
+
+  function handleSendPhotoReadyEmail() {
+    if (!selectedEvent || photoEventRecipients.length === 0) return;
+    if (
+      !window.confirm(
+        `Elküldöd a képek elkészültéről szóló emailt ${photoEventRecipients.length} szülőnek, külön-külön a saját PIN-kódjukkal?`,
+      )
+    ) {
+      return;
+    }
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    startPhotoReadyEmailTransition(async () => {
+      const result = await sendPhotoReadyEmailsAction({ bookingId: selectedEvent.bookingId });
+      if (result.count && result.count > 0) {
+        setSuccessMessage(`${result.count} szülőnek elindult az email küldése.`);
+      }
+      if (!result.success) {
+        setErrorMessage(result.error ?? "Az email küldése nem sikerült.");
+      }
+      router.refresh();
+    });
+  }
 
   function handleViewModeChange(newMode: Booking["customerPhotoViewMode"]) {
     if (!selectedEvent) return;
@@ -386,8 +454,75 @@ export function EventPhotoManager({
                 ))}
               </select>
             )}
+
           </div>
         </div>
+
+        {selectedEvent && (
+          <div className="mt-4 rounded-lg border border-accent/20 bg-accent/5 p-4">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Óvodai rendelési tájékoztató</h3>
+              <p className="mt-1 text-xs text-foreground/60">
+                A határidő az azonos szolgáltatáshoz és fotózási naphoz tartozó albumoknál közös. A gomb külön emailt küld minden képpel rendelkező szülőnek, saját PIN-kóddal. Csak akkor indítsd el, ha minden album képei felkerültek. A fizetési tudnivalók automatikusan megjelennek.
+              </p>
+            </div>
+            <div className="mt-3 flex flex-wrap items-end gap-3">
+              <div>
+                <label htmlFor={orderDeadlineInputId} className="block text-xs font-semibold text-foreground">
+                  Képrendelési határidő
+                </label>
+                <input
+                  id={orderDeadlineInputId}
+                  type="date"
+                  value={orderDeadlineDraft}
+                  onChange={(event) => {
+                    if (selectedEvent) {
+                      setOrderDeadlineDraftState({
+                        bookingId: selectedEvent.bookingId,
+                        value: event.target.value,
+                      });
+                    }
+                  }}
+                  className="mt-1.5 min-h-10 rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveOrderDeadline}
+                disabled={
+                  isSavingDeadline ||
+                  orderDeadlineDraft === (selectedEvent.orderDeadline ?? "")
+                }
+                className="min-h-10 rounded-md border border-border bg-white px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
+              >
+                {isSavingDeadline ? "Mentés..." : "Határidő mentése"}
+              </button>
+              <button
+                type="button"
+                onClick={handleSendPhotoReadyEmail}
+                disabled={
+                  isSendingPhotoReadyEmail ||
+                  isSavingDeadline ||
+                  !selectedEvent.orderDeadline ||
+                  orderDeadlineDraft !== selectedEvent.orderDeadline ||
+                  selectedEvent.photoCount === 0
+                }
+                className="min-h-10 rounded-md bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-dark disabled:opacity-50"
+              >
+                {isSendingPhotoReadyEmail
+                  ? "Email küldése..."
+                  : photoEventSentCount > 0
+                    ? `Értesítők újraküldése (${photoEventRecipients.length} szülő)`
+                    : `Képek elkészültek — ${photoEventRecipients.length} email küldése`}
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-foreground/60">
+              {photoEventRecipients.length === 0
+                ? "Email csak legalább egy kép feltöltése után küldhető."
+                : `A címzettek közül eddig ${photoEventSentCount} szülő kapott értesítőt.`}
+            </p>
+          </div>
+        )}
 
         {selectedEvent && (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border/60 pt-3 text-xs text-foreground/70">
@@ -985,4 +1120,3 @@ export function EventPhotoManager({
     </div>
   );
 }
-

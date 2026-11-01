@@ -27,6 +27,7 @@ export function CreateEventUserModal({
 
   const serviceSelectId = useId();
   const nameInputId = useId();
+  const childNameInputId = useId();
   const emailInputId = useId();
   const phoneInputId = useId();
   const pinInputId = useId();
@@ -37,6 +38,7 @@ export function CreateEventUserModal({
 
   const [serviceId, setServiceId] = useState(defaultServiceId ?? services[0]?.id ?? "");
   const [customerName, setCustomerName] = useState("");
+  const [childName, setChildName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("+36 ");
   const [pin, setPin] = useState("");
@@ -70,6 +72,7 @@ export function CreateEventUserModal({
       const result = await createAdminEventUserAction({
         serviceId,
         customerName,
+        childName,
         customerEmail,
         customerPhone,
         pin: pin ? pin.trim().toUpperCase() : undefined,
@@ -86,6 +89,7 @@ export function CreateEventUserModal({
 
       closeModal();
       setCustomerName("");
+      setChildName("");
       setCustomerEmail("");
       setCustomerPhone("+36 ");
       setPin("");
@@ -202,6 +206,21 @@ export function CreateEventUserModal({
                   className="mt-1.5 w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
                 />
               </div>
+            </div>
+
+            <div>
+              <label htmlFor={childNameInputId} className="block text-xs font-semibold text-foreground">
+                Gyermek neve (opcionális)
+              </label>
+              <input
+                id={childNameInputId}
+                type="text"
+                maxLength={100}
+                placeholder="pl. Kiss Ádám"
+                value={childName}
+                onChange={(e) => setChildName(e.target.value)}
+                className="mt-1.5 w-full rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

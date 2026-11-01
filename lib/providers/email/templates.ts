@@ -1,6 +1,19 @@
 import { formatPrice } from "@/lib/photo-order-catalog";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
-import type { BookingEmailInput, PhotoOrderEmailInput } from "./types";
+import type { BookingEmailInput, PhotoOrderEmailInput, PhotoReadyEmailInput } from "./types";
+
+export const PAYMENT_INFORMATION_TEXT = `Fizetési információk:
+
+Banki utalással:
+Toldi Zsanett
+OTP BANK
+Számlaszám:11748076-25511136
+Az utalásnál a közlemény rovatba kérem feltüntetni a gyermek nevét/intézményét.
+
+Készpénzes fizetés esetén zárt borítékba kérem rakni a pontos összeget ,melyet kérem a borítékra írni.A borítékon tüntesse fel a gyermek nevét/intézményét.
+A zárt borítékot leadhatja :
+- Sárbogárdon a Főtéri cukrászdába
+-Sárbogárd/Töbörzsökön Tóth Lászlónál a Törpe Élelmiszerben/Dózsa György utca 42/ Nyitva tartási időben Hétfőtől-Péntekig 6-11 óráig  és 14-17 óráig.Szombat-vasárnap:7-12 óráig.`;
 
 function formatWhen(input: BookingEmailInput): { date: string; time: string } {
   return {
@@ -105,6 +118,29 @@ Foglalási azonosító: ${input.bookingNumber}${formatBookingPin(input.pin)}${ch
 ${consentSection}
 
 A végleges visszaigazolásról e-mailben értesítünk, amint a fotós jóváhagyta a foglalást.
+
+ZsaNa Photo`,
+  };
+}
+
+export function buildPhotoReadyEmail(input: PhotoReadyEmailInput) {
+  const childNameSection = input.childName ? `\nGyermek neve: ${input.childName}` : "";
+  const [year, month, day] = input.orderDeadline.split("-");
+  const formattedDeadline = `${year}. ${month}. ${day}.`;
+
+  return {
+    subject: "Elkészültek a fotók - ZsaNa Photo",
+    text: `Kedves ${input.customerName}!
+
+Elkészültek a fotók a(z) ${input.serviceName} során.${childNameSection}
+
+A képek megtekintéséhez nyisd meg a weboldalt, majd válaszd a „Fotók megtekintése / rendelés” lehetőséget, és add meg a PIN-kódot:
+${input.galleryUrl}
+
+Belépési PIN-kód: ${input.pin}
+Rendelési határidő: ${formattedDeadline}
+
+${PAYMENT_INFORMATION_TEXT}
 
 ZsaNa Photo`,
   };
@@ -257,20 +293,7 @@ function formatBillingDetails(input: PhotoOrderEmailInput): string {
 
 export function buildPhotoOrderConfirmationEmail(input: PhotoOrderEmailInput) {
   const billingSection = formatBillingDetails(input);
-  const paymentSection = input.includePaymentInformation ? `
-
-Fizetési információk:
-
-Banki utalással:
-Toldi Zsanett
-OTP BANK
-Számlaszám:11748076-25511136
-Az utalásnál a közlemény rovatba kérem feltüntetni a gyermek nevét/intézményét.
-
-Készpénzes fizetés esetén zárt borítékba kérem rakni a pontos összeget ,melyet kérem a borítékra írni.A borítékon tüntesse fel a gyermek nevét/intézményét.
-A zárt borítékot leadhatja :
-- Sárbogárdon a Főtéri cukrászdába
--Sárbogárd/Töbörzsökön Tóth Lászlónál a Törpe Élelmiszerben/Dózsa György utca 42/ Nyitva tartási időben Hétfőtől-Péntekig 6-11 óráig  és 14-17 óráig.Szombat-vasárnap:7-12 óráig.` : "";
+  const paymentSection = input.includePaymentInformation ? `\n\n${PAYMENT_INFORMATION_TEXT}` : "";
 
   return {
     subject: `${input.isUpdate ? "Fotórendelés módosítva" : "Fotórendelés visszaigazolása"} - ${input.orderNumber}`,

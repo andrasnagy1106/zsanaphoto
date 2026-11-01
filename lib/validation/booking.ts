@@ -36,6 +36,7 @@ export type RescheduleBookingByCustomerForm = z.infer<typeof rescheduleBookingBy
 export const createAdminEventUserSchema = z.object({
   serviceId: z.string().min(1, "Válassz eseményt / szolgáltatást."),
   customerName: z.string().trim().min(2, "A név legalább 2 karakter legyen.").max(100),
+  childName: z.string().trim().max(100).optional(),
   customerEmail: z.string().trim().email("Adj meg érvényes e-mail címet.").max(200),
   customerPhone: z.string().trim().max(30).optional().default("+36"),
   pin: z

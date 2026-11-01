@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import {
   bookings,
   eventPhotos,
+  photoEventNotices,
   services,
   type Booking,
   type EventPhoto,
@@ -22,6 +23,7 @@ import {
 import { NotFoundError } from "@/lib/utils/errors";
 import { reorderIdsByMove } from "@/lib/utils/photo-layout";
 import type { EventPhotoEditInput, PhotoMoveDirection } from "@/lib/validation/photo-edit";
+import { getZonedDateIso } from "@/lib/utils/time";
 
 const MAX_EVENT_PHOTO_SIZE_BYTES = 25 * 1024 * 1024;
 const ALLOWED_EVENT_PHOTO_FORMATS = new Set(["jpg", "jpeg", "png", "webp", "avif"]);
@@ -181,13 +183,16 @@ export interface EventWithPinOption {
   customerPhotoViewMode: Booking["customerPhotoViewMode"];
   showPhotoTitles: boolean;
   photoCount: number;
+  orderDeadline: string | null;
+  photoReadyEmailSentAt: Date | null;
 }
 
 /**
  * Returns all bookings that have an assigned PIN code along with their photo counts.
  */
 export async function listEventsWithPin(): Promise<EventWithPinOption[]> {
-  const rows = await db
+  const [rows, notices] = await Promise.all([
+    db
     .select({
       booking: bookings,
       service: services,
@@ -198,7 +203,12 @@ export async function listEventsWithPin(): Promise<EventWithPinOption[]> {
     .leftJoin(eventPhotos, eq(bookings.id, eventPhotos.bookingId))
     .where(isNotNull(bookings.pin))
     .groupBy(bookings.id, services.id)
-    .orderBy(desc(bookings.startAt));
+    .orderBy(desc(bookings.startAt)),
+    db.select().from(photoEventNotices),
+  ]);
+  const noticeByEvent = new Map(
+    notices.map((notice) => [`${notice.serviceId}:${notice.eventDate}`, notice]),
+  );
 
   return rows.map((row) => ({
     bookingId: row.booking.id,
@@ -217,6 +227,9 @@ export async function listEventsWithPin(): Promise<EventWithPinOption[]> {
     customerPhotoViewMode: row.booking.customerPhotoViewMode,
     showPhotoTitles: row.booking.showPhotoTitles,
     photoCount: row.photoCount,
+    orderDeadline:
+      noticeByEvent.get(`${row.service.id}:${getZonedDateIso(row.booking.startAt)}`)?.orderDeadline ?? null,
+    photoReadyEmailSentAt: row.booking.photoReadyEmailSentAt,
   }));
 }
 

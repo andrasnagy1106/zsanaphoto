@@ -225,6 +225,13 @@
       "when": 1791235170870,
       "tag": "0031_silky_stepford_cuckoos",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793561186156,
+      "tag": "0032_loose_chat",
+      "breakpoints": true
     }
   ]
 }

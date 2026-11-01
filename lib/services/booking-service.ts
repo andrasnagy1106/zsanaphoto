@@ -176,6 +176,7 @@ async function sendBookingCreatedEmails(
 export interface CreateAdminEventUserInput {
   serviceId: string;
   customerName: string;
+  childName?: string;
   customerEmail: string;
   customerPhone?: string;
   pin?: string;
@@ -227,6 +228,7 @@ export async function createAdminEventUser(input: CreateAdminEventUserInput): Pr
             pin: assignedPin,
             serviceId: input.serviceId,
             customerName: input.customerName.trim(),
+            childName: input.childName?.trim() || null,
             customerEmail: input.customerEmail.trim(),
             customerPhone: input.customerPhone?.trim() || "-",
             startAt: start,

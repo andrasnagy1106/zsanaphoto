@@ -3,6 +3,7 @@ import {
   buildBookingCreatedEmail,
   buildGoogleCalendarUrl,
   buildPhotoOrderConfirmationEmail,
+  buildPhotoReadyEmail,
 } from "./templates";
 import type { ApprovalMode, BookingEmailInput, PhotoOrderEmailInput } from "./types";
 
@@ -68,6 +69,27 @@ describe("buildBookingCreatedEmail", () => {
 
     const email = buildBookingCreatedEmail(input);
     expect(email.text).not.toContain("Hozzáadás a Google Naptárhoz:");
+  });
+});
+
+describe("buildPhotoReadyEmail", () => {
+  it("includes the gallery link, PIN, child name, deadline, and payment instructions", () => {
+    const email = buildPhotoReadyEmail({
+      customerName: "Szülő Anna",
+      childName: "Kiss Ádám",
+      customerEmail: "anna@example.com",
+      serviceName: "Óvodai fotózás",
+      pin: "AB12345",
+      orderDeadline: "2026-11-03",
+      galleryUrl: "https://zsanaphoto.hu/fotorendeles",
+    });
+
+    expect(email.subject).toContain("Elkészültek a fotók");
+    expect(email.text).toContain("https://zsanaphoto.hu/fotorendeles");
+    expect(email.text).toContain("PIN-kód: AB12345");
+    expect(email.text).toContain("Gyermek neve: Kiss Ádám");
+    expect(email.text).toContain("Rendelési határidő: 2026. 11. 03.");
+    expect(email.text).toContain("Számlaszám:11748076-25511136");
   });
 });
 
