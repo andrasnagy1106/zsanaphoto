@@ -7,7 +7,7 @@ A teljes specifikációt lásd: [`Zsana_Photo_MVP_v4.md`](./Zsana_Photo_MVP_v4.m
 
 ## Tech stack
 
-- Next.js 16 (App Router, Turbopack), TypeScript (strict), React 19
+- Next.js 16 (App Router, Turbopack fejlesztéshez, Webpack production buildhez), TypeScript (strict), React 19
 - Tailwind CSS v4
 - PostgreSQL (Neon-kompatibilis, `pg` driver) + Drizzle ORM
 - Zod validáció, React Hook Form
@@ -113,7 +113,7 @@ lib/
 
 ```bash
 pnpm dev          # fejlesztői szerver
-pnpm build        # production build
+pnpm build        # production build (Webpack)
 pnpm start        # production szerver (build után)
 pnpm lint         # ESLint
 pnpm typecheck    # tsc --noEmit
@@ -122,6 +122,10 @@ pnpm db:generate  # Drizzle migráció generálása schema.ts alapján
 pnpm db:migrate   # migrációk lefuttatása a DATABASE_URL adatbázison
 pnpm db:seed      # alap szolgáltatások, availability szabályok, settings, dev admin létrehozása
 ```
+
+A production build Webpacket használ a Vercelen tapasztalt Turbopack
+`next/font/google` modulfeloldási hiba elkerülésére. A fejlesztői szerver
+továbbra is Turbopackkel fut; a betűtípusok és a megjelenés változatlanok.
 
 ## Környezetek
 
