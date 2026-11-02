@@ -10,6 +10,7 @@ import {
 } from "@/lib/services/photo-order-service";
 import { listPhotosByBookingId } from "@/lib/services/photo-storage-service";
 import { toObjectPosition } from "@/lib/utils/photo-layout";
+import { getPaymentInformationForBooking } from "@/lib/services/payment-information-service";
 
 export const metadata: Metadata = {
   title: "Fotók megtekintése és rendelés",
@@ -46,10 +47,11 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
     redirect(`/fotogaleria?token=${encodeURIComponent(token!)}`);
   }
 
-  const [activeOrder, settings, uploadedPhotos] = await Promise.all([
+  const [activeOrder, settings, uploadedPhotos, paymentInformation] = await Promise.all([
     getActivePhotoOrderForBooking(access.booking.id),
     getSiteSettings(),
     listPhotosByBookingId(access.booking.id),
+    getPaymentInformationForBooking(access.booking, access.service),
   ]);
 
   const prices = resolvePhotoPrices(
@@ -84,6 +86,7 @@ export default async function PhotoOrderPage({ searchParams }: PhotoOrderPagePro
         isRealEventPhotos={uploadedPhotos.length > 0}
         showPhotoTitles={access.booking.showPhotoTitles}
         prices={prices}
+        {...paymentInformation}
         initialOrder={activeOrder ? {
           orderNumber: activeOrder.order.orderNumber,
           billingName: activeOrder.order.billingName ?? access.booking.customerName,

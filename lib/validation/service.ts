@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { photoPriceOverridesSchema } from "@/lib/validation/photo-pricing";
+import { MAX_PAYMENT_INFORMATION_LENGTH } from "@/lib/payment-information";
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const servicePhotoPricesSchema = z.union([photoPriceOverridesSchema, z.null()]).optional().default(null);
@@ -35,6 +36,9 @@ export const updateServiceSchema = z.object({
     .transform((val) => (val === "" ? null : val ?? null)),
   requiresChildName: z.coerce.boolean().default(false),
   includePaymentInformation: z.coerce.boolean().default(false),
+  paymentInformation: z.string().trim().max(
+    MAX_PAYMENT_INFORMATION_LENGTH, "A fizetési tájékoztató legfeljebb 5000 karakter lehet.",
+  ).nullable().optional().default(null),
   generatesPin: z.coerce.boolean().default(false),
   active: z.coerce.boolean(),
 });
@@ -72,6 +76,9 @@ export const createServiceSchema = z.object({
     .transform((val) => (val === "" ? null : val ?? null)),
   requiresChildName: z.coerce.boolean().default(false),
   includePaymentInformation: z.coerce.boolean().default(false),
+  paymentInformation: z.string().trim().max(
+    MAX_PAYMENT_INFORMATION_LENGTH, "A fizetési tájékoztató legfeljebb 5000 karakter lehet.",
+  ).nullable().optional().default(null),
   generatesPin: z.coerce.boolean().default(false),
   active: z.coerce.boolean().default(true),
 });

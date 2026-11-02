@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createServiceAction } from "@/app/actions/admin-service-actions";
 import type { AvailabilityCalendar } from "@/db/schema";
 import { slugify } from "@/lib/utils/slug";
+import { PaymentInformationEditor } from "./PaymentInformationEditor";
+import { PAYMENT_INFORMATION_TEXT } from "@/lib/payment-information";
 
 interface CreateServiceModalProps {
   calendars?: AvailabilityCalendar[];
@@ -44,6 +46,7 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
   const [dateRangeEnd, setDateRangeEnd] = useState("");
   const [requiresChildName, setRequiresChildName] = useState(false);
   const [includePaymentInformation, setIncludePaymentInformation] = useState(false);
+  const [paymentInformation, setPaymentInformation] = useState<string | null>(null);
   const [generatesPin, setGeneratesPin] = useState(false);
   const [active, setActive] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +86,7 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
         dateRangeEnd: dateRangeEnd || null,
         requiresChildName,
         includePaymentInformation,
+        paymentInformation,
         generatesPin,
         active,
       });
@@ -96,6 +100,7 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
       setName("");
       setSlug("");
       setDescription("");
+      setPaymentInformation(null);
       setDateRangeStart("");
       setDateRangeEnd("");
       setIncludePaymentInformation(false);
@@ -383,6 +388,14 @@ export function CreateServiceModal({ calendars = [] }: CreateServiceModalProps) 
               </label>
             </div>
 
+            <PaymentInformationEditor
+              value={paymentInformation ?? PAYMENT_INFORMATION_TEXT}
+              onChange={setPaymentInformation}
+              disabled={isPending}
+            />
+            <p className="text-xs text-foreground/60">
+              A képek elkészültek értesítő alapértelmezett szövege. A rendelés-visszaigazolásban a fenti kapcsoló engedélyezi. Fotózásonként felülírható a fotókezelőben.
+            </p>
             {error && <p className="text-xs font-medium text-red-600">{error}</p>}
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/60">

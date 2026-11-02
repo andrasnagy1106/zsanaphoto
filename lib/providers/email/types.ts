@@ -25,6 +25,8 @@ export interface PhotoOrderEmailInput {
   serviceName: string;
   adminNotificationEmail: string;
   includePaymentInformation?: boolean;
+  paymentInformation?: string | null;
+  paymentDeadline?: string | null;
   billingName?: string | null;
   billingPostalCode?: string | null;
   billingCity?: string | null;
@@ -49,6 +51,8 @@ export interface PhotoReadyEmailInput {
   serviceName: string;
   pin: string;
   orderDeadline: string;
+  paymentInformation?: string | null;
+  paymentDeadline?: string | null;
   galleryUrl: string;
 }
 

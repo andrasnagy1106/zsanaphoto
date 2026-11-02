@@ -25,6 +25,8 @@ import { formatZonedHungarianDate, formatZonedTime, getZonedDateIso } from "@/li
 import { CreateEventUserModal } from "@/components/admin/CreateEventUserModal";
 import { PhotoEditDialog, type PhotoEditValues } from "@/components/admin/PhotoEditDialog";
 import { PhotoOrderStatusControl } from "@/components/admin/PhotoOrderStatusControl";
+import { PaymentInformationEditor } from "@/components/admin/PaymentInformationEditor";
+import { formatNoticeDate, formatPaymentInformation } from "@/lib/payment-information";
 
 interface EventPhotoManagerProps {
   events: EventWithPinOption[];
@@ -57,13 +59,16 @@ export function EventPhotoManager({
   const router = useRouter();
   const fileInputId = useId();
   const orderDeadlineInputId = useId();
+  const paymentDeadlineInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [currentPin, setCurrentPin] = useState(selectedPin ?? (events[0]?.pin ?? ""));
-  const [orderDeadlineDraftState, setOrderDeadlineDraftState] = useState<{
-    bookingId: string;
-    value: string;
+  const [noticeDraftState, setNoticeDraftState] = useState<{
+    eventKey: string;
+    orderDeadline: string;
+    paymentDeadline: string;
+    paymentInformation: string | null;
   } | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("gallery");
 
@@ -99,10 +104,27 @@ export function EventPhotoManager({
   const photoEventSentCount = photoEventRecipients.filter(
     (event) => event.photoReadyEmailSentAt !== null,
   ).length;
-  const orderDeadlineDraft =
-    selectedEvent && orderDeadlineDraftState?.bookingId === selectedEvent.bookingId
-      ? orderDeadlineDraftState.value
-      : selectedEvent?.orderDeadline ?? "";
+  const eventKey = selectedEvent
+    ? `${selectedEvent.serviceId}:${getZonedDateIso(selectedEvent.startAt)}`
+    : "";
+  const savedNotice = {
+    orderDeadline: selectedEvent?.orderDeadline ?? "",
+    paymentDeadline: selectedEvent?.paymentDeadline ?? "",
+    paymentInformation: selectedEvent?.paymentInformation ?? null,
+  };
+  const noticeDraft = noticeDraftState?.eventKey === eventKey ? noticeDraftState : savedNotice;
+  const noticeIsDirty = noticeDraft.orderDeadline !== savedNotice.orderDeadline ||
+    noticeDraft.paymentDeadline !== savedNotice.paymentDeadline ||
+    noticeDraft.paymentInformation !== savedNotice.paymentInformation;
+  const noticeIsPending = isSavingDeadline || isSendingPhotoReadyEmail;
+  const paymentPreview = formatPaymentInformation({
+    paymentInformation: noticeDraft.paymentInformation ?? selectedEvent?.defaultPaymentInformation ?? "",
+    paymentDeadline: noticeDraft.paymentDeadline,
+  });
+
+  function updateNoticeDraft(values: Partial<typeof savedNotice>) {
+    setNoticeDraftState({ eventKey, ...noticeDraft, ...values });
+  }
 
   function handleSaveOrderDeadline() {
     if (!selectedEvent) return;
@@ -112,14 +134,16 @@ export function EventPhotoManager({
     startDeadlineTransition(async () => {
       const result = await savePhotoOrderDeadlineAction({
         bookingId: selectedEvent.bookingId,
-        orderDeadline: orderDeadlineDraft,
+        orderDeadline: noticeDraft.orderDeadline,
+        paymentDeadline: noticeDraft.paymentDeadline,
+        paymentInformation: noticeDraft.paymentInformation,
       });
       if (result.success) {
-        setOrderDeadlineDraftState({ bookingId: selectedEvent.bookingId, value: orderDeadlineDraft });
-        setSuccessMessage("A rendelési határidő elmentve az aznapi fotózáshoz.");
+        setNoticeDraftState(null);
+        setSuccessMessage("A rendelési és fizetési tájékoztató elmentve az aznapi fotózáshoz.");
         router.refresh();
       } else {
-        setErrorMessage(result.error ?? "A határidő mentése nem sikerült.");
+        setErrorMessage(result.error ?? "A tájékoztató mentése nem sikerült.");
       }
     });
   }
@@ -461,9 +485,9 @@ export function EventPhotoManager({
         {selectedEvent && (
           <div className="mt-4 rounded-lg border border-accent/20 bg-accent/5 p-4">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Óvodai rendelési tájékoztató</h3>
+              <h3 className="text-sm font-semibold text-foreground">Rendelési és fizetési tájékoztató</h3>
               <p className="mt-1 text-xs text-foreground/60">
-                A határidő az azonos szolgáltatáshoz és fotózási naphoz tartozó albumoknál közös. A gomb külön emailt küld minden képpel rendelkező szülőnek, saját PIN-kóddal. Csak akkor indítsd el, ha minden album képei felkerültek. A fizetési tudnivalók automatikusan megjelennek.
+                A beállítások az azonos szolgáltatáshoz és fotózási naphoz tartozó összes albumnál közösek. A gomb külön emailt küld minden képpel rendelkező szülőnek, saját PIN-kóddal. Csak akkor indítsd el, ha minden album képei felkerültek.
               </p>
             </div>
             <div className="mt-3 flex flex-wrap items-end gap-3">
@@ -474,28 +498,62 @@ export function EventPhotoManager({
                 <input
                   id={orderDeadlineInputId}
                   type="date"
-                  value={orderDeadlineDraft}
-                  onChange={(event) => {
-                    if (selectedEvent) {
-                      setOrderDeadlineDraftState({
-                        bookingId: selectedEvent.bookingId,
-                        value: event.target.value,
-                      });
-                    }
-                  }}
+                  value={noticeDraft.orderDeadline}
+                  disabled={noticeIsPending}
+                  onChange={(event) => updateNoticeDraft({ orderDeadline: event.target.value })}
                   className="mt-1.5 min-h-10 rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
                 />
               </div>
+              <div>
+                <label htmlFor={paymentDeadlineInputId} className="block text-xs font-semibold text-foreground">
+                  Fizetési határidő (opcionális)
+                </label>
+                <input id={paymentDeadlineInputId} type="date" value={noticeDraft.paymentDeadline}
+                  disabled={noticeIsPending}
+                  onChange={(event) => updateNoticeDraft({ paymentDeadline: event.target.value })}
+                  className="mt-1.5 min-h-10 rounded-md border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent" />
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-foreground/60">
+              A fizetési határidőt hagyd üresen, ha nem szeretnél megadni. A határidők tájékoztató jellegűek, nem zárják le a rendelést.
+            </p>
+            <div className="mt-4">
+              <PaymentInformationEditor
+                value={noticeDraft.paymentInformation ?? selectedEvent.defaultPaymentInformation}
+                onChange={(value) => updateNoticeDraft({ paymentInformation: value })}
+                disabled={noticeIsPending}
+              />
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <button type="button" disabled={noticeIsPending || noticeDraft.paymentInformation === null}
+                  onClick={() => updateNoticeDraft({ paymentInformation: null })}
+                  className="min-h-10 rounded-md border border-border bg-white px-3 py-2 text-xs font-semibold disabled:opacity-50">
+                  Szolgáltatás alapértelmezése
+                </button>
+                <p className="text-xs text-foreground/60">
+                  {noticeDraft.paymentInformation === null
+                    ? "A szolgáltatás alapértelmezett szövegét használja. Szerkesztéssel külön szöveget menthetsz ehhez a fotózáshoz."
+                    : "Egyedi szöveg ehhez a fotózáshoz: a szolgáltatás későbbi módosítása nem írja felül. Mindkét szülői értesítőben és a rendelési oldalon megjelenik."}
+                </p>
+              </div>
+            </div>
+            <details className="mt-4 rounded-md border border-border bg-white p-3">
+              <summary className="cursor-pointer text-sm font-semibold">Tájékoztató előnézete</summary>
+              <div className="mt-3 whitespace-pre-wrap break-words text-sm text-foreground/80">
+                {noticeDraft.orderDeadline && <p>Képrendelési határidő: {formatNoticeDate(noticeDraft.orderDeadline)}</p>}
+                {paymentPreview ? <p className="mt-2">{paymentPreview}</p> : <p>Nincs fizetési tájékoztató vagy fizetési határidő.</p>}
+              </div>
+              {noticeIsDirty && <p className="mt-2 text-xs text-foreground/60">Ez még nincs elmentve. Küldés előtt mentsd a módosításokat.</p>}
+            </details>
+            <div className="mt-3 flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={handleSaveOrderDeadline}
                 disabled={
-                  isSavingDeadline ||
-                  orderDeadlineDraft === (selectedEvent.orderDeadline ?? "")
+                  noticeIsPending || !noticeIsDirty
                 }
                 className="min-h-10 rounded-md border border-border bg-white px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
               >
-                {isSavingDeadline ? "Mentés..." : "Határidő mentése"}
+                {isSavingDeadline ? "Mentés..." : "Tájékoztató mentése"}
               </button>
               <button
                 type="button"
@@ -504,7 +562,7 @@ export function EventPhotoManager({
                   isSendingPhotoReadyEmail ||
                   isSavingDeadline ||
                   !selectedEvent.orderDeadline ||
-                  orderDeadlineDraft !== selectedEvent.orderDeadline ||
+                  noticeIsDirty ||
                   selectedEvent.photoCount === 0
                 }
                 className="min-h-10 rounded-md bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-dark disabled:opacity-50"

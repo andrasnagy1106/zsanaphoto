@@ -12,6 +12,7 @@ import {
   type PhotoPrintSize,
 } from "@/lib/photo-order-catalog";
 import { formatHungarianCityName, getHungarianCityByPostalCode } from "@/lib/utils/hungarian-postal-codes";
+import { formatNoticeDate, formatPaymentInformation } from "@/lib/payment-information";
 
 export interface PhotoOrderItemDisplay {
   id: string;
@@ -26,6 +27,9 @@ interface PhotoOrderFormProps {
   customerName: string;
   bookingNumber: string;
   pin?: string;
+  paymentInformation?: string;
+  paymentDeadline?: string | null;
+  orderDeadline?: string | null;
   photos?: PhotoOrderItemDisplay[];
   isRealEventPhotos?: boolean;
   /** When false, photo names (usually camera file numbers) are hidden from the customer. */
@@ -57,6 +61,9 @@ export function PhotoOrderForm({
   customerName,
   bookingNumber,
   pin,
+  paymentInformation,
+  paymentDeadline,
+  orderDeadline,
   photos = STOCK_PHOTOS as unknown as PhotoOrderItemDisplay[],
   isRealEventPhotos = false,
   showPhotoTitles = true,
@@ -87,6 +94,13 @@ export function PhotoOrderForm({
     totalAmount: number;
   } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const paymentText = formatPaymentInformation({ paymentInformation, paymentDeadline });
+  const notice = (paymentText || orderDeadline) ? (
+    <div className="mt-6 rounded-lg border border-border bg-muted/40 p-4 text-left text-sm">
+      {orderDeadline && <p className="font-semibold">Képrendelési határidő: {formatNoticeDate(orderDeadline)}</p>}
+      {paymentText && <p className="mt-2 whitespace-pre-wrap break-words text-foreground/80">{paymentText}</p>}
+    </div>
+  ) : null;
 
   // Calculate per-size totals and grand totals
   const sizeBreakdown = PHOTO_PRINT_SIZES.map((size) => {
@@ -200,6 +214,7 @@ export function PhotoOrderForm({
         >
           Rendelés módosítása
         </button>
+        {notice}
       </div>
     );
   }
@@ -232,6 +247,8 @@ export function PhotoOrderForm({
           <p className="mt-2 font-mono text-sm font-semibold text-foreground/70">{activeOrderNumber}</p>
         ) : null}
       </div>
+
+      {notice}
 
       {/* Price guide banner with digital notice */}
       <div className="mt-6 rounded-lg border border-border bg-muted/40 p-4 space-y-3">

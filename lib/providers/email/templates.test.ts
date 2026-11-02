@@ -73,6 +73,41 @@ describe("buildBookingCreatedEmail", () => {
 });
 
 describe("buildPhotoReadyEmail", () => {
+  it.each([null, "2026-11-20"])("uses only the event payment text and optional deadline (%s)", (paymentDeadline) => {
+    const common = {
+      customerName: "Anna", customerEmail: "anna@example.com",
+      serviceName: "Óvodai fotózás", paymentInformation: "Az óvoda szedi be.\nAz óvónőnél fizethetsz.",
+      paymentDeadline,
+    };
+    const ready = buildPhotoReadyEmail({
+      ...common, pin: "AB12345", orderDeadline: "2026-11-10", galleryUrl: "https://example.com",
+    });
+    const confirmation = buildPhotoOrderConfirmationEmail({
+      ...common, orderNumber: "ZR-1", bookingNumber: "ZS-1", adminNotificationEmail: "",
+      includePaymentInformation: false, isUpdate: false, totalAmount: 1200, items: [],
+    });
+    for (const email of [ready, confirmation]) {
+      expect(email.text).toContain(common.paymentInformation);
+      expect(email.text).not.toContain("Főtéri");
+      expect(email.text).not.toContain("Számlaszám:");
+      if (paymentDeadline) {
+        expect(email.text).toContain("Fizetési határidő: 2026. 11. 20.");
+      } else {
+        expect(email.text).not.toContain("Fizetési határidő:");
+      }
+    }
+  });
+
+  it("allows hiding all payment information in the photo-ready email", () => {
+    const email = buildPhotoReadyEmail({
+      customerName: "Anna", customerEmail: "anna@example.com", serviceName: "Fotózás",
+      pin: "AB12345", orderDeadline: "2026-11-10", galleryUrl: "https://example.com",
+      paymentInformation: "", paymentDeadline: null,
+    });
+    expect(email.text).not.toContain("Fizetési");
+    expect(email.text).not.toContain("Számlaszám:");
+  });
+
   it("includes the gallery link, PIN, child name, deadline, and payment instructions", () => {
     const email = buildPhotoReadyEmail({
       customerName: "Szülő Anna",

@@ -4,10 +4,13 @@ import { bookings, eventPhotos, photoEventNotices, services } from "@/db/schema"
 import { getEmailProvider } from "@/lib/providers/email";
 import { NotFoundError } from "@/lib/utils/errors";
 import { getZonedDateIso } from "@/lib/utils/time";
+import { resolvePaymentInformation } from "@/lib/payment-information";
 
 export async function savePhotoOrderDeadlineForBooking(
   bookingId: string,
   orderDeadline: string | null,
+  paymentDeadline: string | null,
+  paymentInformation: string | null,
 ): Promise<void> {
   const [booking] = await db
     .select({ serviceId: bookings.serviceId, startAt: bookings.startAt })
@@ -23,10 +26,12 @@ export async function savePhotoOrderDeadlineForBooking(
       serviceId: booking.serviceId,
       eventDate: getZonedDateIso(booking.startAt),
       orderDeadline,
+      paymentDeadline,
+      paymentInformation,
     })
     .onConflictDoUpdate({
       target: [photoEventNotices.serviceId, photoEventNotices.eventDate],
-      set: { orderDeadline, updatedAt: new Date() },
+      set: { orderDeadline, paymentDeadline, paymentInformation, updatedAt: new Date() },
     });
 }
 
@@ -102,6 +107,7 @@ export async function sendPhotoReadyEmailsForEvent(
         serviceName: service.name,
         pin: recipientBooking.pin,
         orderDeadline: notice.orderDeadline,
+        ...resolvePaymentInformation(service, notice, true),
         galleryUrl: siteUrl,
       });
 

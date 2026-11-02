@@ -1,19 +1,9 @@
 import { formatPrice } from "@/lib/photo-order-catalog";
 import { formatZonedHungarianDate, formatZonedTime } from "@/lib/utils/time";
 import type { BookingEmailInput, PhotoOrderEmailInput, PhotoReadyEmailInput } from "./types";
+import { formatNoticeDate, formatPaymentInformation, PAYMENT_INFORMATION_TEXT } from "@/lib/payment-information";
 
-export const PAYMENT_INFORMATION_TEXT = `Fizetési információk:
-
-Banki utalással:
-Toldi Zsanett
-OTP BANK
-Számlaszám:11748076-25511136
-Az utalásnál a közlemény rovatba kérem feltüntetni a gyermek nevét/intézményét.
-
-Készpénzes fizetés esetén zárt borítékba kérem rakni a pontos összeget ,melyet kérem a borítékra írni.A borítékon tüntesse fel a gyermek nevét/intézményét.
-A zárt borítékot leadhatja :
-- Sárbogárdon a Főtéri cukrászdába
--Sárbogárd/Töbörzsökön Tóth Lászlónál a Törpe Élelmiszerben/Dózsa György utca 42/ Nyitva tartási időben Hétfőtől-Péntekig 6-11 óráig  és 14-17 óráig.Szombat-vasárnap:7-12 óráig.`;
+export { PAYMENT_INFORMATION_TEXT } from "@/lib/payment-information";
 
 function formatWhen(input: BookingEmailInput): { date: string; time: string } {
   return {
@@ -125,8 +115,11 @@ ZsaNa Photo`,
 
 export function buildPhotoReadyEmail(input: PhotoReadyEmailInput) {
   const childNameSection = input.childName ? `\nGyermek neve: ${input.childName}` : "";
-  const [year, month, day] = input.orderDeadline.split("-");
-  const formattedDeadline = `${year}. ${month}. ${day}.`;
+  const formattedDeadline = formatNoticeDate(input.orderDeadline);
+  const paymentSection = formatPaymentInformation({
+    paymentInformation: input.paymentInformation ?? PAYMENT_INFORMATION_TEXT,
+    paymentDeadline: input.paymentDeadline,
+  });
 
   return {
     subject: "Elkészültek a fotók - ZsaNa Photo",
@@ -140,7 +133,7 @@ ${input.galleryUrl}
 Belépési PIN-kód: ${input.pin}
 Rendelési határidő: ${formattedDeadline}
 
-${PAYMENT_INFORMATION_TEXT}
+${paymentSection}
 
 ZsaNa Photo`,
   };
@@ -293,7 +286,12 @@ function formatBillingDetails(input: PhotoOrderEmailInput): string {
 
 export function buildPhotoOrderConfirmationEmail(input: PhotoOrderEmailInput) {
   const billingSection = formatBillingDetails(input);
-  const paymentSection = input.includePaymentInformation ? `\n\n${PAYMENT_INFORMATION_TEXT}` : "";
+  const paymentText = formatPaymentInformation({
+    paymentInformation: input.paymentInformation ??
+      (input.includePaymentInformation ? PAYMENT_INFORMATION_TEXT : ""),
+    paymentDeadline: input.paymentDeadline,
+  });
+  const paymentSection = paymentText ? `\n\n${paymentText}` : "";
 
   return {
     subject: `${input.isUpdate ? "Fotórendelés módosítva" : "Fotórendelés visszaigazolása"} - ${input.orderNumber}`,

@@ -21,6 +21,7 @@ import { formatHungarianCityName } from "@/lib/utils/hungarian-postal-codes";
 import { NotFoundError } from "@/lib/utils/errors";
 import { getSiteSettings } from "./availability-service";
 import { listPhotosByBookingId } from "./photo-storage-service";
+import { getPaymentInformationForBooking } from "./payment-information-service";
 
 const PHOTO_ORDER_ACCESS_STATUSES: Booking["status"][] = ["CONFIRMED", "COMPLETED"];
 const ACTIVE_PHOTO_ORDER_STATUSES: PhotoOrder["status"][] = ["NEW", "PROCESSING"];
@@ -120,9 +121,10 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
   const access = await getPhotoOrderAccessByToken(input.accessToken);
   if (!access) throw new NotFoundError("A fotók nem érhetők el ezzel a hozzáféréssel.");
 
-  const [settings, eventPhotosList] = await Promise.all([
+  const [settings, eventPhotosList, paymentInformation] = await Promise.all([
     getSiteSettings(),
     listPhotosByBookingId(access.booking.id),
+    getPaymentInformationForBooking(access.booking, access.service),
   ]);
 
   const photoLookup = new Map<string, { title: string }>();
@@ -243,6 +245,7 @@ export async function savePhotoOrder(input: SavePhotoOrderInput): Promise<SavedP
       customerEmail: saved.booking.customerEmail,
       serviceName: saved.service.name,
       includePaymentInformation: saved.service.includePaymentInformation,
+      ...paymentInformation,
       adminNotificationEmail: settings.adminNotificationEmail,
       billingName: saved.order.billingName,
       billingPostalCode: saved.order.billingPostalCode,

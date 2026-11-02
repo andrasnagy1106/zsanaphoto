@@ -95,6 +95,7 @@ export const services = pgTable("services", {
   dateRangeEnd: text("date_range_end"), // "YYYY-MM-DD" or null
   requiresChildName: boolean("requires_child_name").notNull().default(false),
   includePaymentInformation: boolean("include_payment_information").notNull().default(false),
+  paymentInformation: text("payment_information"),
   generatesPin: boolean("generates_pin").notNull().default(false),
   active: boolean("active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
@@ -266,6 +267,8 @@ export const photoEventNotices = pgTable("photo_event_notices", {
     .references(() => services.id, { onDelete: "cascade" }),
   eventDate: text("event_date").notNull(),
   orderDeadline: text("order_deadline"),
+  paymentDeadline: text("payment_deadline"),
+  paymentInformation: text("payment_information"),
   ...timestamps,
 }, (table) => [
   uniqueIndex("photo_event_notices_service_date_idx").on(table.serviceId, table.eventDate),

@@ -24,6 +24,7 @@ import { NotFoundError } from "@/lib/utils/errors";
 import { reorderIdsByMove } from "@/lib/utils/photo-layout";
 import type { EventPhotoEditInput, PhotoMoveDirection } from "@/lib/validation/photo-edit";
 import { getZonedDateIso } from "@/lib/utils/time";
+import { PAYMENT_INFORMATION_TEXT } from "@/lib/payment-information";
 
 const MAX_EVENT_PHOTO_SIZE_BYTES = 25 * 1024 * 1024;
 const ALLOWED_EVENT_PHOTO_FORMATS = new Set(["jpg", "jpeg", "png", "webp", "avif"]);
@@ -184,6 +185,9 @@ export interface EventWithPinOption {
   showPhotoTitles: boolean;
   photoCount: number;
   orderDeadline: string | null;
+  paymentDeadline: string | null;
+  paymentInformation: string | null;
+  defaultPaymentInformation: string;
   photoReadyEmailSentAt: Date | null;
 }
 
@@ -229,6 +233,11 @@ export async function listEventsWithPin(): Promise<EventWithPinOption[]> {
     photoCount: row.photoCount,
     orderDeadline:
       noticeByEvent.get(`${row.service.id}:${getZonedDateIso(row.booking.startAt)}`)?.orderDeadline ?? null,
+    paymentDeadline:
+      noticeByEvent.get(`${row.service.id}:${getZonedDateIso(row.booking.startAt)}`)?.paymentDeadline ?? null,
+    paymentInformation:
+      noticeByEvent.get(`${row.service.id}:${getZonedDateIso(row.booking.startAt)}`)?.paymentInformation ?? null,
+    defaultPaymentInformation: row.service.paymentInformation ?? PAYMENT_INFORMATION_TEXT,
     photoReadyEmailSentAt: row.booking.photoReadyEmailSentAt,
   }));
 }

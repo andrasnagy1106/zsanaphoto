@@ -36,22 +36,25 @@ export async function savePhotoOrderDeadlineAction(input: unknown): Promise<Admi
   await requireAdmin();
   const parsed = savePhotoOrderDeadlineSchema.safeParse(input);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Érvénytelen rendelési határidő." };
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Érvénytelen tájékoztató." };
   }
 
   try {
     await savePhotoOrderDeadlineForBooking(
       parsed.data.bookingId,
       parsed.data.orderDeadline || null,
+      parsed.data.paymentDeadline || null,
+      parsed.data.paymentInformation,
     );
     revalidatePath("/admin/event-photos");
     revalidatePath(`/admin/bookings/${parsed.data.bookingId}`);
+    revalidatePath("/fotorendeles");
     return { success: true };
   } catch (error) {
     console.error("[savePhotoOrderDeadlineAction] Failed:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "A határidő mentése nem sikerült.",
+      error: error instanceof Error ? error.message : "A tájékoztató mentése nem sikerült.",
     };
   }
 }

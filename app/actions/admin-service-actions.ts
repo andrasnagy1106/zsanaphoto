@@ -37,6 +37,7 @@ export async function createServiceAction(formData: unknown): Promise<AdminActio
     dateRangeEnd: parsed.data.dateRangeEnd,
     requiresChildName: parsed.data.requiresChildName,
     includePaymentInformation: parsed.data.includePaymentInformation,
+    paymentInformation: parsed.data.paymentInformation,
     generatesPin: parsed.data.generatesPin,
     active: parsed.data.active,
   };
@@ -75,6 +76,7 @@ export async function updateServiceAction(formData: unknown): Promise<AdminActio
     dateRangeEnd: parsed.data.dateRangeEnd,
     requiresChildName: parsed.data.requiresChildName,
     includePaymentInformation: parsed.data.includePaymentInformation,
+    paymentInformation: parsed.data.paymentInformation,
     generatesPin: parsed.data.generatesPin,
     active: parsed.data.active,
   };

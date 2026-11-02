@@ -242,9 +242,26 @@ adatbázisban tárolt intézményi szolgáltatását ez az átnevezés nem módo
 - Az egyedi, két nagybetűből és öt számjegyből álló PIN kizárólag intézményi foglaláshoz készül.
   Megerősített vagy teljesített foglalás PIN-jével a fejlécből megnyitható a privát fotórendelő.
 - **Esemény fotók & PIN kezelés az adminban (`/admin/event-photos` és `/admin/bookings`):**
-  - **Új ügyfél & PIN létrehozása:** Az admin felületen modál ablakban bármikor létrehozható új ügyfél bármelyik eseményhez/szolgáltatáshoz, egyedi vagy böngészőkompatibilisen generált PIN-kóddal és opcionális értesítő e-maillel.
+  - **Új ügyfél & PIN létrehozása:** Az admin felületen modál ablakban bármikor létrehozható új ügyfél bármelyik eseményhez/szolgáltatáshoz, szülőnévvel, opcionális gyermeknévvel, e-mail-címmel, telefonszámmal és egyedi vagy böngészőkompatibilisen generált PIN-kóddal. Előzetes online időpontfoglalás nem szükséges.
+    - Alapértelmezetten a kézi ügyfélfelvétel nem küld e-mailt. Az **Értesítő e-mail küldése PIN-nel** jelölőnégyzet jelenleg a meglévő **időpontfoglalási** sablont küldi; foglalás nélküli óvodai ügyfélnél ezt hagyd kikapcsolva.
+    - A szülő által leadott online időpontfoglalás továbbra is automatikus foglalási visszaigazolást küld.
   - **Esemény/Szolgáltatás szerinti szűrés:** A fotókezelőben eseménykategóriák szerint szűrhető a PIN-kódok és ügyfelek listája.
   - **Gyermek neve:** Az `/admin/event-photos` oldalon a kiválasztott ügyfél adatai mellett a foglalásban megadott gyermek neve is látható. Ha nincs kitöltve, a mező nem jelenik meg.
+  - **Rendelési és fizetési tájékoztató, képek elkészülte:** Az `/admin/event-photos` oldalon egy ügyfél/PIN kiválasztása után a **Rendelési és fizetési tájékoztató** blokkban:
+    1. Add meg a **Képrendelési határidőt**. A külön **Fizetési határidő (opcionális)** üresen hagyható vagy törölhető: ilyenkor sem a levélben, sem a rendelési oldalon nem jelenik meg fizetési határidő.
+    2. A **Fizetési tájékoztató (szabad szöveg)** többsoros, legfeljebb 5000 karakteres mező. Az **Utalás / készpénz minta** és az **Intézmény szedi be minta** gombok kitöltik a mezőt; a szöveg utána szabadon átírható. A mintagomb lecseréli az aktuális szöveget. Üresre törölt, elmentett szövegnél nem jelenik meg fizetési tájékoztató, csak az esetleg megadott fizetési határidő.
+    3. A **Tájékoztató előnézete** alatt ellenőrizd a szöveget és a dátumokat, majd kattints a **Tájékoztató mentése** gombra. A mentés nem küld e-mailt; mentetlen változtatás mellett az értesítő küldése le van tiltva.
+    4. A beállítások az azonos szolgáltatáshoz és budapesti idő szerinti fotózási naphoz tartozó összes albumnál közösek. Külön óvodákhoz külön szolgáltatást használj, ha ugyanazon a napon eltérő határidők vagy fizetési szövegek szükségesek.
+    5. Töltsd fel az összes érintett album képeit. A feltöltés önmagában nem küld értesítőt.
+    6. A **Képek elkészültek — … email küldése** gomb megerősítés után külön levelet küld minden, az adott szolgáltatáshoz és naphoz tartozó, PIN-nel és legalább egy feltöltött képpel rendelkező ügyfélnek. Nem csak a kiválasztott ügyfél kap levelet.
+    - A levél a weboldal címét, a PIN-es belépés lépéseit, a saját PIN-t, a megadott gyermeknevet, a rendelési határidőt és az aktuális fizetési tudnivalókat tartalmazza. E-mail-fiókhoz való hozzáférés nem szükséges.
+    - Az adott fotózáshoz elmentett egyedi szöveg a képek elkészültéről szóló értesítőben, a fotórendelés visszaigazolásában/módosításában és a PIN-es rendelési oldalon is megjelenik. Nem kerül mellé automatikusan a régi utalásos szöveg. Az opcionális fizetési határidő a szövegtől függetlenül használható. A rendelési és fizetési határidő is tájékoztató jellegű, nem tiltja le automatikusan a rendelést.
+    - **Szolgáltatásonkénti alapértelmezés:** Az `/admin/services` oldalon új szolgáltatás felvételekor és meglévő szerkesztésekor is beállítható a szabad szöveg és használhatók a minták. A meglévő **Fizetési információk a fotórendelés visszaigazoló e-mailjében** kapcsoló továbbra is a szolgáltatás alapértelmezett szövegének rendelés-visszaigazolásbeli megjelenítését szabályozza; ugyanígy a rendelési oldalon is ezt az alapértelmezést használjuk. A képek elkészültek levél a szolgáltatás alapértelmezett szövegét használja.
+    - Fotózásonként a szöveg szerkesztése vagy minta kiválasztása egyedi felülírást hoz létre, amelyet a szolgáltatás későbbi módosítása nem ír át. A **Szolgáltatás alapértelmezése** gomb és utána a mentés visszaállítja az öröklést. Az egyedi felülírás (az üres szöveg is) a régi rendelés-visszaigazolási kapcsolótól függetlenül érvényes. Alapértelmezésre visszaállítva a szolgáltatás későbbi szövegmódosításai ismét érvényesülnek.
+    - Mentés után a rendelési oldal és a később létrehozott levelek az új adatokat használják. A már elküldött vagy várólistára tett levelek szövege nem változik; szükség esetén külön újraküldés indítható.
+    - Az adminban látszik, hány címzettnél indult már el az értesítés. Az **Értesítők újraküldése** gomb minden érintett címzettnek ismét küld, nem csak a korábban sikerteleneknek. Részleges küldési hibánál a sikeres és sikertelen darabszám is megjelenik.
+    - A Resend napi limitje felett a levelek várólistára kerülnek, ezért az elindított értesítés nem feltétlenül jelent azonnali kézbesítést. Resend-beállítás nélkül a fejlesztői email-szolgáltató csak konzolba ír.
+    - Használat előtt futtatni kell a migrációkat a megfelelő adatbázison (`pnpm db:migrate`). A [0032-es migráció](./db/migrations/0032_loose_chat.sql) hozza létre a közös határidőket és az értesítési időpontot, a [0033-as migráció](./db/migrations/0033_needy_sabra.sql) adja hozzá az opcionális fizetési határidőt és a szolgáltatás/fotózás fizetési szövegét. Az új mezők kezdetben `NULL` értékűek: a meglévő levelezési viselkedés megmarad, meglévő ügyfél- és rendelési adatot nem írnak át, és nem küldenek e-mailt.
   - **Ügyfél hozzáférési nézet kapcsoló (`ORDER_ONLY` / `GALLERY_ONLY`):**
     - Az adminban egy gombnyomással beállítható, hogy az adott PIN-kóddal belépő ügyfél a **Megrendelő felületet** (`/fotorendeles`) kapja meg, vagy a **Teljes képgalériát** (`/fotogaleria`).
     - **Szigorú szerveroldali védelem:** Közvetlen URL megnyitása esetén a szerver ellenőrzi a jogosultságot, és automatikusan átirányítja az ügyfelet a számára engedélyezett felületre.
@@ -275,8 +292,10 @@ adatbázisban tárolt intézményi szolgáltatását ez az átnevezés nem módo
   - A rendelés mentésekor tételes áras és végösszeggel ellátott e-mailes visszaigazolást küld a rendszer
     az ügyfélnek és az adminnak.
     Az `/admin/services` oldalon új és meglévő szolgáltatásoknál külön kapcsolható a fizetési
-    tájékoztató: bekapcsolva az ügyfél fotórendelési visszaigazolásába (módosításkor is) bekerülnek
-    a banki utalás és a készpénzes fizetés részletei. Alapértelmezés szerint ki van kapcsolva.
+    tájékoztató: bekapcsolva az ügyfél fotórendelési visszaigazolásába (módosításkor is) bekerül
+    a szolgáltatás szerkeszthető fizetési szövege. Alapértelmezés szerint ki van kapcsolva.
+    A fotókezelőben az adott fotózáshoz elmentett egyedi szöveg ezt felülírja; a külön,
+    opcionális fizetési határidő a kapcsolótól függetlenül megjelenik.
   - Az `/admin/photo-orders` oldalon követhető az összes rendelés állapota, összbevétele, valamint a tételes
     egységárak és összegek. Egy PIN-hez egyszerre egy aktív (`NEW`/`PROCESSING`) rendelés tartozhat;
     ismételt belépéskor a tételek, darabszámok, méretek és a rendelési megjegyzés módosíthatók.

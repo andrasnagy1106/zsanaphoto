@@ -10,6 +10,8 @@ import type { AvailabilityCalendar, Service, ServiceAvailabilityRule } from "@/d
 import { DEFAULT_PHOTO_PRICES, PHOTO_PRINT_SIZES, formatPrice, resolvePhotoPrices, type PhotoPrintSize } from "@/lib/photo-order-catalog";
 import { ServiceAvailabilityRuleRow } from "./ServiceAvailabilityRuleRow";
 import { DeleteServiceModal } from "./DeleteServiceModal";
+import { PaymentInformationEditor } from "./PaymentInformationEditor";
+import { PAYMENT_INFORMATION_TEXT } from "@/lib/payment-information";
 
 type FormInput = z.input<typeof updateServiceSchema>;
 type FormOutput = z.output<typeof updateServiceSchema>;
@@ -28,6 +30,7 @@ export function ServiceEditForm({ service, customRules = [], calendars = [], def
 
   const {
     register,
+    setValue,
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -54,12 +57,14 @@ export function ServiceEditForm({ service, customRules = [], calendars = [], def
       dateRangeEnd: service.dateRangeEnd ?? "",
       requiresChildName: service.requiresChildName,
       includePaymentInformation: service.includePaymentInformation,
+      paymentInformation: service.paymentInformation,
       generatesPin: service.generatesPin,
       active: service.active,
     },
   });
 
   const availabilityMode = useWatch({ control, name: "availabilityMode" });
+  const paymentInformation = useWatch({ control, name: "paymentInformation" });
   const availabilityCalendarId = useWatch({ control, name: "availabilityCalendarId" });
   const fallbackPrices = resolvePhotoPrices(defaultPhotoPrices);
   const ruleByDay = new Map(customRules.map((r) => [r.dayOfWeek, r]));
@@ -306,6 +311,17 @@ export function ServiceEditForm({ service, customRules = [], calendars = [], def
             <label htmlFor={`${service.id}-generatesPin`} className="text-sm font-medium text-foreground">
               Generáljon PIN kódot foglaláskor (privát fotógaléria eléréséhez, e-mailben ki lesz küldve)
             </label>
+          </div>
+          <div className="sm:col-span-2">
+            <PaymentInformationEditor
+              value={paymentInformation ?? PAYMENT_INFORMATION_TEXT}
+              onChange={(value) => setValue("paymentInformation", value, { shouldDirty: true, shouldValidate: true })}
+              disabled={isSubmitting}
+              error={errors.paymentInformation?.message}
+            />
+            <p className="mt-2 text-xs text-foreground/60">
+              A képek elkészültek értesítő alapértelmezett szövege. A rendelés-visszaigazolásban a fenti fizetési információk kapcsoló engedélyezi. A fotókezelőben külön szöveget adhatsz meg az adott fotózáshoz.
+            </p>
           </div>
         </div>
 
