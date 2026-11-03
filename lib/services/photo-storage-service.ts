@@ -25,8 +25,8 @@ import { reorderIdsByMove } from "@/lib/utils/photo-layout";
 import type { EventPhotoEditInput, PhotoMoveDirection } from "@/lib/validation/photo-edit";
 import { getZonedDateIso } from "@/lib/utils/time";
 import { PAYMENT_INFORMATION_TEXT } from "@/lib/payment-information";
+import { MAX_EVENT_PHOTO_UPLOAD_SIZE_BYTES } from "@/lib/utils/event-photo-upload";
 
-const MAX_EVENT_PHOTO_SIZE_BYTES = 25 * 1024 * 1024;
 const ALLOWED_EVENT_PHOTO_FORMATS = new Set(["jpg", "jpeg", "png", "webp", "avif"]);
 
 export async function getSignedEventPhotoUpload(pin: string): Promise<SignedEventPhotoUpload> {
@@ -88,7 +88,7 @@ export async function registerUploadedPhotoForPin(input: {
     !ALLOWED_EVENT_PHOTO_FORMATS.has(format) ||
     !Number.isFinite(bytes) ||
     bytes <= 0 ||
-    bytes > MAX_EVENT_PHOTO_SIZE_BYTES ||
+    bytes > MAX_EVENT_PHOTO_UPLOAD_SIZE_BYTES ||
     typeof resource.secure_url !== "string"
   ) {
     throw new Error("A Cloudinary által visszaadott kép adatai érvénytelenek.");

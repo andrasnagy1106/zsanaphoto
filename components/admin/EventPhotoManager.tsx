@@ -20,6 +20,10 @@ import type { Booking, EventPhoto, PhotoOrder, PhotoOrderItem, Service } from "@
 import type { EventWithPinOption } from "@/lib/services/photo-storage-service";
 import { formatPrice } from "@/lib/photo-order-catalog";
 import { uploadEventPhotoDirectlyToCloudinary } from "@/lib/utils/cloudinary-browser-upload";
+import {
+  MAX_EVENT_PHOTO_SOURCE_SIZE_BYTES,
+  prepareEventPhotoForUpload,
+} from "@/lib/utils/event-photo-upload";
 import { toObjectPosition } from "@/lib/utils/photo-layout";
 import { formatZonedHungarianDate, formatZonedTime, getZonedDateIso } from "@/lib/utils/time";
 import { CreateEventUserModal } from "@/components/admin/CreateEventUserModal";
@@ -301,20 +305,25 @@ export function EventPhotoManager({
 
     startUploadTransition(async () => {
       let uploadedCount = 0;
+      let compressedCount = 0;
 
       for (const file of filesToUpload) {
         try {
+          if (file.size > MAX_EVENT_PHOTO_SOURCE_SIZE_BYTES) {
+            throw new Error("A kiválasztott fájl nagyobb 25 MiB-nál.");
+          }
+          const uploadFile = await prepareEventPhotoForUpload(file);
           const signatureResult = await createEventPhotoUploadSignatureAction({
             pin: currentPin,
             fileName: file.name,
-            fileSize: file.size,
-            mimeType: file.type,
+            fileSize: uploadFile.size,
+            mimeType: uploadFile.type,
           });
           if (!signatureResult.success || !signatureResult.upload) {
             throw new Error(signatureResult.error ?? "A feltöltés engedélyezése sikertelen volt.");
           }
 
-          const uploadedPhoto = await uploadEventPhotoDirectlyToCloudinary(file, signatureResult.upload);
+          const uploadedPhoto = await uploadEventPhotoDirectlyToCloudinary(uploadFile, signatureResult.upload);
           const registrationResult = await registerUploadedEventPhotoAction({
             pin: currentPin,
             fileName: file.name,
@@ -325,14 +334,15 @@ export function EventPhotoManager({
           }
 
           uploadedCount += 1;
+          if (uploadFile !== file) compressedCount += 1;
           setSelectedFiles((pending) => pending.filter((pendingFile) => pendingFile !== file));
           setUploadProgress({ done: uploadedCount, total: filesToUpload.length });
         } catch (error) {
           const message = error instanceof Error ? error.message : "A feltöltés nem sikerült.";
           setErrorMessage(
             uploadedCount > 0
-              ? `${uploadedCount} kép sikeresen feltöltve, a következő képnél hiba történt: ${message}`
-              : message,
+              ? `${uploadedCount} kép sikeresen feltöltve, a következő képnél (${file.name}) hiba történt: ${message}`
+              : `${file.name}: ${message}`,
           );
           setUploadProgress(null);
           return;
@@ -341,7 +351,12 @@ export function EventPhotoManager({
 
       if (uploadedCount > 0) {
         if (fileInputRef.current) fileInputRef.current.value = "";
-        setSuccessMessage(`${uploadedCount} kép sikeresen feltöltve a Cloudinary tárhelyre!`);
+        setSuccessMessage(
+          `${uploadedCount} kép sikeresen feltöltve a Cloudinary tárhelyre!` +
+          (compressedCount > 0
+            ? ` ${compressedCount} nagyobb képet feltöltés előtt tömörítettünk; a felbontásuk megmaradt.`
+            : ""),
+        );
         router.refresh();
       }
       setUploadProgress(null);
@@ -724,7 +739,7 @@ export function EventPhotoManager({
                 <div>
                   <h2 className="text-base font-semibold text-foreground">Képek feltöltése a mappába ({selectedEvent.pin})</h2>
                   <p className="text-xs text-foreground/60">
-                    Az eredeti fájl közvetlenül a Cloudinaryba töltődik fel, teljes felbontásban. Az ügyfelek vízjeles, optimalizált előnézetet látnak; a teljes képek eredeti minőségben tölthetők le. JPG, PNG, WEBP és AVIF, legfeljebb 25 MB/kép.
+                    JPG, PNG, WEBP és AVIF képek tölthetők fel, legfeljebb 25 MiB méretig. A 10 MiB-nál nagyobb képeket feltöltés előtt JPEG/WEBP formátumba tömörítjük; a felbontásuk megmarad, de a fájl minősége módosulhat.
                   </p>
                 </div>
                 {selectedFiles.length > 0 && (

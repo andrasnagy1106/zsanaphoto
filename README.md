@@ -276,12 +276,23 @@ adatbázisban tárolt intézményi szolgáltatását ez az átnevezés nem módo
   - **Képek vízjelezése és privát galéria:**
     - A fotórendelés felületén (`/fotorendeles`) a képek Cloudinary által vízjelezett formátumban jelennek meg a kiválasztáshoz és rendeléshez.
     - A privát teljes képgalériában (`/fotogaleria`) a rendszer az eredeti, vízjelmentes fotókat jeleníti meg és teszi letölthetővé (egyedi és kötegelt ZIP formátumban).
-    - Az eseményfotók eredeti felbontású masterként kerülnek a Cloudinary tárhelyre (legfeljebb 25 MB/kép). A megrendelői nézetek vízjeles előnézetet használnak; a teljes galéria eredeti fájlokat ad le tokennel és foglalással ellenőrzött letöltési útvonalon.
+    - Az eseményfotók teljes felbontású masterként kerülnek a Cloudinary tárhelyre. A 10 MiB-nál nagyobb képeket a böngésző JPEG/WEBP formátumba tömöríti (a felbontás megmarad, a képminőség változhat); a maximális forrásméret 25 MiB. A megrendelői nézetek vízjeles előnézetet használnak; a teljes galéria a feltöltött fájlokat adja le tokennel és foglalással ellenőrzött letöltési útvonalon.
   - **Képfeltöltés és tájolás:** Az admin feltöltők JPG, PNG, WEBP és AVIF képeket fogadnak
-    legfeljebb 25 MB-os fájlméretig. Az eseményfotók eredeti méretben, egyenként, közvetlenül a
-    Cloudinaryba töltődnek fel, így nem mennek át a Vercel Function 4,5 MB-os kéréslimitjén;
+    legfeljebb 25 MiB-os forrásfájl-méretig. Az eseményfotók egyenként, közvetlenül a
+    Cloudinaryba töltődnek fel (10 MiB fölött tömörítés után), így nem mennek át a Vercel Function 4,5 MB-os kéréslimitjén;
     a többi admin képfeltöltő szükség esetén automatikusan leméretezi a nagy fájlokat. Az álló és
     fekvő fotók eredeti képaránya megmarad, a galéria- és rendelési nézetek nem vágnak le a képből.
+  - **Eseményfotó-tömörítés visszavonása:** A tömörítés a Cloudinary 10 MiB-os feltöltési korlátja
+    miatt került be; a 10 MiB fölötti forrásképek JPEG/WEBP átkódolást kapnak, ezért a felbontásuk
+    megmarad, de nem bitazonosak az eredetivel. Ha a Cloudinary-csomag később nagyobb fájlokat
+    enged, a tömörítés eltávolításához a `components/admin/EventPhotoManager.tsx` fájlban az eredeti
+    `file` kerüljön aláírásra és feltöltésre, a forrásméret maradjon legfeljebb 25 MiB; az
+    `app/actions/admin-photo-actions.ts`
+    és a `lib/services/photo-storage-service.ts` validációja fogadja el az új Cloudinary-limitet;
+    frissítsd a feltöltő leírását és ezt a dokumentációt, majd távolítsd el az
+    `lib/utils/event-photo-upload.ts` és `lib/utils/event-photo-upload.test.ts` fájlokat. A
+    10 MiB-os limitre való visszaállításkor az eredeti fájl változatlanul továbbítható.
+    **Egyik irányhoz sem kell adatbázis-migráció.**
   - **Főoldali fotók kezelése az adminban:** Az `/admin/settings` oldalon közvetlenül feltölthető és cserélhető a főoldali Hero borítókép, a "Rólam" portré, valamint a "Miben segíthetek?" szolgáltatáskártyák egyedi képei.
   - **Rólam oldal többképes galériája:** A "Bemutatkozó oldalak képei" adminfelületen (`/admin/service-page-photos`) a "Rólam" gyűjteményhez több kép tölthető fel. A sorrend első képe jelenik meg kiemelt portréként a `/rolam` oldalon, a többi fotó alatta galériában látható. A képek sorrendje, felirata, igazítása és törlése ugyanitt kezelhető. Ez külön funkció a Beállítások oldalon kezelhető, egyképes főoldali portrétól.
   - **Fotó- és digitális képek árai:** Az `/admin/settings` oldalon a nyomatméretek és a digitális képek

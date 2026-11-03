@@ -24,6 +24,7 @@ import {
   sendPhotoReadyEmailSchema,
 } from "@/lib/validation/photo-notification";
 import type { Booking } from "@/db/schema";
+import { MAX_EVENT_PHOTO_UPLOAD_SIZE_BYTES } from "@/lib/utils/event-photo-upload";
 import { z } from "zod";
 
 export interface AdminPhotoActionResult {
@@ -93,12 +94,10 @@ const EVENT_PHOTO_MIME_TYPES = new Set([
   "image/avif",
 ]);
 
-const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
-
 const directPhotoUploadSchema = z.object({
   pin: z.string().trim().toUpperCase().regex(/^[A-Z]{2}\d{5}$/),
   fileName: z.string().trim().min(1).max(255),
-  fileSize: z.number().int().positive().max(MAX_FILE_SIZE_BYTES),
+  fileSize: z.number().int().positive().max(MAX_EVENT_PHOTO_UPLOAD_SIZE_BYTES),
   mimeType: z.string().refine((value) => EVENT_PHOTO_MIME_TYPES.has(value), "Nem támogatott képformátum."),
 });
 
