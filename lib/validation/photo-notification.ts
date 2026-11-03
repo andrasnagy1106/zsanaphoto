@@ -27,4 +27,7 @@ export const savePhotoOrderDeadlineSchema = z.object({
 
 export const sendPhotoReadyEmailSchema = z.object({
   bookingId: z.string().uuid(),
+  mode: z.enum(["UNSENT", "ALL"]).optional().default("UNSENT"),
 });
+
+export type PhotoReadyEmailMode = z.infer<typeof sendPhotoReadyEmailSchema>["mode"];

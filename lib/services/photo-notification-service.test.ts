@@ -63,7 +63,7 @@ describe("photo event payment settings", () => {
     selectRows([{ booking, photoCount: 2 }]);
     mocks.send.mockResolvedValue(undefined);
     mocks.update.mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) });
-    expect(await sendPhotoReadyEmailsForEvent(booking.id)).toEqual({ sent: 1, failed: 0, total: 1 });
+    expect(await sendPhotoReadyEmailsForEvent(booking.id)).toEqual({ sent: 1, failed: 0, total: 1, skipped: 0 });
     expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({
       paymentInformation: notice.paymentInformation, paymentDeadline: null,
       orderDeadline: notice.orderDeadline, pin: booking.pin,
@@ -76,5 +76,51 @@ describe("photo event payment settings", () => {
       orderDeadline: notice.orderDeadline, paymentInformation: service.paymentInformation,
       paymentDeadline: "2026-11-20",
     });
+  });
+});
+
+describe("sendPhotoReadyEmailsForEvent modes", () => {
+  const notified = { ...booking, id: "booking-2", bookingNumber: "ZS-2", pin: "CD12345", photoReadyEmailSentAt: new Date("2026-11-03T10:00:00Z") };
+  const failedBefore = { ...booking, photoReadyEmailSentAt: null };
+
+  function mockEvent(recipients: unknown[]) {
+    selectRows([{ booking: failedBefore, service }]);
+    selectRows([notice]);
+    selectRows(recipients);
+    mocks.update.mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) });
+  }
+
+  it("sends only to parents without a recorded email by default", async () => {
+    mockEvent([{ booking: failedBefore, photoCount: 2 }, { booking: notified, photoCount: 1 }]);
+    mocks.send.mockResolvedValue(undefined);
+    expect(await sendPhotoReadyEmailsForEvent(booking.id)).toEqual({ sent: 1, failed: 0, total: 1, skipped: 1 });
+    expect(mocks.send).toHaveBeenCalledTimes(1);
+    expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({ pin: failedBefore.pin }));
+  });
+
+  it("resends to every parent in ALL mode", async () => {
+    mockEvent([{ booking: failedBefore, photoCount: 2 }, { booking: notified, photoCount: 1 }]);
+    mocks.send.mockResolvedValue(undefined);
+    expect(await sendPhotoReadyEmailsForEvent(booking.id, "ALL")).toEqual({ sent: 2, failed: 0, total: 2, skipped: 0 });
+    expect(mocks.send.mock.calls.map(([input]) => input.pin)).toEqual([failedBefore.pin, notified.pin]);
+  });
+
+  it("refuses an UNSENT send when everyone was already notified", async () => {
+    mockEvent([{ booking: notified, photoCount: 1 }]);
+    await expect(sendPhotoReadyEmailsForEvent(booking.id)).rejects.toThrow("Minden szülő megkapta már");
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
+  it("keeps failed recipients unmarked so a later UNSENT send retries them", async () => {
+    const second = { ...failedBefore, id: "booking-3", bookingNumber: "ZS-3", pin: "EF12345" };
+    mockEvent([{ booking: failedBefore, photoCount: 2 }, { booking: second, photoCount: 1 }]);
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      mocks.send.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("rate limited"));
+      expect(await sendPhotoReadyEmailsForEvent(booking.id)).toEqual({ sent: 1, failed: 1, total: 2, skipped: 0 });
+      expect(mocks.update).toHaveBeenCalledTimes(1);
+    } finally {
+      log.mockRestore();
+    }
   });
 });

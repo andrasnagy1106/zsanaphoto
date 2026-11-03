@@ -108,6 +108,7 @@ export function EventPhotoManager({
   const photoEventSentCount = photoEventRecipients.filter(
     (event) => event.photoReadyEmailSentAt !== null,
   ).length;
+  const photoEventUnsentCount = photoEventRecipients.length - photoEventSentCount;
   const eventKey = selectedEvent
     ? `${selectedEvent.serviceId}:${getZonedDateIso(selectedEvent.startAt)}`
     : "";
@@ -152,20 +153,19 @@ export function EventPhotoManager({
     });
   }
 
-  function handleSendPhotoReadyEmail() {
+  function handleSendPhotoReadyEmail(mode: "UNSENT" | "ALL") {
     if (!selectedEvent || photoEventRecipients.length === 0) return;
-    if (
-      !window.confirm(
-        `Elküldöd a képek elkészültéről szóló emailt ${photoEventRecipients.length} szülőnek, külön-külön a saját PIN-kódjukkal?`,
-      )
-    ) {
-      return;
-    }
+    const confirmText = mode === "ALL"
+      ? `Újraküldöd a képek elkészültéről szóló emailt MIND a ${photoEventRecipients.length} szülőnek? ` +
+        `Az a ${photoEventSentCount} szülő is újra megkapja, aki már kapott értesítőt.`
+      : `Elküldöd a képek elkészültéről szóló emailt annak a ${photoEventUnsentCount} szülőnek, aki még nem kapott értesítőt? ` +
+        `Aki már megkapta (${photoEventSentCount}), nem kap újabb emailt.`;
+    if (!window.confirm(confirmText)) return;
 
     setErrorMessage(null);
     setSuccessMessage(null);
     startPhotoReadyEmailTransition(async () => {
-      const result = await sendPhotoReadyEmailsAction({ bookingId: selectedEvent.bookingId });
+      const result = await sendPhotoReadyEmailsAction({ bookingId: selectedEvent.bookingId, mode });
       if (result.count && result.count > 0) {
         setSuccessMessage(`${result.count} szülőnek elindult az email küldése.`);
       }
@@ -572,28 +572,61 @@ export function EventPhotoManager({
               </button>
               <button
                 type="button"
-                onClick={handleSendPhotoReadyEmail}
+                onClick={() => handleSendPhotoReadyEmail("UNSENT")}
                 disabled={
                   isSendingPhotoReadyEmail ||
                   isSavingDeadline ||
                   !selectedEvent.orderDeadline ||
                   noticeIsDirty ||
-                  selectedEvent.photoCount === 0
+                  selectedEvent.photoCount === 0 ||
+                  photoEventUnsentCount === 0
                 }
                 className="min-h-10 rounded-md bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-dark disabled:opacity-50"
               >
                 {isSendingPhotoReadyEmail
                   ? "Email küldése..."
                   : photoEventSentCount > 0
-                    ? `Értesítők újraküldése (${photoEventRecipients.length} szülő)`
+                    ? `Küldés a még nem értesített szülőknek (${photoEventUnsentCount})`
                     : `Képek elkészültek — ${photoEventRecipients.length} email küldése`}
               </button>
+              {photoEventSentCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => handleSendPhotoReadyEmail("ALL")}
+                  disabled={
+                    isSendingPhotoReadyEmail ||
+                    isSavingDeadline ||
+                    !selectedEvent.orderDeadline ||
+                    noticeIsDirty ||
+                    selectedEvent.photoCount === 0
+                  }
+                  className="min-h-10 rounded-md border border-border bg-white px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
+                >
+                  {`Újraküldés mindenkinek (${photoEventRecipients.length})`}
+                </button>
+              )}
             </div>
-            <p className="mt-2 text-xs text-foreground/60">
-              {photoEventRecipients.length === 0
-                ? "Email csak legalább egy kép feltöltése után küldhető."
-                : `A címzettek közül eddig ${photoEventSentCount} szülő kapott értesítőt.`}
-            </p>
+            {photoEventRecipients.length === 0 ? (
+              <p className="mt-2 text-xs text-foreground/60">Email csak legalább egy kép feltöltése után küldhető.</p>
+            ) : (
+              <div className="mt-2 space-y-1 text-xs text-foreground/60">
+                <p>
+                  A címzettek közül eddig {photoEventSentCount} szülő kapott értesítőt, {photoEventUnsentCount} még nem.
+                </p>
+                {photoEventSentCount > 0 && (
+                  <>
+                    <p>
+                      <strong className="text-foreground/80">Küldés a még nem értesített szülőknek:</strong>{" "}
+                      csak azok kapnak emailt, akik még nem kaptak (pl. újonnan hozzáadott szülők, vagy akiknél a küldés nem sikerült). Aki már megkapta, nem kap újat.
+                    </p>
+                    <p>
+                      <strong className="text-foreground/80">Újraküldés mindenkinek:</strong>{" "}
+                      az esemény összes szülője újra megkapja az emailt, azok is, akik már kaptak. Akkor használd, ha például a tájékoztató szövege vagy a határidő megváltozott.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         )}
 

@@ -5,6 +5,7 @@ import { getEmailProvider } from "@/lib/providers/email";
 import { NotFoundError } from "@/lib/utils/errors";
 import { getZonedDateIso } from "@/lib/utils/time";
 import { resolvePaymentInformation } from "@/lib/payment-information";
+import type { PhotoReadyEmailMode } from "@/lib/validation/photo-notification";
 
 export async function savePhotoOrderDeadlineForBooking(
   bookingId: string,
@@ -39,10 +40,16 @@ export interface SendPhotoReadyEmailsResult {
   sent: number;
   failed: number;
   total: number;
+  skipped: number;
 }
 
+/**
+ * UNSENT: only parents without a recorded photo-ready email (first send or retrying failures).
+ * ALL: every parent of the event, including those who already received it.
+ */
 export async function sendPhotoReadyEmailsForEvent(
   bookingId: string,
+  mode: PhotoReadyEmailMode = "UNSENT",
 ): Promise<SendPhotoReadyEmailsResult> {
   const [row] = await db
     .select({ booking: bookings, service: services })
@@ -91,11 +98,21 @@ export async function sendPhotoReadyEmailsForEvent(
     throw new Error("Ehhez az óvodai fotózáshoz még nincs feltöltött album.");
   }
 
+  const targets = mode === "ALL"
+    ? recipients
+    : recipients.filter((recipient) => !recipient.booking.photoReadyEmailSentAt);
+
+  if (targets.length === 0) {
+    throw new Error(
+      "Minden szülő megkapta már az értesítőt. Ha mindenkinek újra szeretnéd küldeni, használd az „Újraküldés mindenkinek” gombot.",
+    );
+  }
+
   const provider = getEmailProvider();
   let sent = 0;
   let failed = 0;
 
-  for (const recipient of recipients) {
+  for (const recipient of targets) {
     const recipientBooking = recipient.booking;
     if (!recipientBooking.pin) continue;
 
@@ -126,5 +143,5 @@ export async function sendPhotoReadyEmailsForEvent(
     }
   }
 
-  return { sent, failed, total: recipients.length };
+  return { sent, failed, total: targets.length, skipped: recipients.length - targets.length };
 }

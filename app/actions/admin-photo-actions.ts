@@ -66,7 +66,7 @@ export async function sendPhotoReadyEmailsAction(input: unknown): Promise<AdminP
   if (!parsed.success) return { success: false, error: "Érvénytelen ügyfélazonosító." };
 
   try {
-    const result = await sendPhotoReadyEmailsForEvent(parsed.data.bookingId);
+    const result = await sendPhotoReadyEmailsForEvent(parsed.data.bookingId, parsed.data.mode);
     revalidatePath("/admin/event-photos");
     revalidatePath(`/admin/bookings/${parsed.data.bookingId}`);
     if (result.failed > 0) {
