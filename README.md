@@ -78,6 +78,12 @@ lib/
    (`/api/admin/cron/flush-email-queue`, ~02:00 Európa/Budapest időben) küldi ki őket, amint a
    következő nap elindul a limit-számláló elölről.
 
+   A Resend API másodpercenkénti kéréskorlátja miatt minden Resend-küldés (az azonnali és a
+   cron általi is) 429 / `rate_limit_exceeded` válasz esetén 1, majd 2 másodperc várakozás után
+   legfeljebb kétszer újrapróbálkozik; más hibát (pl. érvénytelen cím) nem próbál újra. A cron
+   a Resend által elutasított levelet `QUEUED` állapotban hagyja, így a következő futás újra
+   megpróbálja.
+
 2. Telepítés és adatbázis előkészítés:
 
    ```bash
@@ -283,6 +289,7 @@ adatbázisban tárolt intézményi szolgáltatását ez az átnevezés nem módo
     - Az adminban látszik, hány címzettnél indult már el az értesítés, és hánynál nem. Ha már legalább egy szülő megkapta, két gomb jelenik meg:
       - **Küldés a még nem értesített szülőknek (N):** csak azoknak küld, akiknél még nincs rögzített küldés (`bookings.photo_ready_email_sent_at` üres) – például a korábban sikertelen küldéseknek vagy az utólag hozzáadott szülőknek. Aki már megkapta, nem kap újabb levelet. Ha mindenki megkapta, a gomb le van tiltva.
       - **Újraküldés mindenkinek (N):** az esemény összes érintett szülőjének újra elküldi a levelet, azoknak is, akik már megkapták. Akkor érdemes használni, ha a tájékoztató szövege vagy a határidő megváltozott.
+    - A szülői levelek egymás után, 600 ms szünettel mennek ki, hogy ne lépjék túl a Resend másodpercenkénti korlátját (pl. 14 levél kb. 8–9 másodperc). Ennyi ideig a gomb „Email küldése...” állapotban marad.
     - Részleges küldési hibánál a sikeres és sikertelen darabszám is megjelenik. A darabszám foglalásonként (PIN-enként) értendő: ha két gyereknek ugyanaz a szülői e-mail címe, az két levélnek számít. Sikertelen az a levél, amelyet a Resend már a küldéskor elutasított (ezek nem jelennek meg bounced státusszal); a később visszapattanó (bounced) levelek a rendszerben sikeresnek számítanak. A sikertelen küldések oka a szerver logjában (`[photo-notification-service] Failed to send photo-ready email for ZS-…`) látható.
     - A Resend napi limitje felett a levelek várólistára kerülnek, ezért az elindított értesítés nem feltétlenül jelent azonnali kézbesítést. Resend-beállítás nélkül a fejlesztői email-szolgáltató csak konzolba ír.
     - Használat előtt futtatni kell a migrációkat a megfelelő adatbázison (`pnpm db:migrate`). A [0032-es migráció](./db/migrations/0032_loose_chat.sql) hozza létre a közös határidőket és az értesítési időpontot, a [0033-as migráció](./db/migrations/0033_needy_sabra.sql) adja hozzá az opcionális fizetési határidőt és a szolgáltatás/fotózás fizetési szövegét. Az új mezők kezdetben `NULL` értékűek: a meglévő levelezési viselkedés megmarad, meglévő ügyfél- és rendelési adatot nem írnak át, és nem küldenek e-mailt.

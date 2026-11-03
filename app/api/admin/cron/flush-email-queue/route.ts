@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { EMAIL_FROM_ADDRESS, EMAIL_REPLY_TO_ADDRESS } from "@/lib/constants";
 import { flushQueuedEmails } from "@/lib/services/email-outbox-service";
+import { sendWithRateLimitRetry } from "@/lib/providers/email/resend-send";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +29,8 @@ export async function GET(request: Request) {
   }
 
   const client = new Resend(apiKey);
-  const result = await flushQueuedEmails(async (to, subject, text) => {
-    await client.emails.send({ from, to, subject, text, replyTo: EMAIL_REPLY_TO_ADDRESS });
-  });
+  const result = await flushQueuedEmails((to, subject, text) =>
+    sendWithRateLimitRetry(client, { from, to, subject, text, replyTo: EMAIL_REPLY_TO_ADDRESS }));
 
   return NextResponse.json(result);
 }

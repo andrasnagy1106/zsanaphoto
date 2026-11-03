@@ -6,6 +6,10 @@ import { NotFoundError } from "@/lib/utils/errors";
 import { getZonedDateIso } from "@/lib/utils/time";
 import { resolvePaymentInformation } from "@/lib/payment-information";
 import type { PhotoReadyEmailMode } from "@/lib/validation/photo-notification";
+import { sleep } from "@/lib/utils/sleep";
+
+/** Pause between photo-ready emails to stay under Resend's per-second API rate limit. */
+export const PHOTO_READY_EMAIL_INTERVAL_MS = 600;
 
 export async function savePhotoOrderDeadlineForBooking(
   bookingId: string,
@@ -112,9 +116,10 @@ export async function sendPhotoReadyEmailsForEvent(
   let sent = 0;
   let failed = 0;
 
-  for (const recipient of targets) {
+  for (const [index, recipient] of targets.entries()) {
     const recipientBooking = recipient.booking;
     if (!recipientBooking.pin) continue;
+    if (index > 0) await sleep(PHOTO_READY_EMAIL_INTERVAL_MS);
 
     try {
       await provider.sendPhotoReadyEmail({

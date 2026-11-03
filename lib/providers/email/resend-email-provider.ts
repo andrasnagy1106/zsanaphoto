@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { EMAIL_REPLY_TO_ADDRESS } from "@/lib/constants";
 import { sendOrQueueEmail } from "@/lib/services/email-outbox-service";
+import { sendWithRateLimitRetry } from "./resend-send";
 import {
   buildAdminBookingCancelledEmail,
   buildAdminBookingRescheduledEmail,
@@ -36,16 +37,13 @@ export class ResendEmailProvider implements EmailProvider {
       to,
       subject,
       body: text,
-      deliver: async () => {
-        const { error } = await this.client.emails.send({
-          from: this.from,
-          to,
-          subject,
-          text,
-          replyTo: EMAIL_REPLY_TO_ADDRESS,
-        });
-        if (error) throw new Error(error.message);
-      },
+      deliver: () => sendWithRateLimitRetry(this.client, {
+        from: this.from,
+        to,
+        subject,
+        text,
+        replyTo: EMAIL_REPLY_TO_ADDRESS,
+      }),
     });
   }
 

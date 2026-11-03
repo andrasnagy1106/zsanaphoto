@@ -3,8 +3,9 @@ import { getPaymentInformationForBooking } from "./payment-information-service";
 import { savePhotoOrderDeadlineForBooking, sendPhotoReadyEmailsForEvent } from "./photo-notification-service";
 
 const mocks = vi.hoisted(() => ({
-  select: vi.fn(), insert: vi.fn(), update: vi.fn(), send: vi.fn(),
+  select: vi.fn(), insert: vi.fn(), update: vi.fn(), send: vi.fn(), sleep: vi.fn(),
 }));
+vi.mock("@/lib/utils/sleep", () => ({ sleep: mocks.sleep }));
 vi.mock("@/db/client", () => ({ db: {
   select: mocks.select, insert: mocks.insert, update: mocks.update,
 } }));
@@ -103,6 +104,14 @@ describe("sendPhotoReadyEmailsForEvent modes", () => {
     mocks.send.mockResolvedValue(undefined);
     expect(await sendPhotoReadyEmailsForEvent(booking.id, "ALL")).toEqual({ sent: 2, failed: 0, total: 2, skipped: 0 });
     expect(mocks.send.mock.calls.map(([input]) => input.pin)).toEqual([failedBefore.pin, notified.pin]);
+    expect(mocks.sleep.mock.calls).toEqual([[600]]);
+  });
+
+  it("does not pause before a single email", async () => {
+    mockEvent([{ booking: failedBefore, photoCount: 2 }, { booking: notified, photoCount: 1 }]);
+    mocks.send.mockResolvedValue(undefined);
+    await sendPhotoReadyEmailsForEvent(booking.id);
+    expect(mocks.sleep).not.toHaveBeenCalled();
   });
 
   it("refuses an UNSENT send when everyone was already notified", async () => {
