@@ -9,8 +9,9 @@ import {
   createAdminEventUser,
   deleteBookingsWithoutNotification,
   deleteBookingWithoutNotification,
+  updateCustomerEmail,
 } from "@/lib/services/booking-service";
-import { bulkDeleteBookingsSchema, createAdminEventUserSchema } from "@/lib/validation/booking";
+import { bulkDeleteBookingsSchema, createAdminEventUserSchema, updateCustomerEmailSchema } from "@/lib/validation/booking";
 import { zonedDateTimeToUtc } from "@/lib/utils/time";
 
 export interface AdminActionResult {
@@ -19,6 +20,30 @@ export interface AdminActionResult {
   pin?: string;
   bookingId?: string;
   deletedCount?: number;
+  updatedCount?: number;
+}
+
+export async function updateCustomerEmailAction(input: unknown): Promise<AdminActionResult> {
+  await requireAdmin();
+  const parsed = updateCustomerEmailSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok." };
+  }
+
+  try {
+    const updatedCount = await updateCustomerEmail(parsed.data);
+    revalidatePath("/admin/bookings");
+    revalidatePath("/admin/bookings/[id]", "page");
+    revalidatePath("/admin/event-photos");
+    revalidatePath("/admin/photo-orders");
+    revalidatePath("/foglalas-kezeles");
+    revalidatePath("/fotorendeles");
+    revalidatePath("/fotogaleria");
+    return { success: true, updatedCount };
+  } catch (error) {
+    console.error("[updateCustomerEmailAction] Failed:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Az e-mail cím módosítása nem sikerült." };
+  }
 }
 
 export async function confirmBookingAction(id: string): Promise<AdminActionResult> {

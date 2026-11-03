@@ -15,6 +15,24 @@ export const createBookingInputSchema = z.object({
 
 export type CreateBookingInputForm = z.infer<typeof createBookingInputSchema>;
 
+const normalizedEmailSchema = z.string().trim().toLowerCase()
+  .email("Adj meg érvényes e-mail címet.").max(200);
+
+export const updateCustomerEmailSchema = z.object({
+  bookingId: z.string().uuid("Érvénytelen foglalási azonosító."),
+  currentEmail: normalizedEmailSchema,
+  email: normalizedEmailSchema,
+  confirmEmail: normalizedEmailSchema,
+}).refine(({ email, confirmEmail }) => email === confirmEmail, {
+  message: "A két e-mail cím nem egyezik.",
+  path: ["confirmEmail"],
+}).refine(({ currentEmail, email }) => currentEmail !== email, {
+  message: "Az új e-mail címnek különböznie kell a jelenlegitől.",
+  path: ["email"],
+});
+
+export type UpdateCustomerEmailForm = z.infer<typeof updateCustomerEmailSchema>;
+
 export const cancelBookingByCustomerSchema = z.object({
   token: z.string().min(1, "Érvénytelen azonosító."),
 });

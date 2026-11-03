@@ -127,6 +127,27 @@ A production build Webpacket használ a Vercelen tapasztalt Turbopack
 `next/font/google` modulfeloldási hiba elkerülésére. A fejlesztői szerver
 továbbra is Turbopackkel fut; a betűtípusok és a megjelenés változatlanok.
 
+## Ügyfelek e-mail-címének módosítása
+
+Az admin a **Foglalások → foglalás adatlapja → Ügyfél adatai → E-mail módosítása**
+gombbal módosíthatja az ügyfél címét. Az új címet kétszer kell megadni; a rendszer
+levágja a szélső szóközöket és kisbetűsíti a címeket.
+
+- Az összes, azonos régi e-mail-címmel tárolt foglalás frissül, kis- és nagybetűtől
+  függetlenül. Közösen használt cím esetén ez több ügyfél foglalásait is érintheti.
+- A következő ügyféllevelek és a kapcsolódó, még `QUEUED` állapotú foglalási,
+  fotórendelési és „Elkészültek a fotók” levelek az új címre mennek.
+- A már elküldött levelek és az adminnak címzett levelek nem változnak. Az adminfiókok
+  e-mail-címe, jelszava és az admin értesítési címe szintén változatlan marad.
+- Az ügyfelek továbbra is a meglévő PIN-kóddal, illetve foglaláskezelő linkkel férnek
+  hozzá az adataikhoz; nincs ügyfél e-mail/jelszó alapú bejelentkezés.
+- A módosítás nem küld megerősítő vagy értesítő e-mailt. A foglalások és a kapcsolódó
+  várakozó levelek átírása egy adatbázis-tranzakcióban történik; az időközben
+  megváltozott cím újabb felülírását a rendszer hibával megakadályozza.
+
+Ehhez a funkcióhoz **nem kell új adatbázis-migráció**: a meglévő
+`bookings.customer_email` és `email_outbox.to_address` mezőket használja.
+
 ## Környezetek
 
 A kódban nincs környezetfüggő elágazás: helyi fejlesztés és Vercel production ugyanazt a kódot futtatja,

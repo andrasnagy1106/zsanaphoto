@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/photo-order-catalog";
 import { BookingDetailActions } from "@/components/admin/BookingDetailActions";
 import { PhotoOrderDetailsDialog } from "@/components/admin/PhotoOrderDetailsDialog";
 import { PhotoOrderStatusControl } from "@/components/admin/PhotoOrderStatusControl";
+import { CustomerEmailEditModal } from "@/components/admin/CustomerEmailEditModal";
 
 interface AdminBookingDetailPageProps {
   params: Promise<{ id: string }>;
@@ -119,6 +120,7 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
               </div>
             ) : null}
           </dl>
+          <CustomerEmailEditModal bookingId={booking.id} currentEmail={booking.customerEmail} />
         </div>
       </div>
 

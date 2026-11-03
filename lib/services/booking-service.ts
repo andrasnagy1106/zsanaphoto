@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, gte, inArray, lt, lte, ne, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, like, lt, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { bookings, emailOutbox, eventPhotos, photoOrders, services, type Booking, type Service } from "@/db/schema";
 import { deleteMultiplePhotosFromCloudinary } from "@/lib/providers/cloudinary/client";
@@ -12,6 +12,7 @@ import { BookingConflictError, NotFoundError } from "@/lib/utils/errors";
 import { addMinutes, getZonedDateIso, getZonedYear, zonedDateTimeToUtc } from "@/lib/utils/time";
 import { getAvailableSlotsForDate, getSiteSettings, isSlotAvailable } from "./availability-service";
 import { canCancelBooking, canConfirmBooking, determineInitialBookingStatus } from "./booking-rules";
+import { updateCustomerEmailSchema, type UpdateCustomerEmailForm } from "@/lib/validation/booking";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -463,6 +464,44 @@ export async function deleteBookingsWithoutNotification(ids: string[]): Promise<
 
 export async function deleteBookingWithoutNotification(id: string): Promise<void> {
   await deleteBookingsWithoutNotification([id]);
+}
+
+export async function updateCustomerEmail(input: UpdateCustomerEmailForm): Promise<number> {
+  const { bookingId, currentEmail, email } = updateCustomerEmailSchema.parse(input);
+
+  return db.transaction(async (tx) => {
+    const [booking] = await tx.select().from(bookings)
+      .where(eq(bookings.id, bookingId)).limit(1);
+    if (!booking) throw new NotFoundError("A foglalás nem található.");
+    if (booking.customerEmail.trim().toLowerCase() !== currentEmail) {
+      throw new Error("Az e-mail cím időközben megváltozott. Frissítsd az oldalt, majd próbáld újra.");
+    }
+
+    const now = new Date();
+    const updated = await tx.update(bookings)
+      .set({ customerEmail: email, updatedAt: now })
+      .where(sql`lower(trim(${bookings.customerEmail})) = ${currentEmail}`)
+      .returning({ id: bookings.id, bookingNumber: bookings.bookingNumber, pin: bookings.pin });
+    if (!updated.some(({ id }) => id === bookingId)) {
+      throw new Error("Az ügyfél adatai időközben megváltoztak. Frissítsd az oldalt, majd próbáld újra.");
+    }
+
+    // Legacy outbox rows have no recipient role: match customer greetings and exact booking/PIN lines.
+    await tx.update(emailOutbox).set({ toAddress: email, updatedAt: now })
+      .where(and(
+        eq(emailOutbox.status, "QUEUED"),
+        sql`lower(trim(${emailOutbox.toAddress})) = ${currentEmail}`,
+        like(emailOutbox.body, "Kedves %"),
+        or(...updated.flatMap(({ bookingNumber, pin }) => [
+          sql`strpos(E'\n' || ${emailOutbox.body} || E'\n', ${`\nFoglalási azonosító: ${bookingNumber}\n`}) > 0`,
+          ...(pin ? [
+            sql`strpos(E'\n' || ${emailOutbox.body} || E'\n', ${`\nBelépési PIN-kód: ${pin}\n`}) > 0`,
+          ] : []),
+        ])),
+      ));
+
+    return updated.length;
+  });
 }
 
 export async function completeBooking(id: string): Promise<Booking> {

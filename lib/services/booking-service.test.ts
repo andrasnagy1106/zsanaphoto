@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { bookings, emailOutbox, eventPhotos, photoOrders } from "@/db/schema";
-import { cancelBooking, createAdminEventUser, deleteBookingWithoutNotification, deleteBookingsWithoutNotification } from "./booking-service";
+import { cancelBooking, createAdminEventUser, deleteBookingWithoutNotification, deleteBookingsWithoutNotification, updateCustomerEmail } from "./booking-service";
 
 const mocks = vi.hoisted(() => ({
   transaction: vi.fn(), select: vi.fn(), update: vi.fn(),
@@ -50,6 +50,86 @@ beforeEach(() => {
   mocks.deletePhotos.mockResolvedValue(undefined);
   mocks.getEmailProvider.mockReturnValue({ sendBookingCancelledEmail: mocks.sendCancellation });
   mocks.getSiteSettings.mockResolvedValue({ adminNotificationEmail: "admin@example.com" });
+});
+
+describe("updateCustomerEmail", () => {
+  const input = {
+    bookingId: "00000000-0000-4000-8000-000000000001",
+    currentEmail: "test@example.com",
+    email: "new@example.com",
+    confirmEmail: "new@example.com",
+  };
+  const source = { ...booking, id: input.bookingId, customerEmail: " Test@Example.com " };
+  const other = { ...source, id: "booking-2", bookingNumber: "ZS-2026-0003", pin: null };
+
+  function mockEmailTransaction(rows = [source, other], selected = [source]) {
+    const returning = vi.fn().mockResolvedValue(rows);
+    const queueWhere = vi.fn().mockResolvedValue(undefined);
+    const bookingWhere = vi.fn().mockReturnValue({ returning });
+    const bookingSet = vi.fn(() => ({ where: bookingWhere }));
+    const queueSet = vi.fn(() => ({ where: queueWhere }));
+    const tx = {
+      select: vi.fn(() => ({ from: () => ({ where: () => ({ limit: async () => selected }) }) })),
+      update: vi.fn((table) => ({ set: table === bookings ? bookingSet : queueSet })),
+    };
+    mocks.transaction.mockImplementation(async (callback) => callback(tx));
+    return { tx, bookingSet, bookingWhere, queueSet, queueWhere };
+  }
+
+  it("updates all matching bookings and queued customer emails in one transaction without notifications", async () => {
+    const { tx, bookingSet, bookingWhere, queueSet, queueWhere } = mockEmailTransaction();
+    await expect(updateCustomerEmail(input)).resolves.toBe(2);
+    expect(mocks.transaction).toHaveBeenCalledTimes(1);
+    expect(tx.update.mock.calls.map(([table]) => table)).toEqual([bookings, emailOutbox]);
+    expect(bookingSet).toHaveBeenCalledWith({ customerEmail: input.email, updatedAt: expect.any(Date) });
+    expect(queueSet).toHaveBeenCalledWith({ toAddress: input.email, updatedAt: expect.any(Date) });
+    const dialect = new PgDialect();
+    const bookingQuery = dialect.sqlToQuery(bookingWhere.mock.calls[0][0]);
+    expect(bookingQuery.sql).toContain('lower(trim("bookings"."customer_email"))');
+    expect(bookingQuery.sql).not.toContain('"id"');
+    expect(bookingQuery.params).toEqual([input.currentEmail]);
+
+    const queueQuery = dialect.sqlToQuery(queueWhere.mock.calls[0][0]);
+    expect(queueQuery.sql).toContain('"email_outbox"."status" =');
+    expect(queueQuery.sql).toContain('lower(trim("email_outbox"."to_address"))');
+    expect(queueQuery.sql).toContain('"email_outbox"."body" like');
+    expect(queueQuery.params).toEqual([
+      "QUEUED", input.currentEmail, "Kedves %",
+      "\nFoglalási azonosító: ZS-2026-0002\n", "\nBelépési PIN-kód: AB12345\n",
+      "\nFoglalási azonosító: ZS-2026-0003\n",
+    ]);
+    expect(mocks.getEmailProvider).not.toHaveBeenCalled();
+    expect(mocks.getSiteSettings).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unknown booking without updating data", async () => {
+    const { tx } = mockEmailTransaction([], []);
+    await expect(updateCustomerEmail(input)).rejects.toThrow("A foglalás nem található.");
+    expect(tx.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects stale forms without updating data", async () => {
+    const { tx } = mockEmailTransaction([source], [{ ...source, customerEmail: "changed@example.com" }]);
+    await expect(updateCustomerEmail(input)).rejects.toThrow("időközben megváltozott");
+    expect(tx.update).not.toHaveBeenCalled();
+  });
+
+  it("rolls back if the booking changed between reading and updating", async () => {
+    const { queueSet } = mockEmailTransaction([other]);
+    await expect(updateCustomerEmail(input)).rejects.toThrow("időközben megváltoztak");
+    expect(queueSet).not.toHaveBeenCalled();
+  });
+
+  it("propagates outbox errors so booking changes roll back", async () => {
+    const { queueWhere } = mockEmailTransaction();
+    queueWhere.mockRejectedValue(new Error("Outbox unavailable"));
+    await expect(updateCustomerEmail(input)).rejects.toThrow("Outbox unavailable");
+  });
+
+  it("rejects mismatching emails before starting a transaction", async () => {
+    await expect(updateCustomerEmail({ ...input, confirmEmail: "other@example.com" })).rejects.toThrow();
+    expect(mocks.transaction).not.toHaveBeenCalled();
+  });
 });
 
 describe("deleteBookingWithoutNotification", () => {

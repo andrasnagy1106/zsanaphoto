@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildAdminBookingCancelledEmail,
+  buildAdminBookingRescheduledEmail,
+  buildAdminNewBookingEmail,
+  buildAdminPhotoOrderNotificationEmail,
+  buildBookingCancelledEmail,
+  buildBookingConfirmedEmail,
   buildBookingCreatedEmail,
+  buildBookingRescheduledEmail,
   buildGoogleCalendarUrl,
   buildPhotoOrderConfirmationEmail,
   buildPhotoReadyEmail,
@@ -18,6 +25,51 @@ const baseInput = {
   endAt: new Date("2026-09-23T09:00:00Z"),
   adminNotificationEmail: "admin@example.com",
 };
+
+describe("queued email identification for customer address changes", () => {
+  const bookingInput = { ...baseInput, approvalMode: "AUTO" as const };
+  const orderInput: PhotoOrderEmailInput = {
+    ...baseInput, orderNumber: "ZR-2026-0001", isUpdate: false, totalAmount: 1000, items: [],
+  };
+
+  it("identifies every customer template by greeting and an exact booking or PIN line", () => {
+    const emails = [
+      buildBookingCreatedEmail(bookingInput),
+      buildBookingCreatedEmail({ ...bookingInput, approvalMode: "MANUAL" }),
+      buildBookingConfirmedEmail(bookingInput),
+      buildBookingCancelledEmail(bookingInput),
+      buildBookingRescheduledEmail(bookingInput),
+      buildPhotoOrderConfirmationEmail(orderInput),
+      buildPhotoOrderConfirmationEmail({ ...orderInput, isUpdate: true }),
+      buildPhotoReadyEmail({
+        ...baseInput, orderDeadline: "2026-11-20", galleryUrl: "https://example.com",
+      }),
+    ];
+    for (const { text } of emails) {
+      expect(text.startsWith("Kedves ")).toBe(true);
+      const lines = text.split("\n");
+      expect(
+        lines.includes(`Foglalási azonosító: ${baseInput.bookingNumber}`) ||
+        lines.includes(`Belépési PIN-kód: ${baseInput.pin}`),
+      ).toBe(true);
+    }
+  });
+
+  it("excludes every admin template even if the admin and customer addresses coincide", () => {
+    const input = { ...bookingInput, adminNotificationEmail: baseInput.customerEmail };
+    const order = { ...orderInput, adminNotificationEmail: baseInput.customerEmail };
+    const emails = [
+      buildAdminNewBookingEmail(input),
+      buildAdminBookingCancelledEmail(input),
+      buildAdminBookingRescheduledEmail(input),
+      buildAdminPhotoOrderNotificationEmail(order),
+      buildAdminPhotoOrderNotificationEmail({ ...order, isUpdate: true }),
+    ];
+    for (const { text } of emails) {
+      expect(text.startsWith("Kedves ")).toBe(false);
+    }
+  });
+});
 
 describe("buildBookingCreatedEmail", () => {
   it.each<ApprovalMode>(["AUTO", "MANUAL"])("includes the PIN in %s mode", (approvalMode) => {

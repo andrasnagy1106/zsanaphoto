@@ -7,6 +7,22 @@ vi.mock("@/db/client", () => ({ db: mocks }));
 beforeEach(() => vi.resetAllMocks());
 
 describe("flushQueuedEmails", () => {
+  it("delivers to the updated customer address rather than the earlier queue snapshot", async () => {
+    const email = { id: "email-1", toAddress: "old@example.com", subject: "Booking", body: "Details" };
+    mocks.select.mockReturnValueOnce({ from: () => ({ where: async () => [{ count: 0 }] }) })
+      .mockReturnValueOnce({ from: () => ({ where: () => ({ orderBy: async () => [email] }) }) })
+      .mockReturnValueOnce({ from: () => ({ where: async () => [{ count: 0 }] }) });
+    mocks.transaction.mockImplementation(async (callback) => callback({
+      select: () => ({ from: () => ({ where: () => ({
+        for: async () => [{ ...email, toAddress: "new@example.com" }],
+      }) }) }),
+      update: () => ({ set: () => ({ where: async () => undefined }) }),
+    }));
+    const deliver = vi.fn().mockResolvedValue(undefined);
+    await expect(flushQueuedEmails(deliver)).resolves.toEqual({ sent: 1, remaining: 0 });
+    expect(deliver).toHaveBeenCalledWith("new@example.com", email.subject, email.body);
+  });
+
   it.each([false, true])("rechecks queued email under a row lock (still exists: %s)", async (exists) => {
     const email = { id: "email-1", toAddress: "test@example.com", subject: "Booking", body: "Details" };
     mocks.select.mockReturnValueOnce({ from: () => ({ where: async () => [{ count: 0 }] }) })
