@@ -133,6 +133,22 @@ A production build Webpacket használ a Vercelen tapasztalt Turbopack
 `next/font/google` modulfeloldási hiba elkerülésére. A fejlesztői szerver
 továbbra is Turbopackkel fut; a betűtípusok és a megjelenés változatlanok.
 
+## Foglalások exportálása Excelbe
+
+Az admin **Foglalások → Exportálás Excelbe (CSV)** gombja az aktuális szűrésnek
+és rendezésnek megfelelő foglalásokat tölti le, Excelben megnyitható CSV-ként.
+
+- Az export tartalmazza a foglalási azonosítót, PIN-kódot, ügyfél nevét,
+  e-mail-címét, telefonszámát, online képmegjelenési hozzájárulását, a foglalás
+  dátumát és kezdési idejét, valamint a **Gyermek neve** mezőt.
+- A korábbi oszlopok és sorrendjük változatlanok; a gyermek neve az utolsó oszlop.
+  Ha nincs megadva gyermeknév, ez a cella üres.
+- A magyar ékezeteket UTF-8 BOM, a pontosvesszőket, idézőjeleket és sortöréseket
+  CSV-idézőjelezés őrzi meg.
+
+Ehhez a bővítéshez **nem kell új adatbázis-migráció**: a meglévő
+`bookings.child_name` mezőt használja.
+
 ## Ügyfelek e-mail-címének módosítása
 
 Az admin a **Foglalások → foglalás adatlapja → Ügyfél adatai → E-mail módosítása**

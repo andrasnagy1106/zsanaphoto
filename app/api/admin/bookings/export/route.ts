@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
     "Létrehozva",
     "Jóváhagyva",
     "Lemondva",
+    "Gyermek neve",
   ];
 
   const rows = bookings.map((b) => [
@@ -109,6 +110,7 @@ export async function GET(request: NextRequest) {
         ? `${formatZonedHungarianDate(b.cancelledAt)} ${formatZonedTime(b.cancelledAt)}`
         : "",
     ),
+    escapeCsvCell(b.childName),
   ]);
 
   // \uFEFF is UTF-8 Byte Order Mark (BOM) so Excel opens UTF-8 Hungarian characters without character encoding issues.
