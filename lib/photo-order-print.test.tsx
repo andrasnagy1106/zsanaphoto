@@ -2,6 +2,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { PhotoOrderDetailsDialog, PhotoOrderPrintContent } from "@/components/admin/PhotoOrderDetailsDialog";
+import { PhotoOrdersPrintButton } from "@/components/admin/PhotoOrdersPrintButton";
 import { formatPrice } from "@/lib/photo-order-catalog";
 
 const props = {
@@ -72,5 +73,14 @@ describe("photo order details and print", () => {
     expect(html).toContain("Nincs megjegyzés.");
     expect(html).toContain(formatPrice(1200));
     expect(html).not.toContain("Digitális változat");
+  });
+
+  it("disables bulk printing when there are no matching orders", () => {
+    const empty = renderToStaticMarkup(<PhotoOrdersPrintButton orders={[]} />);
+    const matching = renderToStaticMarkup(<PhotoOrdersPrintButton orders={[props, props]} />);
+    expect(empty).toContain('disabled=""');
+    expect(empty).toContain("nyomtatása (0)");
+    expect(matching).not.toContain('disabled=""');
+    expect(matching).toContain("nyomtatása (2)");
   });
 });

@@ -50,6 +50,10 @@ body {
     margin-bottom: 12pt;
   }
 
+  .photo-order-print-content + .photo-order-print-content {
+    break-before: page;
+  }
+
   .photo-order-print-content h2 {
     font-size: 13pt;
     margin-top: 16pt;

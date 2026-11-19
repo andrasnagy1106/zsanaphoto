@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { PhotoOrderDetailsDialog } from "@/components/admin/PhotoOrderDetailsDialog";
+import { PhotoOrdersPrintButton } from "@/components/admin/PhotoOrdersPrintButton";
 import { PhotoOrderStatusControl } from "@/components/admin/PhotoOrderStatusControl";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatPrice } from "@/lib/photo-order-catalog";
@@ -68,29 +69,51 @@ export default async function AdminPhotoOrdersPage({ searchParams }: AdminPhotoO
             <strong className="text-foreground">{formatPrice(totalRevenue)}</strong>
           </p>
         </div>
-        <a
-          href={exportUrl}
-          download
-          className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent hover:text-accent shadow-sm"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+        <div className="flex flex-wrap gap-2">
+          <PhotoOrdersPrintButton
+            orders={orders.map(({ order, booking, items }) => ({
+              order: {
+                orderNumber: order.orderNumber,
+                notes: order.notes,
+                totalAmount: order.totalAmount,
+                billingName: order.billingName,
+                billingPostalCode: order.billingPostalCode,
+                billingCity: order.billingCity,
+                billingAddress: order.billingAddress,
+                includesDigital: order.includesDigital,
+              },
+              customerName: booking.customerName,
+              bookingNumber: booking.bookingNumber,
+              photoPublicationConsent: booking.photoPublicationConsent,
+              items: items.map(({ id, photoId, photoTitle, size, quantity, unitPrice, totalPrice }) => ({
+                id, photoId, photoTitle, size, quantity, unitPrice, totalPrice,
+              })),
+            }))}
+          />
+          <a
+            href={exportUrl}
+            download
+            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent hover:text-accent shadow-sm"
           >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Exportálás Excelbe (CSV)
-        </a>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Exportálás Excelbe (CSV)
+          </a>
+        </div>
       </div>
 
       {/* Filter bar */}

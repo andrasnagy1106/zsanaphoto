@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import type { PhotoOrder, PhotoOrderItem } from "@/db/schema";
 import { formatPrice } from "@/lib/photo-order-catalog";
 
-interface PhotoOrderDetailsDialogProps {
+export interface PhotoOrderDetailsDialogProps {
   order: Pick<
     PhotoOrder,
     "orderNumber" | "notes" | "totalAmount" | "billingName" | "billingPostalCode" | "billingCity" | "billingAddress"
