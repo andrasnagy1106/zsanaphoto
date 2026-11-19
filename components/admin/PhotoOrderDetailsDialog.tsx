@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { PhotoOrder, PhotoOrderItem } from "@/db/schema";
 import { formatPrice } from "@/lib/photo-order-catalog";
 
@@ -11,24 +12,91 @@ interface PhotoOrderDetailsDialogProps {
   > & { includesDigital?: boolean | null };
   customerName: string;
   bookingNumber: string;
+  photoPublicationConsent: boolean | null;
   items: Array<Pick<PhotoOrderItem, "id" | "photoId" | "photoTitle" | "size" | "quantity" | "unitPrice" | "totalPrice">>;
+}
+
+function getTotalAmount(order: PhotoOrderDetailsDialogProps["order"], items: PhotoOrderDetailsDialogProps["items"]) {
+  return order.totalAmount > 0
+    ? order.totalAmount
+    : items.reduce((sum, item) => sum + item.totalPrice, 0);
+}
+
+function consentLabel(consent: boolean | null) {
+  if (consent === null) return "Nincs rögzítve";
+  return consent ? "Hozzájárult" : "Nem járult hozzá";
+}
+
+export function PhotoOrderPrintContent({
+  order,
+  customerName,
+  bookingNumber,
+  photoPublicationConsent,
+  items,
+}: PhotoOrderDetailsDialogProps) {
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalAmount = getTotalAmount(order, items);
+  const itemTotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+  const address = [[order.billingPostalCode, order.billingCity].filter(Boolean).join(" "), order.billingAddress]
+    .filter(Boolean)
+    .join(", ");
+
+  return (
+    <article className="photo-order-print-content">
+      <h1>Fotórendelés részletei</h1>
+      <p><strong>Rendelés:</strong> {order.orderNumber}</p>
+      <p><strong>Ügyfél:</strong> {customerName} · <strong>Foglalás:</strong> {bookingNumber}</p>
+      <table>
+        <thead>
+          <tr><th>Fotó / Tétel</th><th>Típus</th><th>Egységár</th><th>Db</th><th>Összeg</th><th>Jelölés</th></tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id}>
+              <td>{item.photoTitle}</td>
+              <td>{item.size}</td>
+              <td>{formatPrice(item.unitPrice)}</td>
+              <td>{item.quantity} db</td>
+              <td>{formatPrice(item.totalPrice)}</td>
+              <td><span className="photo-order-print-check" /></td>
+            </tr>
+          ))}
+          {order.includesDigital && (
+            <tr>
+              <td>Digitális változat</td><td>Online galéria</td><td>-</td><td>1 csomag</td>
+              <td>{formatPrice(Math.max(0, totalAmount - itemTotal))}</td>
+              <td><span className="photo-order-print-check" /></td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      <p><strong>Összesen:</strong> {totalQuantity} db tétel{order.includesDigital ? " + digitális csomag" : ""} · {formatPrice(totalAmount)}</p>
+      <h2>Számlázási adatok</h2>
+      <p><strong>Név:</strong> {order.billingName || "Nincs megadva"}</p>
+      <p><strong>Cím:</strong> {address || "Nincs megadva"}</p>
+      <p><strong>Online képmegjelenés:</strong> {consentLabel(photoPublicationConsent)}</p>
+      <h2>Megjegyzés</h2>
+      <p className="photo-order-print-notes">{order.notes ?? "Nincs megjegyzés."}</p>
+    </article>
+  );
 }
 
 export function PhotoOrderDetailsDialog({
   order,
   customerName,
   bookingNumber,
+  photoPublicationConsent,
   items,
 }: PhotoOrderDetailsDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const photoCount = new Set(items.map((item) => item.photoId)).size;
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalAmount = order.totalAmount > 0
-    ? order.totalAmount
-    : items.reduce((sum, item) => sum + item.totalPrice, 0);
+  const totalAmount = getTotalAmount(order, items);
 
   function openPhotoOrderDetails() {
     dialogRef.current?.showModal();
+    setIsOpen(true);
   }
 
   function closePhotoOrderDetails() {
@@ -61,12 +129,13 @@ export function PhotoOrderDetailsDialog({
       <dialog
         ref={dialogRef}
         className="m-auto w-[calc(100%-2rem)] max-w-3xl rounded-lg border border-border bg-background p-0 text-foreground shadow-xl backdrop:bg-black/45"
+        onClose={() => setIsOpen(false)}
         onClick={(event) => {
           if (event.target === dialogRef.current) closePhotoOrderDetails();
         }}
       >
         <div className="max-h-[85vh] overflow-y-auto p-5 sm:p-7">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase text-accent">Fotórendelés részletei</p>
               <h2 className="mt-2 font-mono text-xl font-semibold sm:text-2xl">{order.orderNumber}</h2>
@@ -74,14 +143,23 @@ export function PhotoOrderDetailsDialog({
                 {customerName} · {bookingNumber}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={closePhotoOrderDetails}
-              className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md text-2xl text-foreground/60 hover:bg-muted hover:text-foreground"
-              aria-label="Részletek bezárása"
-            >
-              ×
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="min-h-11 cursor-pointer rounded-md border border-border bg-white px-3 text-sm font-semibold text-accent hover:bg-muted"
+              >
+                Nyomtatás
+              </button>
+              <button
+                type="button"
+                onClick={closePhotoOrderDetails}
+                className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md text-2xl text-foreground/60 hover:bg-muted hover:text-foreground"
+                aria-label="Részletek bezárása"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           {order.includesDigital && (
@@ -130,25 +208,27 @@ export function PhotoOrderDetailsDialog({
             </div>
           </div>
 
-          {(order.billingName || order.billingAddress) && (
-            <div className="mt-5 rounded-lg border border-border bg-white p-4">
-              <p className="text-xs font-semibold uppercase text-foreground/50">Számlázási adatok</p>
-              <div className="mt-2 text-sm text-foreground/80 space-y-1">
-                {order.billingName && (
-                  <p>
-                    <span className="text-foreground/50">Név:</span> <strong>{order.billingName}</strong>
-                  </p>
-                )}
-                {(order.billingPostalCode || order.billingCity || order.billingAddress) && (
-                  <p>
-                    <span className="text-foreground/50">Cím:</span>{" "}
-                    {[order.billingPostalCode, order.billingCity].filter(Boolean).join(" ")}
-                    {order.billingAddress ? `, ${order.billingAddress}` : ""}
-                  </p>
-                )}
-              </div>
+          <div className="mt-5 rounded-lg border border-border bg-white p-4">
+            <p className="text-xs font-semibold uppercase text-foreground/50">Számlázási adatok</p>
+            <div className="mt-2 text-sm text-foreground/80 space-y-1">
+              {order.billingName && (
+                <p>
+                  <span className="text-foreground/50">Név:</span> <strong>{order.billingName}</strong>
+                </p>
+              )}
+              {(order.billingPostalCode || order.billingCity || order.billingAddress) && (
+                <p>
+                  <span className="text-foreground/50">Cím:</span>{" "}
+                  {[order.billingPostalCode, order.billingCity].filter(Boolean).join(" ")}
+                  {order.billingAddress ? `, ${order.billingAddress}` : ""}
+                </p>
+              )}
+              <p>
+                <span className="text-foreground/50">Online képmegjelenés:</span>{" "}
+                <strong>{consentLabel(photoPublicationConsent)}</strong>
+              </p>
             </div>
-          )}
+          </div>
 
           <div className="mt-5 rounded-lg border border-border bg-white p-4">
             <p className="text-xs font-semibold uppercase text-foreground/50">Megjegyzés</p>
@@ -158,6 +238,18 @@ export function PhotoOrderDetailsDialog({
           </div>
         </div>
       </dialog>
+      {isOpen && createPortal(
+        <div className="photo-order-print" aria-hidden="true">
+          <PhotoOrderPrintContent
+            order={order}
+            customerName={customerName}
+            bookingNumber={bookingNumber}
+            photoPublicationConsent={photoPublicationConsent}
+            items={items}
+          />
+        </div>,
+        document.body,
+      )}
     </>
   );
 }

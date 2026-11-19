@@ -160,6 +160,7 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
                     order={orderRow.order}
                     customerName={orderRow.booking.customerName}
                     bookingNumber={orderRow.booking.bookingNumber}
+                    photoPublicationConsent={orderRow.booking.photoPublicationConsent}
                     items={orderRow.items}
                   />
                   <PhotoOrderStatusControl order={orderRow.order} />

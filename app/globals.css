@@ -29,3 +29,72 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+.photo-order-print {
+  display: none;
+}
+
+@media print {
+  body:has(> .photo-order-print) > * {
+    display: none !important;
+  }
+
+  body:has(> .photo-order-print) > .photo-order-print {
+    display: block !important;
+    color: #000;
+    font: 11pt Arial, sans-serif;
+  }
+
+  .photo-order-print-content h1 {
+    font-size: 18pt;
+    margin-bottom: 12pt;
+  }
+
+  .photo-order-print-content h2 {
+    font-size: 13pt;
+    margin-top: 16pt;
+  }
+
+  .photo-order-print-content p {
+    margin: 4pt 0;
+  }
+
+  .photo-order-print-content table {
+    width: 100%;
+    margin: 14pt 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .photo-order-print-content th,
+  .photo-order-print-content td {
+    border: 1px solid #999;
+    padding: 5pt;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .photo-order-print-content th:first-child {
+    width: 30%;
+  }
+
+  .photo-order-print-content th:last-child {
+    width: 11%;
+  }
+
+  .photo-order-print-check {
+    display: inline-block;
+    width: 10pt;
+    height: 10pt;
+    border: 1px solid #000;
+  }
+
+  .photo-order-print-content tr {
+    break-inside: avoid;
+  }
+
+  .photo-order-print-notes {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}

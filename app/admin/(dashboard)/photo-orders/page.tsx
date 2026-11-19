@@ -23,6 +23,7 @@ function renderOrderDetails(row: Awaited<ReturnType<typeof listPhotoOrders>>[num
       order={row.order}
       customerName={row.booking.customerName}
       bookingNumber={row.booking.bookingNumber}
+      photoPublicationConsent={row.booking.photoPublicationConsent}
       items={row.items}
     />
   );
