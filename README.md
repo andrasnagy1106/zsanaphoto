@@ -320,7 +320,12 @@ adatbázisban tárolt intézményi szolgáltatását ez az átnevezés nem módo
     `15x21 cm` (1 200 Ft / db), `A4 21x30 cm` (1 900 Ft / db), `Digitális kép` (2 000 Ft / db).
   - **Digitális képek rendelése:** Képenként külön kérhető digitális átadás (2 000 Ft / db), melyről az információs doboz részletes tájékoztatást ad (digitálisan átadott, megszerkesztett képek online galériában, szabad sokszorosítási joggal).
   - **Számlázási adatok bekérése:** Rendelés leadásakor a rendszer bekéri a számlázási nevet, irányítószámot, települést és címet. Az irányítószám beírásakor az app automatikusan kitölti a hozzá tartozó magyar települést (Budapest esetén `1xxx` kódoknál Budapestet, vidéki településeknél a megfelelő várost/falut). A számlázási adatok bekerülnek a visszaigazoló e-mailekbe, a rendelési részletekbe és a CSV exporthoz is.
-  - **Rendelés nyomtatása:** Az admin rendelésrészleteiben a Nyomtatás gomb a kiválasztott rendelés tételes, nyomtatható nézetét nyitja meg, a tételek papíron jelölhetők. A fotórendelések listáján a szűrt rendelések nyomtatása az alkalmazott szűrés minden találatát nyomtatja ugyanebben a formában, rendelésenként új oldalon kezdve. A számlázási adatok mellett a foglaláshoz rögzített online képmegjelenési hozzájárulás is látható; hiányzó adat esetén „Nincs rögzítve” jelenik meg. A nyomtatás nem módosít adatot, migráció nem szükséges.
+  - **Rendelések nyomtatása** az admin Fotórendelések oldalán:
+    - Egy rendelésnél a **Részletek**, majd a **Nyomtatás** gomb megnyitja a böngésző nyomtatási ablakát.
+    - Több rendeléshez válaszd ki a szolgáltatást vagy státuszt, alkalmazd a **Szűrés** gombbal, majd használd a **Szűrt rendelések nyomtatása** gombot. A gombon látható szám az alkalmazott szűrés találatainak száma; nulla találat esetén a gomb nem használható. Szűrés nélkül az összes listázott rendelés nyomtatható.
+    - A nyomtatvány minden rendelést az egyedi nézettel azonos formában tartalmaz, rendelésenként új oldalon kezdve. Hosszabb rendelés több oldalon folytatódhat; a tételek mellett kézzel jelölhető négyzetek vannak.
+    - A számlázási adatok mellett a kapcsolódó foglalás online képmegjelenési hozzájárulása is szerepel. Ha az nincs rögzítve, a nyomtatványon és a rendelésrészletekben „Nincs rögzítve” látható.
+    - A nyomtatás nem módosít rendelést vagy más adatot, és nem igényel migrációt.
   - **Képek vízjelezése és privát galéria:**
     - A fotórendelés felületén (`/fotorendeles`) a képek Cloudinary által vízjelezett formátumban jelennek meg a kiválasztáshoz és rendeléshez.
     - A privát teljes képgalériában (`/fotogaleria`) a rendszer az eredeti, vízjelmentes fotókat jeleníti meg és teszi letölthetővé (egyedi és kötegelt ZIP formátumban).
