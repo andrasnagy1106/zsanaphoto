@@ -325,6 +325,7 @@ adatbázisban tárolt intézményi szolgáltatását ez az átnevezés nem módo
     - Több rendeléshez válaszd ki a szolgáltatást vagy státuszt, alkalmazd a **Szűrés** gombbal, majd használd a **Szűrt rendelések nyomtatása** gombot. A gombon látható szám az alkalmazott szűrés találatainak száma; nulla találat esetén a gomb nem használható. Szűrés nélkül az összes listázott rendelés nyomtatható.
     - A nyomtatvány minden rendelést az egyedi nézettel azonos formában tartalmaz, rendelésenként új oldalon kezdve. Hosszabb rendelés több oldalon folytatódhat; a tételek mellett kézzel jelölhető négyzetek vannak.
     - A számlázási adatok mellett a kapcsolódó foglalás online képmegjelenési hozzájárulása is szerepel. Ha az nincs rögzítve, a nyomtatványon és a rendelésrészletekben „Nincs rögzítve” látható.
+    - A **Részletek → Nyomtatás** és a **Szűrt rendelések nyomtatása** gombbal készült nyomtatványon az online képmegjelenési hozzájárulás fölött a foglaláshoz rögzített gyermek neve is szerepel. Ha nincs megadva, ez a sor kimarad.
     - A nyomtatás nem módosít rendelést vagy más adatot, és nem igényel migrációt.
   - **Képek vízjelezése és privát galéria:**
     - A fotórendelés felületén (`/fotorendeles`) a képek Cloudinary által vízjelezett formátumban jelennek meg a kiválasztáshoz és rendeléshez.

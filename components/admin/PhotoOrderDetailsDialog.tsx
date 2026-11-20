@@ -11,6 +11,7 @@ export interface PhotoOrderDetailsDialogProps {
     "orderNumber" | "notes" | "totalAmount" | "billingName" | "billingPostalCode" | "billingCity" | "billingAddress"
   > & { includesDigital?: boolean | null };
   customerName: string;
+  childName: string | null;
   bookingNumber: string;
   photoPublicationConsent: boolean | null;
   items: Array<Pick<PhotoOrderItem, "id" | "photoId" | "photoTitle" | "size" | "quantity" | "unitPrice" | "totalPrice">>;
@@ -30,6 +31,7 @@ function consentLabel(consent: boolean | null) {
 export function PhotoOrderPrintContent({
   order,
   customerName,
+  childName,
   bookingNumber,
   photoPublicationConsent,
   items,
@@ -37,6 +39,7 @@ export function PhotoOrderPrintContent({
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = getTotalAmount(order, items);
   const itemTotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+  const printedChildName = childName?.trim();
   const address = [[order.billingPostalCode, order.billingCity].filter(Boolean).join(" "), order.billingAddress]
     .filter(Boolean)
     .join(", ");
@@ -74,6 +77,7 @@ export function PhotoOrderPrintContent({
       <h2>Számlázási adatok</h2>
       <p><strong>Név:</strong> {order.billingName || "Nincs megadva"}</p>
       <p><strong>Cím:</strong> {address || "Nincs megadva"}</p>
+      {printedChildName && <p><strong>Gyermek neve:</strong> {printedChildName}</p>}
       <p><strong>Online képmegjelenés:</strong> {consentLabel(photoPublicationConsent)}</p>
       <h2>Megjegyzés</h2>
       <p className="photo-order-print-notes">{order.notes ?? "Nincs megjegyzés."}</p>
@@ -84,6 +88,7 @@ export function PhotoOrderPrintContent({
 export function PhotoOrderDetailsDialog({
   order,
   customerName,
+  childName,
   bookingNumber,
   photoPublicationConsent,
   items,
@@ -243,6 +248,7 @@ export function PhotoOrderDetailsDialog({
           <PhotoOrderPrintContent
             order={order}
             customerName={customerName}
+            childName={childName}
             bookingNumber={bookingNumber}
             photoPublicationConsent={photoPublicationConsent}
             items={items}

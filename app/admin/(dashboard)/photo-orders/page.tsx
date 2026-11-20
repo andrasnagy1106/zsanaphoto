@@ -23,6 +23,7 @@ function renderOrderDetails(row: Awaited<ReturnType<typeof listPhotoOrders>>[num
     <PhotoOrderDetailsDialog
       order={row.order}
       customerName={row.booking.customerName}
+      childName={row.booking.childName}
       bookingNumber={row.booking.bookingNumber}
       photoPublicationConsent={row.booking.photoPublicationConsent}
       items={row.items}
@@ -83,6 +84,7 @@ export default async function AdminPhotoOrdersPage({ searchParams }: AdminPhotoO
                 includesDigital: order.includesDigital,
               },
               customerName: booking.customerName,
+              childName: booking.childName,
               bookingNumber: booking.bookingNumber,
               photoPublicationConsent: booking.photoPublicationConsent,
               items: items.map(({ id, photoId, photoTitle, size, quantity, unitPrice, totalPrice }) => ({

@@ -17,6 +17,7 @@ const props = {
     includesDigital: true,
   },
   customerName: "Teszt Ügyfél",
+  childName: "Teszt Lili",
   bookingNumber: "ZS-TEST",
   photoPublicationConsent: true,
   items: [{
@@ -52,6 +53,19 @@ describe("photo order details and print", () => {
       expect(html).toContain(value);
     }
     expect(html.match(/class="photo-order-print-check"/g)).toHaveLength(2);
+  });
+
+  it("prints the child's name once, just before the online publication consent", () => {
+    const html = renderToStaticMarkup(<PhotoOrderPrintContent {...props} />);
+    expect(html).toContain(
+      "<p><strong>Gyermek neve:</strong> Teszt Lili</p><p><strong>Online képmegjelenés:</strong> Hozzájárult</p>",
+    );
+    expect(html.match(/Gyermek neve:/g)).toHaveLength(1);
+  });
+
+  it.each([null, "   "])("omits the child name line when the name is missing (%j)", (childName) => {
+    const html = renderToStaticMarkup(<PhotoOrderPrintContent {...props} childName={childName} />);
+    expect(html).not.toContain("Gyermek neve:");
   });
 
   it("handles missing billing details, notes and legacy totals", () => {

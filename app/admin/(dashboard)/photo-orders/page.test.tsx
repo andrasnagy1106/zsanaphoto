@@ -33,7 +33,10 @@ describe("filtered photo order printing", () => {
     };
     mocks.listPhotoOrders.mockResolvedValue([{
       order,
-      booking: { customerName: "Teszt Ügyfél", bookingNumber: "ZS-TEST", photoPublicationConsent: null },
+      booking: {
+        customerName: "Teszt Ügyfél", childName: "Teszt Lili",
+        bookingNumber: "ZS-TEST", photoPublicationConsent: null,
+      },
       items: [item],
     }]);
     mocks.listServices.mockResolvedValue([]);
@@ -45,7 +48,7 @@ describe("filtered photo order printing", () => {
     expect(mocks.listPhotoOrders).toHaveBeenCalledWith({ status: "NEW", serviceId: "event-test" });
     expect(mocks.printButton).toHaveBeenCalledWith({
       orders: [{
-        order, customerName: "Teszt Ügyfél", bookingNumber: "ZS-TEST",
+        order, customerName: "Teszt Ügyfél", childName: "Teszt Lili", bookingNumber: "ZS-TEST",
         photoPublicationConsent: null, items: [item],
       }],
     });

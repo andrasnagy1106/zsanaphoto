@@ -159,6 +159,7 @@ export default async function AdminBookingDetailPage({ params }: AdminBookingDet
                   <PhotoOrderDetailsDialog
                     order={orderRow.order}
                     customerName={orderRow.booking.customerName}
+                    childName={orderRow.booking.childName}
                     bookingNumber={orderRow.booking.bookingNumber}
                     photoPublicationConsent={orderRow.booking.photoPublicationConsent}
                     items={orderRow.items}
