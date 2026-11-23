@@ -17,11 +17,13 @@ import {
 import {
   savePhotoOrderDeadlineForBooking,
   sendPhotoReadyEmailsForEvent,
+  resendPhotoReadyEmail,
 } from "@/lib/services/photo-notification-service";
 import { eventPhotoEditSchema, photoMoveDirectionSchema } from "@/lib/validation/photo-edit";
 import {
   savePhotoOrderDeadlineSchema,
   sendPhotoReadyEmailSchema,
+  resendPhotoReadyEmailSchema,
 } from "@/lib/validation/photo-notification";
 import type { Booking } from "@/db/schema";
 import { MAX_EVENT_PHOTO_UPLOAD_SIZE_BYTES } from "@/lib/utils/event-photo-upload";
@@ -31,6 +33,25 @@ export interface AdminPhotoActionResult {
   success: boolean;
   count?: number;
   error?: string;
+  queued?: boolean;
+}
+
+export async function resendPhotoReadyEmailAction(input: unknown): Promise<AdminPhotoActionResult> {
+  await requireAdmin();
+  const parsed = resendPhotoReadyEmailSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok." };
+  try {
+    const result = await resendPhotoReadyEmail(parsed.data);
+    return { success: true, queued: result === "queued" };
+  } catch (error) {
+    console.error("[resendPhotoReadyEmailAction] Failed:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Az email újraküldése nem sikerült." };
+  } finally {
+    revalidatePath("/admin/event-photos");
+    revalidatePath("/admin/bookings");
+    revalidatePath(`/admin/bookings/${parsed.data.bookingId}`);
+    revalidatePath("/admin/photo-orders");
+  }
 }
 
 export async function savePhotoOrderDeadlineAction(input: unknown): Promise<AdminPhotoActionResult> {

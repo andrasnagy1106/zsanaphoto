@@ -1,11 +1,12 @@
-import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { and, eq, isNotNull, like, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { bookings, eventPhotos, photoEventNotices, services } from "@/db/schema";
+import { bookings, emailOutbox, eventPhotos, photoEventNotices, services } from "@/db/schema";
 import { getEmailProvider } from "@/lib/providers/email";
+import { buildPhotoReadyEmail } from "@/lib/providers/email/templates";
 import { NotFoundError } from "@/lib/utils/errors";
 import { getZonedDateIso } from "@/lib/utils/time";
 import { resolvePaymentInformation } from "@/lib/payment-information";
-import type { PhotoReadyEmailMode } from "@/lib/validation/photo-notification";
+import { resendPhotoReadyEmailSchema, type PhotoReadyEmailMode, type ResendPhotoReadyEmailInput } from "@/lib/validation/photo-notification";
 import { sleep } from "@/lib/utils/sleep";
 
 /** Pause between photo-ready emails to stay under Resend's per-second API rate limit. */
@@ -45,6 +46,84 @@ export interface SendPhotoReadyEmailsResult {
   failed: number;
   total: number;
   skipped: number;
+}
+
+export async function resendPhotoReadyEmail(input: ResendPhotoReadyEmailInput): Promise<"queued" | "started"> {
+  const { bookingId, currentEmail, email } = resendPhotoReadyEmailSchema.parse(input);
+  const [row] = await db.select({ booking: bookings, service: services })
+    .from(bookings).innerJoin(services, eq(bookings.serviceId, services.id))
+    .where(eq(bookings.id, bookingId)).limit(1);
+  if (!row) throw new NotFoundError("A kiválasztott ügyfél nem található.");
+  const { booking, service } = row;
+  if (!booking.pin) throw new Error("Ehhez az ügyfélhez nincs PIN-kód rendelve.");
+  const pin = booking.pin;
+
+  const [notice] = await db.select().from(photoEventNotices)
+    .where(and(eq(photoEventNotices.serviceId, service.id), eq(photoEventNotices.eventDate, getZonedDateIso(booking.startAt))))
+    .limit(1);
+  if (!notice?.orderDeadline) throw new Error("Mentsd el a rendelési határidőt az email küldése előtt.");
+  const [photo] = await db.select({ id: eventPhotos.id }).from(eventPhotos)
+    .where(eq(eventPhotos.bookingId, bookingId)).limit(1);
+  if (!photo) throw new Error("Az ügyfél albumához még nincs feltöltött kép.");
+
+  const emailInput = {
+    customerName: booking.customerName,
+    childName: booking.childName,
+    customerEmail: email,
+    serviceName: service.name,
+    pin,
+    orderDeadline: notice.orderDeadline,
+    ...resolvePaymentInformation(service, notice, true),
+    galleryUrl: (process.env.NEXT_PUBLIC_SITE_URL || "https://zsanaphoto.hu").replace(/\/$/, ""),
+  };
+  const template = buildPhotoReadyEmail(emailInput);
+  const pinLine = `\nBelépési PIN-kód: ${pin}\n`;
+  const queued = await db.transaction(async (tx) => {
+    const [updated] = await tx.update(bookings)
+      .set({ customerEmail: email, updatedAt: new Date() })
+      .where(and(eq(bookings.id, bookingId), sql`lower(trim(${bookings.customerEmail})) = ${currentEmail}`, eq(bookings.pin, pin)))
+      .returning({ id: bookings.id });
+    if (!updated) throw new Error("Az ügyfél adatai időközben megváltoztak. Frissítsd az oldalt, majd próbáld újra.");
+
+    const updatedEmails = await tx.update(emailOutbox).set({ toAddress: email, updatedAt: new Date() })
+      .where(and(
+        eq(emailOutbox.status, "QUEUED"),
+        sql`lower(trim(${emailOutbox.toAddress})) = ${currentEmail}`,
+        like(emailOutbox.body, "Kedves %"),
+        or(
+          sql`strpos(E'\n' || ${emailOutbox.body} || E'\n', ${`\nFoglalási azonosító: ${booking.bookingNumber}\n`}) > 0`,
+          sql`strpos(E'\n' || ${emailOutbox.body} || E'\n', ${pinLine}) > 0`,
+        ),
+      )).returning({ id: emailOutbox.id, subject: emailOutbox.subject, body: emailOutbox.body });
+    const photoEmails = updatedEmails.filter((item) =>
+      item.subject === template.subject && `\n${item.body}\n`.includes(pinLine));
+    for (const item of photoEmails) {
+      await tx.update(emailOutbox).set({ body: template.text, updatedAt: new Date() })
+        .where(eq(emailOutbox.id, item.id));
+    }
+    if (photoEmails.length > 0) {
+      await tx.update(bookings).set({ photoReadyEmailSentAt: new Date(), updatedAt: new Date() })
+        .where(eq(bookings.id, bookingId));
+    }
+    return photoEmails.length > 0;
+  });
+
+  if (queued) return "queued";
+
+  try {
+    await getEmailProvider().sendPhotoReadyEmail(emailInput);
+  } catch (error) {
+    console.error(`[photo-notification-service] Failed to resend photo-ready email for ${booking.bookingNumber}:`, error);
+    throw new Error("Az e-mail cím elmentve, de az értesítő küldése nem sikerült. Próbáld újra.");
+  }
+  const now = new Date();
+  try {
+    await db.update(bookings).set({ photoReadyEmailSentAt: now, updatedAt: now }).where(eq(bookings.id, bookingId));
+  } catch (error) {
+    console.error(`[photo-notification-service] Failed to record photo-ready email for ${booking.bookingNumber}:`, error);
+    throw new Error("Az e-mail cím elmentve és a küldés elindult, de a küldési állapot mentése nem sikerült. Újrapróbálás előtt ellenőrizd a Resendet.");
+  }
+  return "started";
 }
 
 /**

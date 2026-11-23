@@ -30,4 +30,17 @@ export const sendPhotoReadyEmailSchema = z.object({
   mode: z.enum(["UNSENT", "ALL"]).optional().default("UNSENT"),
 });
 
+const emailSchema = z.string().trim().toLowerCase().email("Adj meg érvényes e-mail címet.").max(200);
+
+export const resendPhotoReadyEmailSchema = z.object({
+  bookingId: z.string().uuid(),
+  currentEmail: z.string().trim().toLowerCase().max(200),
+  email: emailSchema,
+  confirmEmail: emailSchema,
+}).refine(({ email, confirmEmail }) => email === confirmEmail, {
+  message: "A két e-mail cím nem egyezik.",
+  path: ["confirmEmail"],
+});
+
+export type ResendPhotoReadyEmailInput = z.infer<typeof resendPhotoReadyEmailSchema>;
 export type PhotoReadyEmailMode = z.infer<typeof sendPhotoReadyEmailSchema>["mode"];

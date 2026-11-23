@@ -1,13 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { PgDialect } from "drizzle-orm/pg-core";
+import { bookings, emailOutbox } from "@/db/schema";
 import { getPaymentInformationForBooking } from "./payment-information-service";
-import { savePhotoOrderDeadlineForBooking, sendPhotoReadyEmailsForEvent } from "./photo-notification-service";
+import { resendPhotoReadyEmail, savePhotoOrderDeadlineForBooking, sendPhotoReadyEmailsForEvent } from "./photo-notification-service";
 
 const mocks = vi.hoisted(() => ({
-  select: vi.fn(), insert: vi.fn(), update: vi.fn(), send: vi.fn(), sleep: vi.fn(),
+  select: vi.fn(), insert: vi.fn(), update: vi.fn(), transaction: vi.fn(), send: vi.fn(), sleep: vi.fn(),
 }));
 vi.mock("@/lib/utils/sleep", () => ({ sleep: mocks.sleep }));
 vi.mock("@/db/client", () => ({ db: {
-  select: mocks.select, insert: mocks.insert, update: mocks.update,
+  select: mocks.select, insert: mocks.insert, update: mocks.update, transaction: mocks.transaction,
 } }));
 vi.mock("@/lib/providers/email", () => ({ getEmailProvider: () => ({ sendPhotoReadyEmail: mocks.send }) }));
 
@@ -97,6 +99,112 @@ describe("sendPhotoReadyEmailsForEvent modes", () => {
     expect(await sendPhotoReadyEmailsForEvent(booking.id)).toEqual({ sent: 1, failed: 0, total: 1, skipped: 1 });
     expect(mocks.send).toHaveBeenCalledTimes(1);
     expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({ pin: failedBefore.pin }));
+  });
+
+  describe("resendPhotoReadyEmail", () => {
+    const input = {
+      bookingId: "00000000-0000-4000-8000-000000000001",
+      currentEmail: "anna@example.com",
+      email: "new@example.com",
+      confirmEmail: "new@example.com",
+    };
+    const recipient = { ...booking, id: input.bookingId };
+
+    function setup(queued: Array<{ id: string; subject: string; body: string }> = [], updated = true) {
+      selectRows([{ booking: recipient, service }]);
+      selectRows([notice]);
+      selectRows([{ id: "photo-1" }]);
+      const bookingWhere = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue(updated ? [{ id: input.bookingId }] : []) });
+      const queueWhere = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue(queued) });
+      const extraUpdates: Array<{ table: unknown; values: unknown }> = [];
+      let updateCount = 0;
+      const tx = {
+        update: vi.fn((table) => ({
+          set: vi.fn((values) => {
+            updateCount += 1;
+            if (updateCount === 1) return { where: bookingWhere };
+            if (updateCount === 2) return { where: queueWhere };
+            extraUpdates.push({ table, values });
+            return { where: vi.fn().mockResolvedValue(undefined) };
+          }),
+        })),
+      };
+      mocks.transaction.mockImplementation(async (callback) => callback(tx));
+      mocks.update.mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) });
+      mocks.send.mockResolvedValue(undefined);
+      return { tx, bookingWhere, queueWhere, extraUpdates };
+    }
+
+    it("updates only the selected booking and sends its notification to the corrected address", async () => {
+      const { bookingWhere, queueWhere } = setup();
+      await expect(resendPhotoReadyEmail(input)).resolves.toBe("started");
+      const bookingQuery = new PgDialect().sqlToQuery(bookingWhere.mock.calls[0][0]);
+      expect(bookingQuery.params).toEqual([input.bookingId, input.currentEmail, booking.pin]);
+      const queueQuery = new PgDialect().sqlToQuery(queueWhere.mock.calls[0][0]);
+      expect(queueQuery.params).toEqual([
+        "QUEUED", input.currentEmail, "Kedves %",
+        `\nFoglalási azonosító: ${booking.bookingNumber}\n`, `\nBelépési PIN-kód: ${booking.pin}\n`,
+      ]);
+      expect(mocks.send).toHaveBeenCalledOnce();
+      expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({ customerEmail: input.email, pin: booking.pin }));
+    });
+
+    it("updates an existing queued photo notification instead of sending a duplicate", async () => {
+      const { extraUpdates } = setup([{
+        id: "queued-1", subject: "Elkészültek a fotók - ZsaNa Photo",
+        body: `Kedves Anna!\n\nBelépési PIN-kód: ${booking.pin}\n`,
+      }]);
+      await expect(resendPhotoReadyEmail(input)).resolves.toBe("queued");
+      expect(mocks.send).not.toHaveBeenCalled();
+      expect(extraUpdates).toEqual([
+        { table: emailOutbox, values: expect.objectContaining({ body: expect.stringContaining(booking.pin) }) },
+        { table: bookings, values: expect.objectContaining({ photoReadyEmailSentAt: expect.any(Date) }) },
+      ]);
+    });
+
+    it("does not suppress the resend for another queued email type", async () => {
+      setup([{ id: "queued-1", subject: "Más értesítés", body: `Kedves Anna!\nBelépési PIN-kód: ${booking.pin}\n` }]);
+      await expect(resendPhotoReadyEmail(input)).resolves.toBe("started");
+      expect(mocks.send).toHaveBeenCalledOnce();
+    });
+
+    it("rejects stale addresses before changing the queue or sending", async () => {
+      const { queueWhere } = setup([], false);
+      await expect(resendPhotoReadyEmail(input)).rejects.toThrow("időközben megváltoztak");
+      expect(queueWhere).not.toHaveBeenCalled();
+      expect(mocks.send).not.toHaveBeenCalled();
+    });
+
+    it("allows correcting a legacy invalid stored address", async () => {
+      setup();
+      await expect(resendPhotoReadyEmail({ ...input, currentEmail: "old-invalid-address" })).resolves.toBe("started");
+      expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({ customerEmail: input.email }));
+    });
+
+    it("refuses to change an address when the recipient has no photos", async () => {
+      selectRows([{ booking: recipient, service }]);
+      selectRows([notice]);
+      selectRows([]);
+      await expect(resendPhotoReadyEmail(input)).rejects.toThrow("még nincs feltöltött kép");
+      expect(mocks.transaction).not.toHaveBeenCalled();
+      expect(mocks.send).not.toHaveBeenCalled();
+    });
+
+    it("reports that the address was saved if sending fails", async () => {
+      setup();
+      mocks.send.mockRejectedValue(new Error("Resend error"));
+      const log = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        await expect(resendPhotoReadyEmail(input)).rejects.toThrow("cím elmentve, de");
+      } finally {
+        log.mockRestore();
+      }
+    });
+
+    it("rejects mismatched confirmation without changing anything", async () => {
+      await expect(resendPhotoReadyEmail({ ...input, confirmEmail: "other@example.com" })).rejects.toThrow("nem egyezik");
+      expect(mocks.select).not.toHaveBeenCalled();
+    });
   });
 
   it("resends to every parent in ALL mode", async () => {

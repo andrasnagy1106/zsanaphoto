@@ -10,6 +10,7 @@ import {
   moveEventPhotoAction,
   createEventPhotoUploadSignatureAction,
   registerUploadedEventPhotoAction,
+  resendPhotoReadyEmailAction,
   savePhotoOrderDeadlineAction,
   sendPhotoReadyEmailsAction,
   updateCustomerPhotoViewModeAction,
@@ -64,6 +65,9 @@ export function EventPhotoManager({
   const fileInputId = useId();
   const orderDeadlineInputId = useId();
   const paymentDeadlineInputId = useId();
+  const recipientInputId = useId();
+  const resendEmailInputId = useId();
+  const resendConfirmInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
@@ -84,6 +88,10 @@ export function EventPhotoManager({
   const [isUpdatingMode, startModeTransition] = useTransition();
   const [isSavingDeadline, startDeadlineTransition] = useTransition();
   const [isSendingPhotoReadyEmail, startPhotoReadyEmailTransition] = useTransition();
+  const [isResendingPhotoReadyEmail, startResendPhotoReadyEmailTransition] = useTransition();
+  const [resendRecipientId, setResendRecipientId] = useState("");
+  const [resendError, setResendError] = useState<string | null>(null);
+  const [resendSuccess, setResendSuccess] = useState<string | null>(null);
   const [isMoving, startMoveTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -109,6 +117,7 @@ export function EventPhotoManager({
     (event) => event.photoReadyEmailSentAt !== null,
   ).length;
   const photoEventUnsentCount = photoEventRecipients.length - photoEventSentCount;
+  const resendRecipient = photoEventRecipients.find((event) => event.bookingId === resendRecipientId);
   const eventKey = selectedEvent
     ? `${selectedEvent.serviceId}:${getZonedDateIso(selectedEvent.startAt)}`
     : "";
@@ -121,7 +130,7 @@ export function EventPhotoManager({
   const noticeIsDirty = noticeDraft.orderDeadline !== savedNotice.orderDeadline ||
     noticeDraft.paymentDeadline !== savedNotice.paymentDeadline ||
     noticeDraft.paymentInformation !== savedNotice.paymentInformation;
-  const noticeIsPending = isSavingDeadline || isSendingPhotoReadyEmail;
+  const noticeIsPending = isSavingDeadline || isSendingPhotoReadyEmail || isResendingPhotoReadyEmail;
   const paymentPreview = formatPaymentInformation({
     paymentInformation: noticeDraft.paymentInformation ?? selectedEvent?.defaultPaymentInformation ?? "",
     paymentDeadline: noticeDraft.paymentDeadline,
@@ -157,9 +166,9 @@ export function EventPhotoManager({
     if (!selectedEvent || photoEventRecipients.length === 0) return;
     const confirmText = mode === "ALL"
       ? `Újraküldöd a képek elkészültéről szóló emailt MIND a ${photoEventRecipients.length} szülőnek? ` +
-        `Az a ${photoEventSentCount} szülő is újra megkapja, aki már kapott értesítőt.`
-      : `Elküldöd a képek elkészültéről szóló emailt annak a ${photoEventUnsentCount} szülőnek, aki még nem kapott értesítőt? ` +
-        `Aki már megkapta (${photoEventSentCount}), nem kap újabb emailt.`;
+        `Annak a ${photoEventSentCount} szülőnek is újra elindul a küldés, akinek már indítottál értesítőt.`
+      : `Elküldöd a képek elkészültéről szóló emailt annak a ${photoEventUnsentCount} szülőnek, akinek még nem indult értesítő? ` +
+        `Akinek már elindult (${photoEventSentCount}), nem kap újabb emailt.`;
     if (!window.confirm(confirmText)) return;
 
     setErrorMessage(null);
@@ -173,6 +182,34 @@ export function EventPhotoManager({
         setErrorMessage(result.error ?? "Az email küldése nem sikerült.");
       }
       router.refresh();
+    });
+  }
+
+  function handleResendPhotoReadyEmail(formData: FormData) {
+    if (!resendRecipient) return;
+    if (!window.confirm(`Elmented az új e-mail címet és újraküldöd az értesítőt ${resendRecipient.customerName} részére (PIN: ${resendRecipient.pin})?`)) return;
+    setResendError(null);
+    setResendSuccess(null);
+    startResendPhotoReadyEmailTransition(async () => {
+      try {
+        const result = await resendPhotoReadyEmailAction({
+          bookingId: resendRecipient.bookingId,
+          currentEmail: resendRecipient.customerEmail,
+          email: formData.get("email"),
+          confirmEmail: formData.get("confirmEmail"),
+        });
+        if (result.success) {
+          setResendSuccess(result.queued
+            ? "Az e-mail cím elmentve, a várólistán lévő értesítő az új címre fog menni."
+            : "Az e-mail cím elmentve, az értesítő küldése elindult. Napi limit esetén várólistára kerülhet.");
+        } else {
+          setResendError(result.error ?? "Az email újraküldése nem sikerült.");
+        }
+        router.refresh();
+      } catch (error) {
+        console.error("[EventPhotoManager] Failed to resend photo-ready email:", error);
+        setResendError("Az eredmény nem ellenőrizhető. Frissítsd az oldalt, mielőtt újrapróbálod.");
+      }
     });
   }
 
@@ -576,6 +613,7 @@ export function EventPhotoManager({
                 disabled={
                   isSendingPhotoReadyEmail ||
                   isSavingDeadline ||
+                  isResendingPhotoReadyEmail ||
                   !selectedEvent.orderDeadline ||
                   noticeIsDirty ||
                   selectedEvent.photoCount === 0 ||
@@ -596,6 +634,7 @@ export function EventPhotoManager({
                   disabled={
                     isSendingPhotoReadyEmail ||
                     isSavingDeadline ||
+                    isResendingPhotoReadyEmail ||
                     !selectedEvent.orderDeadline ||
                     noticeIsDirty ||
                     selectedEvent.photoCount === 0
@@ -611,21 +650,74 @@ export function EventPhotoManager({
             ) : (
               <div className="mt-2 space-y-1 text-xs text-foreground/60">
                 <p>
-                  A címzettek közül eddig {photoEventSentCount} szülő kapott értesítőt, {photoEventUnsentCount} még nem.
+                  A címzettek közül eddig {photoEventSentCount} szülőnek elindult az értesítés, {photoEventUnsentCount} szülőnek még nem. Ez nem igazolja a kézbesítést.
                 </p>
                 {photoEventSentCount > 0 && (
                   <>
                     <p>
                       <strong className="text-foreground/80">Küldés a még nem értesített szülőknek:</strong>{" "}
-                      csak azok kapnak emailt, akik még nem kaptak (pl. újonnan hozzáadott szülők, vagy akiknél a küldés nem sikerült). Aki már megkapta, nem kap újat.
+                      azoknak indul email, akiknek még nincs rögzített küldése (pl. új szülők, vagy akiknél a küldés azonnal hibára futott). A később visszapattant leveleket ez nem ismeri fel.
                     </p>
                     <p>
                       <strong className="text-foreground/80">Újraküldés mindenkinek:</strong>{" "}
-                      az esemény összes szülője újra megkapja az emailt, azok is, akik már kaptak. Akkor használd, ha például a tájékoztató szövege vagy a határidő megváltozott.
+                      az esemény összes szülőjének újra elindul az email, azoknak is, akiknek már küldtél. Akkor használd, ha például a tájékoztató szövege vagy a határidő megváltozott.
                     </p>
                   </>
                 )}
               </div>
+            )}
+            {photoEventRecipients.length > 0 && (
+              <details className="mt-4 border-t border-accent/20 pt-3">
+                <summary className="cursor-pointer text-xs font-semibold text-foreground">E-mail cím javítása és egyedi újraküldés</summary>
+                <p className="mt-2 text-xs text-foreground/70">
+                  A Resendben ellenőrizd, melyik címre nem érkezett meg a levél. Itt csak a kiválasztott foglalás címe módosul, és csak az ő értesítője indul újra.
+                </p>
+                <form key={resendRecipient?.bookingId ?? "none"} className="mt-3 space-y-3" onSubmit={(event) => {
+                  event.preventDefault();
+                  handleResendPhotoReadyEmail(new FormData(event.currentTarget));
+                }}>
+                  <div>
+                    <label htmlFor={recipientInputId} className="block text-xs font-semibold">Címzett kiválasztása</label>
+                    <select id={recipientInputId} value={resendRecipient?.bookingId ?? ""} disabled={noticeIsPending}
+                      onChange={(event) => {
+                        setResendRecipientId(event.target.value);
+                        setResendError(null);
+                        setResendSuccess(null);
+                      }}
+                      className="mt-1 min-h-10 w-full rounded-md border border-border bg-white px-3 text-sm disabled:opacity-50">
+                      <option value="">Válassz címzettet</option>
+                      {photoEventRecipients.map((recipient) => (
+                        <option key={recipient.bookingId} value={recipient.bookingId}>
+                          {recipient.customerName}{recipient.childName ? ` (${recipient.childName})` : ""} — {recipient.pin} — {recipient.customerEmail}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {resendRecipient && (
+                    <>
+                      <p className="text-xs text-foreground/70">Jelenlegi cím: <strong className="break-all">{resendRecipient.customerEmail}</strong></p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <label htmlFor={resendEmailInputId} className="block text-xs font-semibold">Új e-mail cím</label>
+                          <input id={resendEmailInputId} name="email" type="email" required maxLength={200} disabled={noticeIsPending}
+                            className="mt-1 min-h-10 w-full rounded-md border border-border bg-white px-3 text-sm disabled:opacity-50" />
+                        </div>
+                        <div>
+                          <label htmlFor={resendConfirmInputId} className="block text-xs font-semibold">Új e-mail cím még egyszer</label>
+                          <input id={resendConfirmInputId} name="confirmEmail" type="email" required maxLength={200} disabled={noticeIsPending}
+                            className="mt-1 min-h-10 w-full rounded-md border border-border bg-white px-3 text-sm disabled:opacity-50" />
+                        </div>
+                      </div>
+                      <button type="submit" disabled={noticeIsPending || !selectedEvent.orderDeadline || noticeIsDirty}
+                        className="min-h-10 rounded-md bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">
+                        {isResendingPhotoReadyEmail ? "Küldés..." : "Cím mentése és értesítő újraküldése"}
+                      </button>
+                      {resendError && <p role="alert" className="text-xs font-medium text-red-700">{resendError}</p>}
+                      {resendSuccess && <p role="status" className="text-xs font-medium text-emerald-700">{resendSuccess}</p>}
+                    </>
+                  )}
+                </form>
+              </details>
             )}
           </div>
         )}
