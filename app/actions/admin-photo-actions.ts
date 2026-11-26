@@ -16,12 +16,14 @@ import {
 } from "@/lib/services/photo-storage-service";
 import {
   savePhotoOrderDeadlineForBooking,
+  sendPhotoReadyEmailToBooking,
   sendPhotoReadyEmailsForEvent,
   resendPhotoReadyEmail,
 } from "@/lib/services/photo-notification-service";
 import { eventPhotoEditSchema, photoMoveDirectionSchema } from "@/lib/validation/photo-edit";
 import {
   savePhotoOrderDeadlineSchema,
+  sendPhotoReadyEmailToBookingSchema,
   sendPhotoReadyEmailSchema,
   resendPhotoReadyEmailSchema,
 } from "@/lib/validation/photo-notification";
@@ -100,6 +102,25 @@ export async function sendPhotoReadyEmailsAction(input: unknown): Promise<AdminP
     return { success: true, count: result.sent };
   } catch (error) {
     console.error("[sendPhotoReadyEmailsAction] Failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Az email küldése nem sikerült.",
+    };
+  }
+}
+
+export async function sendPhotoReadyEmailToBookingAction(input: unknown): Promise<AdminPhotoActionResult> {
+  await requireAdmin();
+  const parsed = sendPhotoReadyEmailToBookingSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Érvénytelen ügyfélazonosító." };
+
+  try {
+    await sendPhotoReadyEmailToBooking(parsed.data.bookingId);
+    revalidatePath("/admin/event-photos");
+    revalidatePath(`/admin/bookings/${parsed.data.bookingId}`);
+    return { success: true, count: 1 };
+  } catch (error) {
+    console.error("[sendPhotoReadyEmailToBookingAction] Failed:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Az email küldése nem sikerült.",

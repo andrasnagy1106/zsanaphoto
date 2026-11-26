@@ -30,6 +30,10 @@ export const sendPhotoReadyEmailSchema = z.object({
   mode: z.enum(["UNSENT", "ALL"]).optional().default("UNSENT"),
 });
 
+export const sendPhotoReadyEmailToBookingSchema = z.object({
+  bookingId: z.string().uuid(),
+});
+
 const emailSchema = z.string().trim().toLowerCase().email("Adj meg érvényes e-mail címet.").max(200);
 
 export const resendPhotoReadyEmailSchema = z.object({

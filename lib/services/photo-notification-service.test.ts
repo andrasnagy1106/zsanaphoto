@@ -2,7 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { bookings, emailOutbox } from "@/db/schema";
 import { getPaymentInformationForBooking } from "./payment-information-service";
-import { resendPhotoReadyEmail, savePhotoOrderDeadlineForBooking, sendPhotoReadyEmailsForEvent } from "./photo-notification-service";
+import {
+  resendPhotoReadyEmail,
+  savePhotoOrderDeadlineForBooking,
+  sendPhotoReadyEmailToBooking,
+  sendPhotoReadyEmailsForEvent,
+} from "./photo-notification-service";
 
 const mocks = vi.hoisted(() => ({
   select: vi.fn(), insert: vi.fn(), update: vi.fn(), transaction: vi.fn(), send: vi.fn(), sleep: vi.fn(),
@@ -79,6 +84,38 @@ describe("photo event payment settings", () => {
       orderDeadline: notice.orderDeadline, paymentInformation: service.paymentInformation,
       paymentDeadline: "2026-11-20",
     });
+  });
+});
+
+describe("sendPhotoReadyEmailToBooking", () => {
+  it("sends only to the selected booking and records its notification", async () => {
+    selectRows([{ booking, service }]);
+    selectRows([notice]);
+    selectRows([{ id: "photo-1" }]);
+    mocks.send.mockResolvedValue(undefined);
+    const set = vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    mocks.update.mockReturnValue({ set });
+
+    await sendPhotoReadyEmailToBooking(booking.id);
+
+    expect(mocks.send).toHaveBeenCalledOnce();
+    expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({
+      customerEmail: booking.customerEmail,
+      pin: booking.pin,
+    }));
+    expect(set).toHaveBeenCalledWith(expect.objectContaining({
+      photoReadyEmailSentAt: expect.any(Date),
+    }));
+  });
+
+  it("does not send when the selected booking has no uploaded photo", async () => {
+    selectRows([{ booking, service }]);
+    selectRows([notice]);
+    selectRows([]);
+
+    await expect(sendPhotoReadyEmailToBooking(booking.id)).rejects.toThrow("még nincs feltöltött kép");
+    expect(mocks.send).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
   });
 });
 

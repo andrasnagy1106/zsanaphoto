@@ -48,6 +48,75 @@ export interface SendPhotoReadyEmailsResult {
   skipped: number;
 }
 
+export async function sendPhotoReadyEmailToBooking(bookingId: string): Promise<void> {
+  const [row] = await db
+    .select({ booking: bookings, service: services })
+    .from(bookings)
+    .innerJoin(services, eq(bookings.serviceId, services.id))
+    .where(eq(bookings.id, bookingId))
+    .limit(1);
+
+  if (!row) throw new NotFoundError("A kiválasztott ügyfél nem található.");
+  const { booking, service } = row;
+  if (!booking.pin) throw new Error("Ehhez az ügyfélhez nincs PIN-kód rendelve.");
+
+  const [notice] = await db
+    .select()
+    .from(photoEventNotices)
+    .where(and(
+      eq(photoEventNotices.serviceId, service.id),
+      eq(photoEventNotices.eventDate, getZonedDateIso(booking.startAt)),
+    ))
+    .limit(1);
+
+  if (!notice?.orderDeadline) {
+    throw new Error("Mentsd el a rendelési határidőt az email küldése előtt.");
+  }
+
+  const [photo] = await db
+    .select({ id: eventPhotos.id })
+    .from(eventPhotos)
+    .where(eq(eventPhotos.bookingId, bookingId))
+    .limit(1);
+
+  if (!photo) throw new Error("Az ügyfél albumához még nincs feltöltött kép.");
+
+  const emailInput = {
+    customerName: booking.customerName,
+    childName: booking.childName,
+    customerEmail: booking.customerEmail,
+    serviceName: service.name,
+    pin: booking.pin,
+    orderDeadline: notice.orderDeadline,
+    ...resolvePaymentInformation(service, notice, true),
+    galleryUrl: (process.env.NEXT_PUBLIC_SITE_URL || "https://zsanaphoto.hu").replace(/\/$/, ""),
+  };
+
+  try {
+    await getEmailProvider().sendPhotoReadyEmail(emailInput);
+  } catch (error) {
+    console.error(
+      `[photo-notification-service] Failed to send photo-ready email for ${booking.bookingNumber}:`,
+      error,
+    );
+    throw new Error("Az értesítő küldése nem sikerült. Próbáld újra.");
+  }
+
+  const sentAt = new Date();
+  try {
+    await db
+      .update(bookings)
+      .set({ photoReadyEmailSentAt: sentAt, updatedAt: sentAt })
+      .where(eq(bookings.id, bookingId));
+  } catch (error) {
+    console.error(
+      `[photo-notification-service] Failed to record photo-ready email for ${booking.bookingNumber}:`,
+      error,
+    );
+    throw new Error("Az értesítő elindult, de a küldési állapot mentése nem sikerült. Újrapróbálás előtt ellenőrizd a Resendet.");
+  }
+}
+
 export async function resendPhotoReadyEmail(input: ResendPhotoReadyEmailInput): Promise<"queued" | "started"> {
   const { bookingId, currentEmail, email } = resendPhotoReadyEmailSchema.parse(input);
   const [row] = await db.select({ booking: bookings, service: services })

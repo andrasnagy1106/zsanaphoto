@@ -12,6 +12,7 @@ import {
   registerUploadedEventPhotoAction,
   resendPhotoReadyEmailAction,
   savePhotoOrderDeadlineAction,
+  sendPhotoReadyEmailToBookingAction,
   sendPhotoReadyEmailsAction,
   updateCustomerPhotoViewModeAction,
   updateEventPhotoAction,
@@ -179,6 +180,27 @@ export function EventPhotoManager({
         setSuccessMessage(`${result.count} szülőnek elindult az email küldése.`);
       }
       if (!result.success) {
+        setErrorMessage(result.error ?? "Az email küldése nem sikerült.");
+      }
+      router.refresh();
+    });
+  }
+
+  function handleSendPhotoReadyEmailToSelectedCustomer() {
+    if (!selectedEvent) return;
+    const alreadySent = selectedEvent.photoReadyEmailSentAt !== null;
+    const confirmText = alreadySent
+      ? `Újraküldöd a képek elkészültéről szóló értesítőt ${selectedEvent.customerName} részére?`
+      : `Elküldöd a képek elkészültéről szóló értesítőt csak ${selectedEvent.customerName} részére?`;
+    if (!window.confirm(confirmText)) return;
+
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    startPhotoReadyEmailTransition(async () => {
+      const result = await sendPhotoReadyEmailToBookingAction({ bookingId: selectedEvent.bookingId });
+      if (result.success) {
+        setSuccessMessage(`Az értesítő küldése elindult ${selectedEvent.customerName} részére.`);
+      } else {
         setErrorMessage(result.error ?? "Az email küldése nem sikerült.");
       }
       router.refresh();
@@ -539,7 +561,7 @@ export function EventPhotoManager({
             <div>
               <h3 className="text-sm font-semibold text-foreground">Rendelési és fizetési tájékoztató</h3>
               <p className="mt-1 text-xs text-foreground/60">
-                A beállítások az azonos szolgáltatáshoz és fotózási naphoz tartozó összes albumnál közösek. A gomb külön emailt küld minden képpel rendelkező szülőnek, saját PIN-kóddal. Csak akkor indítsd el, ha minden album képei felkerültek.
+                A beállítások az azonos szolgáltatáshoz és fotózási naphoz tartozó összes albumnál közösek. Küldhetsz értesítőt csak a kiválasztott ügyfélnek, vagy csoportosan minden képpel rendelkező, még nem értesített szülőnek.
               </p>
             </div>
             <div className="mt-3 flex flex-wrap items-end gap-3">
@@ -599,6 +621,23 @@ export function EventPhotoManager({
             <div className="mt-3 flex flex-wrap gap-3">
               <button
                 type="button"
+                onClick={handleSendPhotoReadyEmailToSelectedCustomer}
+                disabled={
+                  noticeIsPending ||
+                  !selectedEvent.orderDeadline ||
+                  noticeIsDirty ||
+                  selectedEvent.photoCount === 0
+                }
+                className="min-h-10 rounded-md bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-dark disabled:opacity-50"
+              >
+                {isSendingPhotoReadyEmail
+                  ? "Email küldése..."
+                  : selectedEvent.photoReadyEmailSentAt
+                    ? "Értesítő újraküldése ennek az ügyfélnek"
+                    : "Képek elkészültek — küldés ennek az ügyfélnek"}
+              </button>
+              <button
+                type="button"
                 onClick={handleSaveOrderDeadline}
                 disabled={
                   noticeIsPending || !noticeIsDirty
@@ -619,7 +658,7 @@ export function EventPhotoManager({
                   selectedEvent.photoCount === 0 ||
                   photoEventUnsentCount === 0
                 }
-                className="min-h-10 rounded-md bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-dark disabled:opacity-50"
+                className="min-h-10 rounded-md border border-border bg-white px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
               >
                 {isSendingPhotoReadyEmail
                   ? "Email küldése..."
