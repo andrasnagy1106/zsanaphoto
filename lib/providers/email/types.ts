@@ -50,7 +50,7 @@ export interface PhotoReadyEmailInput {
   customerEmail: string;
   serviceName: string;
   pin: string;
-  orderDeadline: string;
+  orderDeadline: string | null;
   paymentInformation?: string | null;
   paymentDeadline?: string | null;
   galleryUrl: string;

@@ -125,6 +125,19 @@ describe("buildBookingCreatedEmail", () => {
 });
 
 describe("buildPhotoReadyEmail", () => {
+  it("omits the order deadline when none is set", () => {
+    const email = buildPhotoReadyEmail({
+      customerName: "Anna", customerEmail: "anna@example.com", serviceName: "Fotózás",
+      pin: "AB12345", orderDeadline: null, galleryUrl: "https://example.com",
+      paymentInformation: "Fizetés személyesen.", paymentDeadline: "2026-11-20",
+    });
+
+    expect(email.text).toContain("\nBelépési PIN-kód: AB12345\n");
+    expect(email.text).not.toContain("Rendelési határidő:");
+    expect(email.text).toContain("Fizetési határidő: 2026. 11. 20.");
+    expect(email.text).toContain("Fizetés személyesen.");
+  });
+
   it.each([null, "2026-11-20"])("uses only the event payment text and optional deadline (%s)", (paymentDeadline) => {
     const common = {
       customerName: "Anna", customerEmail: "anna@example.com",

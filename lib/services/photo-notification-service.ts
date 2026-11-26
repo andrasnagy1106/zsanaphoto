@@ -69,10 +69,6 @@ export async function sendPhotoReadyEmailToBooking(bookingId: string): Promise<v
     ))
     .limit(1);
 
-  if (!notice?.orderDeadline) {
-    throw new Error("Mentsd el a rendelési határidőt az email küldése előtt.");
-  }
-
   const [photo] = await db
     .select({ id: eventPhotos.id })
     .from(eventPhotos)
@@ -87,7 +83,7 @@ export async function sendPhotoReadyEmailToBooking(bookingId: string): Promise<v
     customerEmail: booking.customerEmail,
     serviceName: service.name,
     pin: booking.pin,
-    orderDeadline: notice.orderDeadline,
+    orderDeadline: notice?.orderDeadline ?? null,
     ...resolvePaymentInformation(service, notice, true),
     galleryUrl: (process.env.NEXT_PUBLIC_SITE_URL || "https://zsanaphoto.hu").replace(/\/$/, ""),
   };
@@ -130,7 +126,6 @@ export async function resendPhotoReadyEmail(input: ResendPhotoReadyEmailInput): 
   const [notice] = await db.select().from(photoEventNotices)
     .where(and(eq(photoEventNotices.serviceId, service.id), eq(photoEventNotices.eventDate, getZonedDateIso(booking.startAt))))
     .limit(1);
-  if (!notice?.orderDeadline) throw new Error("Mentsd el a rendelési határidőt az email küldése előtt.");
   const [photo] = await db.select({ id: eventPhotos.id }).from(eventPhotos)
     .where(eq(eventPhotos.bookingId, bookingId)).limit(1);
   if (!photo) throw new Error("Az ügyfél albumához még nincs feltöltött kép.");
@@ -141,7 +136,7 @@ export async function resendPhotoReadyEmail(input: ResendPhotoReadyEmailInput): 
     customerEmail: email,
     serviceName: service.name,
     pin,
-    orderDeadline: notice.orderDeadline,
+    orderDeadline: notice?.orderDeadline ?? null,
     ...resolvePaymentInformation(service, notice, true),
     galleryUrl: (process.env.NEXT_PUBLIC_SITE_URL || "https://zsanaphoto.hu").replace(/\/$/, ""),
   };
@@ -224,10 +219,6 @@ export async function sendPhotoReadyEmailsForEvent(
     ))
     .limit(1);
 
-  if (!notice?.orderDeadline) {
-    throw new Error("Mentsd el az óvodai fotózás rendelési határidejét az email küldése előtt.");
-  }
-
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://zsanaphoto.hu").replace(/\/$/, "");
   const recipients = await db
     .select({
@@ -276,7 +267,7 @@ export async function sendPhotoReadyEmailsForEvent(
         customerEmail: recipientBooking.customerEmail,
         serviceName: service.name,
         pin: recipientBooking.pin,
-        orderDeadline: notice.orderDeadline,
+        orderDeadline: notice?.orderDeadline ?? null,
         ...resolvePaymentInformation(service, notice, true),
         galleryUrl: siteUrl,
       });

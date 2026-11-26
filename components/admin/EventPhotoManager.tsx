@@ -567,7 +567,7 @@ export function EventPhotoManager({
             <div className="mt-3 flex flex-wrap items-end gap-3">
               <div>
                 <label htmlFor={orderDeadlineInputId} className="block text-xs font-semibold text-foreground">
-                  Képrendelési határidő
+                  Képrendelési határidő (opcionális)
                 </label>
                 <input
                   id={orderDeadlineInputId}
@@ -589,7 +589,7 @@ export function EventPhotoManager({
               </div>
             </div>
             <p className="mt-2 text-xs text-foreground/60">
-              A fizetési határidőt hagyd üresen, ha nem szeretnél megadni. A határidők tájékoztató jellegűek, nem zárják le a rendelést.
+              A határidőket hagyd üresen, ha nem szeretnél megadni. A megadott határidők tájékoztató jellegűek, nem zárják le a rendelést.
             </p>
             <div className="mt-4">
               <PaymentInformationEditor
@@ -624,7 +624,6 @@ export function EventPhotoManager({
                 onClick={handleSendPhotoReadyEmailToSelectedCustomer}
                 disabled={
                   noticeIsPending ||
-                  !selectedEvent.orderDeadline ||
                   noticeIsDirty ||
                   selectedEvent.photoCount === 0
                 }
@@ -653,7 +652,6 @@ export function EventPhotoManager({
                   isSendingPhotoReadyEmail ||
                   isSavingDeadline ||
                   isResendingPhotoReadyEmail ||
-                  !selectedEvent.orderDeadline ||
                   noticeIsDirty ||
                   selectedEvent.photoCount === 0 ||
                   photoEventUnsentCount === 0
@@ -674,7 +672,6 @@ export function EventPhotoManager({
                     isSendingPhotoReadyEmail ||
                     isSavingDeadline ||
                     isResendingPhotoReadyEmail ||
-                    !selectedEvent.orderDeadline ||
                     noticeIsDirty ||
                     selectedEvent.photoCount === 0
                   }
@@ -747,7 +744,7 @@ export function EventPhotoManager({
                             className="mt-1 min-h-10 w-full rounded-md border border-border bg-white px-3 text-sm disabled:opacity-50" />
                         </div>
                       </div>
-                      <button type="submit" disabled={noticeIsPending || !selectedEvent.orderDeadline || noticeIsDirty}
+                      <button type="submit" disabled={noticeIsPending || noticeIsDirty}
                         className="min-h-10 rounded-md bg-accent px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">
                         {isResendingPhotoReadyEmail ? "Küldés..." : "Cím mentése és értesítő újraküldése"}
                       </button>

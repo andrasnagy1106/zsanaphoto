@@ -88,6 +88,22 @@ describe("photo event payment settings", () => {
 });
 
 describe("sendPhotoReadyEmailToBooking", () => {
+  it("sends without a saved notice or order deadline using the service payment information", async () => {
+    selectRows([{ booking, service }]);
+    selectRows([]);
+    selectRows([{ id: "photo-1" }]);
+    mocks.send.mockResolvedValue(undefined);
+    mocks.update.mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) });
+
+    await sendPhotoReadyEmailToBooking(booking.id);
+
+    expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({
+      orderDeadline: null,
+      paymentInformation: service.paymentInformation,
+      pin: booking.pin,
+    }));
+  });
+
   it("sends only to the selected booking and records its notification", async () => {
     selectRows([{ booking, service }]);
     selectRows([notice]);
@@ -147,9 +163,13 @@ describe("sendPhotoReadyEmailsForEvent modes", () => {
     };
     const recipient = { ...booking, id: input.bookingId };
 
-    function setup(queued: Array<{ id: string; subject: string; body: string }> = [], updated = true) {
+    function setup(
+      queued: Array<{ id: string; subject: string; body: string }> = [],
+      updated = true,
+      eventNotice: typeof notice | null = notice,
+    ) {
       selectRows([{ booking: recipient, service }]);
-      selectRows([notice]);
+      selectRows(eventNotice ? [eventNotice] : []);
       selectRows([{ id: "photo-1" }]);
       const bookingWhere = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue(updated ? [{ id: input.bookingId }] : []) });
       const queueWhere = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue(queued) });
@@ -184,6 +204,16 @@ describe("sendPhotoReadyEmailsForEvent modes", () => {
       ]);
       expect(mocks.send).toHaveBeenCalledOnce();
       expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({ customerEmail: input.email, pin: booking.pin }));
+    });
+
+    it("resends to the corrected address without a saved notice", async () => {
+      setup([], true, null);
+      await expect(resendPhotoReadyEmail(input)).resolves.toBe("started");
+      expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({
+        customerEmail: input.email,
+        orderDeadline: null,
+        paymentInformation: service.paymentInformation,
+      }));
     });
 
     it("updates an existing queued photo notification instead of sending a duplicate", async () => {
@@ -250,6 +280,21 @@ describe("sendPhotoReadyEmailsForEvent modes", () => {
     expect(await sendPhotoReadyEmailsForEvent(booking.id, "ALL")).toEqual({ sent: 2, failed: 0, total: 2, skipped: 0 });
     expect(mocks.send.mock.calls.map(([input]) => input.pin)).toEqual([failedBefore.pin, notified.pin]);
     expect(mocks.sleep.mock.calls).toEqual([[600]]);
+  });
+
+  it("sends to eligible parents without an order deadline and keeps event payment settings", async () => {
+    selectRows([{ booking: failedBefore, service }]);
+    selectRows([{ ...notice, orderDeadline: null, paymentDeadline: "2026-11-20" }]);
+    selectRows([{ booking: failedBefore, photoCount: 2 }]);
+    mocks.send.mockResolvedValue(undefined);
+    mocks.update.mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) });
+
+    expect(await sendPhotoReadyEmailsForEvent(booking.id)).toEqual({ sent: 1, failed: 0, total: 1, skipped: 0 });
+    expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({
+      orderDeadline: null,
+      paymentDeadline: "2026-11-20",
+      paymentInformation: notice.paymentInformation,
+    }));
   });
 
   it("does not pause before a single email", async () => {

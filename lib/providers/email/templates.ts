@@ -115,7 +115,9 @@ ZsaNa Photo`,
 
 export function buildPhotoReadyEmail(input: PhotoReadyEmailInput) {
   const childNameSection = input.childName ? `\nGyermek neve: ${input.childName}` : "";
-  const formattedDeadline = formatNoticeDate(input.orderDeadline);
+  const deadlineSection = input.orderDeadline
+    ? `\nRendelési határidő: ${formatNoticeDate(input.orderDeadline)}`
+    : "";
   const paymentSection = formatPaymentInformation({
     paymentInformation: input.paymentInformation ?? PAYMENT_INFORMATION_TEXT,
     paymentDeadline: input.paymentDeadline,
@@ -130,8 +132,7 @@ Elkészültek a fotók a(z) ${input.serviceName} során.${childNameSection}
 A képek megtekintéséhez nyisd meg a weboldalt, majd válaszd a „Fotók megtekintése / rendelés” lehetőséget, és add meg a PIN-kódot:
 ${input.galleryUrl}
 
-Belépési PIN-kód: ${input.pin}
-Rendelési határidő: ${formattedDeadline}
+Belépési PIN-kód: ${input.pin}${deadlineSection}
 
 ${paymentSection}
 
